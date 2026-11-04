@@ -5,7 +5,9 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
 설계 세부는 필요할 때 docs/DESIGN.md의 해당 절(§)을 읽을 것. 전체를 미리 읽지 말 것.
 
 ## 현재 단계: S1 후반 ∥ S2(=P0) (DESIGN §1-1 단계표)
-- 완료: S0(ingest 62/240) · S1 전반(문제 풀 승인 265, 세부 항목 커버리지 239/240)
+- 완료: S0(ingest 62/240) · S1 전반(문제 풀 승인 266/284 슬롯(93.7%), 세부 항목 커버리지 240/240,
+  정답이 가장 긴 보기 54% → 33.8%(목표 35% 이하 달성, --rebalance-length 성공 55·원본 유지 20),
+  5% 초과 비율 28% → 7.9%(참고). 수치·예외 기록은 evaluation/quiz_pool_report.md)
 - S1 후반 남은 작업 (S2와 병행 가능):
   - 사람 표본 검토: evaluation/human_review_sample.csv에 verdict 기입 → python scripts/pool_report.py
   - scripts/seed_study_log.py (더미 사용자 demo_heavy·demo_new)
@@ -18,6 +20,7 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
 ## 명령 (Windows PowerShell)
 ..\.venv\Scripts\activate; pip install -r requirements.txt   # 상위 venv 공용 (버전 동일 고정, 독립 저장소 분리 시 새 venv)
 python scripts/check_bedrock.py                      # Bedrock LLM·임베딩 연결 확인
+python scripts/check_bedrock.py --quiz-chain         # 문제 풀 생성 모델 체인(QUIZ_GEN_MODEL_CHAIN) 4개 각각 접근 확인
 python -m src.ingest --dry-run                       # 파싱·62/240 검증만
 python -m src.ingest                                 # 가이드 PDF → guide_chunks.jsonl(62) + guide_bullets.jsonl(240) → Chroma
 python scripts/build_quiz_pool.py --pilot 10         # 파일럿 풀
@@ -25,6 +28,8 @@ python scripts/build_quiz_pool.py --resume           # 전체 풀 270문제 (매
 python scripts/build_quiz_pool.py --fill-gaps        # 승인 문제가 없는 세부 항목만 보충
 python scripts/build_quiz_pool.py --rebalance-length # 정답이 가장 긴 오답보다 5% 넘게 긴 승인 문항의 보기 재조정
 python scripts/build_quiz_pool.py --exception-slot TS-5.2-K2:1   # 미커버 항목 시나리오 고정 예외 슬롯
+python scripts/build_quiz_pool.py --reset-stale      # 이전 prompt_version으로 처리된 슬롯을 pending으로 (LLM 호출 없음)
+python scripts/build_quiz_pool.py --resume --concurrency 1   # 동시 실행 수 (기본 2, 쓰로틀링 심하면 1)
 python scripts/review_sample.py                      # 사람 표본 검토 CSV (층화, repair 문항 층마다 1개 이상)
 python scripts/pool_report.py                        # evaluation/quiz_pool_report.md 자동 절 갱신
 uvicorn src.api:api --port 8000                      # API 서버

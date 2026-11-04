@@ -357,7 +357,7 @@ State 확장 (Supervisor 그래프 messages 외):
 5. **코드 검증**(Pydantic): 보기 4개, 라벨 중복 없음, 정답 라벨 존재, task_id·bullet_id·scenario_id 실재
 6. **독립 검토**: `quiz_reviewer`는 생성 추론 없이 문항 + 근거 청크 + 초점 세부 항목만 받아 판정 (TS 4.6)
 7. **재시도**: 실패 시 근거 + 실패한 문항 + 구체적 오류를 붙여 재생성, 최대 2회 (TS 4.4). 그래도 실패하면 `rejected`로 남기고 `detected_patterns` 기록
-8. 동시 실행 4개, Bedrock throttling 시 지수 백오프
+8. 동시 실행 **기본 2개**(`--concurrency N`. 과정 공용 Bedrock 할당량에서 4개로 쓰로틀링이 나 4 → 2), Bedrock throttling 시 지수 백오프 + 모델 전환(아래 "모델 전환")
 
 **구현 세부 규칙 (v0.4.1, 구현 시 합의)**
 - **문항 언어**: stem·options는 영어(실제 시험·few-shot과 동일), rationale은 한국어 + 영어 용어 병기, source_excerpt는 가이드 영문 원문 그대로
@@ -408,7 +408,7 @@ State 확장 (Supervisor 그래프 messages 외):
   - 예: `Q-5.4-S3`(탐색 단계 요약 후 sub-agent 생성), `Q-2.5-K1`(Grep 내용 검색) → SC-4 개발자 생산성
   - **금지 조합은 유지**: `quiz_gen.FORBIDDEN_SCENARIOS = {"TS-1.7": {5}}`. TS-1.7 × SC-5는 `evaluation/test_queries.csv` 13번이 "풀에 없는 조합 → no_match + alternatives"로 전제하므로 어떤 경로로도 만들지 않음 (슬롯 검증 `plan_errors`에서도 확인)
   - 시나리오 순위 프롬프트는 문항 생성 프롬프트가 아니므로 `prompt_version` 해시에 넣지 않음
-  - 이 예외로 생긴 문항은 §5-3의 "풀 배정 규칙상 없는 TS·시나리오 조합"에 해당하지 않음 (`quiz://catalog`가 실제 풀 기준으로 집계)
+  - `no_match`는 배정 규칙이 아니라 **풀에 실제로 있는 approved 문항** 기준이므로(§5-3), 이 예외로 생긴 조합(예: D5 primary 밖인 TS-5.4 × SC-4, `Q-5.4-K3-F`·`Q-5.4-S3-F`)도 정상 출제 대상. `quiz://catalog`도 실제 풀 기준으로 집계
 - 커버리지 = 승인 문항의 focus_bullet_ids에 한 번이라도 들어간 세부 항목 (추가 슬롯 승인도 인정). 아직 pending 슬롯이 있는 항목은 보충 대상이 아님
 
 **예외 슬롯 (`--exception-slot BULLET_ID:SC`, v0.5)**
@@ -433,16 +433,24 @@ State 확장 (Supervisor 그래프 messages 외):
 - 오류 발견 시 해당 문제 `needs_fix`, 같은 유형이 한 도메인에서 2건 이상이면 그 도메인 프롬프트 수정 후 재생성
 - 결과 문서: `evaluation/quiz_pool_report.md` (도메인·시나리오별 승인 수, 세부 항목 커버리지, 승인율, 실패 유형 분포, 정답 위치 분포, 중복 제거 수, 사람 검토 오류율)
 
-**예상 규모 (가정)**: 생성 슬롯 약 320개(재생성 포함), LLM 호출 약 820회, 동시 4개 기준 약 40분. 계산 근거는 `docs/quiz_generation_options.xlsx`. 과정 공용 Bedrock 키의 할당량 제한 가능성이 있어 S1에서 파일럿 직후 바로 시작 (S2와 병행 가능)
+**실제 결과 (S1 전반 완료, 2026-11-04)** — 세부 수치는 `evaluation/quiz_pool_report.md`
+- **승인 266개** (목표 270, 최소 250 충족) · 슬롯 284개 처리: approved 266 · rejected 16 · duplicate 2 → **승인율 93.7%**
+  - 슬롯 유형별 승인: base 226/240 · extra 27/30 · fill 12/13 · exception 1/1. 도메인 D1 55 · D2 47 · D3 55 · D4 53 · D5 56
+  - **세부 항목 커버리지 240/240 (100%)**
+- **쓰로틀링 중단·재개**: 첫 `--resume`(동시 4개)이 과정 공용 할당량 쓰로틀링으로 approved 210 · rejected 10 · pending 50에서 중단 → 백오프 상한(호출당 약 2분)·연속 3슬롯 일시 오류 시 중단(종료 코드 2)·동시 기본 2개로 바꾸고 모델 전환 도입 후 `--resume`으로 나머지 50슬롯 이어서 완료 → `--fill-gaps` 13슬롯(12 승인)
+- **모델 전환 이력**: 이어서 실행 중 us Sonnet 4.5 일일 토큰 할당량 소진 → global Sonnet 4.5로 전환. 승인 문항 생성 모델 us Sonnet 4.5 209 · global Sonnet 4.5 57, 검토 모델(마지막) us 170 · global 96. **Sonnet 4.6은 사용되지 않음**(Haiku는 체인에 없음)
+- **사후 길이 repair** (`--rebalance-length`, 위 "정답 길이 재조정"): 대상 = 승인 문항 중 정답 > 가장 긴 오답 × 1.05 (75개), 목표 = 정답 ≤ 가장 긴 오답 × 0.95(하한 0.80, 정답이 가장 짧은 보기 아님), **독립 재검토 필수**. 1차(상한 0.95만)는 역방향 단서로 중단·원복, 2차 **성공 55 · 실패 20(원본 유지)** → 정답이 가장 긴 보기 54% → **33.8%**, 5% 초과 28% → 7.9%. 모델은 global Sonnet 4.5만 사용(쓰로틀링·전환 0회)
+- **예외 슬롯** `Q-5.2-K2-E`: TS-5.2-K2가 기본(`Q-5.2-K2`)·보충(`Q-5.2-K2-F`) 모두 탈락해 유일한 미커버 항목 → **SC-1 고정** 예외 슬롯(`--exception-slot TS-5.2-K2:1`) 2번째 시도에서 승인 → 커버리지 239 → 240
+- 사전 추정(생성 슬롯 약 320개, LLM 호출 약 820회, 동시 4개 약 40분, `docs/quiz_generation_options.xlsx`)은 쓰로틀링으로 실행 시간이 크게 늘어남
 
 ### 5-3. 퀴즈 출제 (런타임)
 1. `get_quiz(user_id, domain?, task_id?, scenario_id?)` 호출
-   - 조건에 맞고 사용자가 아직 풀지 않은 `approved` 문제 중 하나를 정답 없이 반환
+   - **실제 풀**(`data/quiz_pool.json`의 `status == "approved"` 문항)을 조회해, 조건에 맞고 사용자가 아직 풀지 않은 문제 중 하나를 정답 없이 반환. 매니페스트·슬롯 배정 규칙으로 판단하지 않음
    - 조건이 없으면 도메인을 **시험 비중 × 약점 점수** 비례로 고르고(기록 부족 시 시험 비중만), 그 도메인 안에서는 사용자가 아직 안 푼 세부 항목을 우선
 2. `no_match`이면 문제를 지어내지 않고 "해당 조합의 문제가 없다"고 밝힌 뒤 `alternatives` 중 하나로 대체 문제를 제안하거나 바로 출제
 3. 사용자에게 지문과 보기만 보여주고 `pending_quiz_id` 저장
 
-`no_match`가 나는 경우: 풀 배정 규칙상 없는 TS·시나리오 조합 요청(예: D1 소속 TS-1.7을 SC-5 CI 상황으로), 해당 범위 문제를 사용자가 모두 푼 경우.
+`no_match`가 나는 경우: **풀에 실제로 없는 조합** 요청(approved 문항이 0개인 TS·시나리오 등. 예: TS-1.7 × SC-5 — `FORBIDDEN_SCENARIOS`로 어떤 경로로도 만들지 않음, `test_queries.csv` 13번), 해당 범위 문제를 사용자가 모두 푼 경우. 배정 규칙 밖이라도 보충·예외 슬롯으로 승인된 조합은 출제함 (§5-2).
 
 ### 5-4. 채점
 "답은 B" 또는 UI 보기 클릭 → `pending_quiz_id` 확인 → `submit_answer`(MCP)가 문제 은행의 정답으로 **코드 채점 + 기록 저장** → quiz_master가 보기별 해설을 한국어로 정리. `pending_quiz_id`가 없으면 "채점할 문제가 없다"고 안내.
@@ -528,14 +536,16 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 - 생성 모델별 승인 수·승인율, 승인 문항의 검토 모델 분포 (모델 전환, §5-2). 사람 표본 검토에서는 Sonnet 4.6이 생성한 문항이 있으면 층마다 최소 1개 포함
 - 사람 표본 검토 오류율 (목표 0건, 최대 1건)
 - 정답 위치 분포 (A~D 각 20~30%), 중복 제거 수
-- **정답이 가장 긴 보기 비율** (승인 문항 기준, 동률은 가장 긴 것으로 침. 목표 35% 이하, 우연 수준 25%, 길이 규칙 도입 전 파일럿 80%). 정의·목표는 그대로 두고, 보조 지표로 **"정답이 가장 긴 오답보다 5% 넘게 긴 비율"**을 함께 기록 (리포트 `evaluation/quiz_pool_report.md`)
+- **정답이 가장 긴 보기 비율** (승인 문항 기준, 동률은 가장 긴 것으로 침. **목표 35% 이하 유지**, 우연 수준 25%, 길이 규칙 도입 전 파일럿 80%). 현재 33.8% (재조정 전 54%)
+  - 참고 지표(목표 없음, 병기만): **"정답이 가장 긴 오답보다 5% 넘게 긴 비율"** — 근소한 차이의 동률성 1위를 걸러 실제 단서에 가까운 비율. `--rebalance-length` 대상 기준과 같음. 현재 7.9% (재조정 전 28%). 리포트 `evaluation/quiz_pool_report.md`
 - 런타임 `no_match` 비율 (평가·시연 중 출제 요청 대비)
 
 ### 9-4. round2 개선 후보 (round1 결과 보고 2~3개 선택)
 1. 질의 재작성(한→영) + TS 번호 직접 조회 보강
 2. 도구 설명 보강 / 오라우팅 사례 few-shot 추가 (concept_tutor ↔ quiz_master 배분)
 3. `search_guide` 결과 트리밍 (Knowledge/Skills 중 관련 부분만, TS 5.1)
-4. `detected_pattern` 집계 기반 생성 프롬프트 수정 후 취약 도메인 재생성
+4. 개념 답변 `TutorAnswer` few-shot 보강 (claims·출처 표기·`coverage_gap` 예시. 출처 표기율·faithfulness 개선 목적)
+   - 기존 후보 "`detected_pattern` 기반 프롬프트 수정 후 취약 도메인 풀 재생성"은 round2 범위에서 빼고 `evaluation/quiz_pool_report.md` "향후 개선"으로 이동 (풀이 S1 기준을 이미 충족)
 5. reranker 추가 (Day 2 `rerank_demo.py`)
 
 ---

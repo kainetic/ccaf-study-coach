@@ -4,6 +4,11 @@
 > 과제 규약: [Day 8,9,10] mini PJT 문서 §4 (산출물 규약), §5 (12개 패턴)
 > 이 문서는 Claude Code에 넘기는 구현 기준 문서입니다. SERVICE.md가 "왜/누구를", 이 문서는 "어떻게"를 다룹니다.
 
+**v0.5.1 변경 사항 (S2 구현)**
+- 런타임 모델 전환 `config.RUNTIME_MODEL_CHAIN`(§7-1): us Sonnet 4.5 고정 → 쓰로틀링·일일 할당량 소진 시 같은 모델의 다른 프로필·리전, 그다음 Sonnet 4.6
+- quiz_master 도구는 MCP 래퍼 + return_direct: user_id·quiz_id 주입, 출제·채점 결과를 코드가 서식화, no_match 대체 출제도 코드 (§3-1, §5-3, §5-4)
+- 풀이 기록 스키마·CoachState(§4), 출제 도메인 가중 공식(§5-3), /query 응답 thread_id·answer 구성(§7), TutorAnswer는 S3(§5-1)
+
 **v0.5 변경 사항**
 - §1-1 구현 우선순위와 §12 일정을 **단계(Stage) S0~S6 + 선택 항목**으로 통합. 단계마다 범위·완료 기준·시작 조건을 두고, 날짜는 고정 마감 3개(Day 8 18:00 진도 공유, Day 9 종료 round1_report, Day 10 15:00 제출)만 남김. S2 = P0, S3 = P1 (기존 표기 유지)
 - v0.4.1~v0.4.4: 문제 풀 생성 세부 규칙(코드 검증 세부 패턴, 길이 repair, extra 쌍 선정, fill-gaps 가드·시나리오 재순위, 모델 전환) — §5-2
@@ -190,6 +195,12 @@ P0의 `search_guide`는 질문에 TS 번호가 있으면 내부에서 정확 조
 - `get_quiz`: "문제 요청 시 사용. 도메인·TS·시나리오로 필터. 결과가 `no_match`면 문제를 만들지 말고 `alternatives` 중 하나를 사용자에게 제안."
 - `submit_answer`: "사용자가 직전 문제의 답을 말했을 때만 사용. quiz_id는 대화 상태의 pending_quiz_id를 사용."
 
+**quiz_master 도구 = MCP 래퍼 (S2 구현, `src/agents/quiz_master.py`)**
+- LLM에 보이는 인자: `get_quiz(domain?, task_id?, scenario_id?)`, `submit_answer(choice)`. **user_id는 실행 config(`configurable.user_id`), quiz_id는 그래프 상태 `pending_quiz_id`에서 래퍼가 주입**하므로 LLM이 고를 수 없음. MCP 서버 시그니처(§3-2)는 그대로
+- 래퍼는 `ToolRuntime`으로 state·config를 읽고 `Command(update={"pending_quiz_id": …})`로 상태를 갱신 (출제 시 설정, 채점 후 None)
+- **두 도구 모두 `return_direct`**: 출제 문항(지문·보기 원문 그대로 + 시나리오 이름)과 채점 결과(정오 + 풀의 보기별 해설 + `[근거: TS-x.y]`)를 **코드가 서식화**해 그대로 답변으로 씀. LLM이 문항을 고쳐 쓰거나 채점 뒤에 덧붙인 말로 결과를 덮어쓰는 문제(구현 중 재현됨)를 막음
+- MCP 클라이언트는 앱 수명 동안 stdio 세션 1개를 열어 두고 `session.call_tool()`로 호출 (`src/quiz_client.py`. `get_tools()`는 호출마다 서버 프로세스를 새로 띄움)
+
 ### 3-2. MCP 서버: `quiz_bank_server.py` (fastmcp, Day 4 구조 재사용)
 
 | 도구 | 입력 | 출력 |
@@ -271,6 +282,21 @@ class GradeResult(BaseModel):
     option_rationales: dict[str, str]
     task_id: str
 
+# ---- 풀이 기록 data/study_log.json (§3-2, S2) ----
+class StudyAttempt(BaseModel):          # submit_answer 한 번 (채점과 같은 도구 안에서 저장)
+    quiz_id: str; task_id: str; domain: int; focus_bullet_ids: list[str]
+    choice: Literal["A","B","C","D"]; correct: bool; answered_at: str
+class QuizIssued(BaseModel):            # get_quiz 출제 한 번 (반복 출제 줄이기)
+    quiz_id: str; issued_at: str
+class UserStudyLog(BaseModel):
+    attempts: list[StudyAttempt] = []; issued: list[QuizIssued] = []
+class StudyLog(BaseModel):              # {"version": 1, "users": {user_id: UserStudyLog}}. user_id는 영문·숫자·_·-만 (점 금지)
+    version: int = 1; users: dict[str, UserStudyLog] = {}
+
+# ---- 그래프 상태 (src/agent.py) ----
+class CoachState(AgentState):           # Supervisor·하위 에이전트 공용. 정답은 두지 않음
+    pending_quiz_id: NotRequired[Optional[str]]   # get_quiz 래퍼가 설정, submit_answer 래퍼가 비움 (Command)
+
 # ---- 오프라인 풀 구축용 (§5-2) ----
 class QuizDraft(BaseModel):             # 생성 LLM 출력. validator 없음 → 형식 오류는 코드 검증이 재시도 피드백으로 변환
     stem: str
@@ -327,8 +353,10 @@ State 확장 (Supervisor 그래프 messages 외):
 ### 5-1. 개념 Q&A
 1. `rewrite_query`: 한국어 질문 → 영어 키워드 질의 (+ TS 번호 감지)
 2. `search_guide` 하이브리드 검색 k=4 (도메인 힌트 있으면 필터)
-3. `TutorAnswer` 구조화 출력. claims가 비면 답을 지어내지 않고 `coverage_gap`으로 "가이드에 없음" 안내
+3. `TutorAnswer` 구조화 출력. claims가 비면 답을 지어내지 않고 `coverage_gap`으로 "가이드에 없음" 안내 — **S3에서 G3과 함께 구현**. S2(P0)는 프롬프트 규칙(검색 결과만 근거, 없으면 "가이드에 근거 없음")
 4. 답변 끝에 출처 표기: `[근거: TS-1.4, SQ-01]`
+
+S2 구현 메모 (`src/retriever.py`): 정확 조회는 정규식(`TS 2.2`·`Task Statement 2.2`·`도메인 3`·`Domain 3`·`D3`·`샘플 1번`·`Sample Question 1`·`시나리오 5`·`Exercise 2`)으로 감지한 청크를 앞에 두고 남은 자리를 하이브리드로 채움. BM25는 영어 토크나이저(가이드가 영어), 가중치 BM25 0.4 · 벡터 0.6, 재작성은 `rewrite_query` LLM 1회(실패 시 원문). rewrite·retrieve 결과는 custom event로 trace에 기록
 
 ### 5-2. 문제 풀 사전 생성 (오프라인, `scripts/build_quiz_pool.py`)
 
@@ -452,14 +480,17 @@ State 확장 (Supervisor 그래프 messages 외):
 ### 5-3. 퀴즈 출제 (런타임)
 1. `get_quiz(user_id, domain?, task_id?, scenario_id?)` 호출
    - **실제 풀**(`data/quiz_pool.json`의 `status == "approved"` 문항)을 조회해, 조건에 맞고 사용자가 아직 풀지 않은 문제 중 하나를 정답 없이 반환. 매니페스트·슬롯 배정 규칙으로 판단하지 않음
-   - 조건이 없으면 도메인을 **시험 비중 × 약점 점수** 비례로 고르고(기록 부족 시 시험 비중만), 그 도메인 안에서는 사용자가 아직 안 푼 세부 항목을 우선
-2. `no_match`이면 문제를 지어내지 않고 "해당 조합의 문제가 없다"고 밝힌 뒤 `alternatives` 중 하나로 대체 문제를 제안하거나 바로 출제
+   - 조건이 없으면 도메인을 **시험 비중 × 약점 계수** 비례로 고르고, 그 도메인 안에서는 사용자가 아직 안 푼 세부 항목을 우선
+     - 약점 계수(코드 계산, `quiz_bank_server.QuizBank`): 그 도메인 시도 3회 이상이면 `max(0.2, 1 − 정답률)`, 3회 미만이면 1 (기록 부족 → 시험 비중만). 하한 0.2는 잘 푸는 도메인도 가끔 나오게 함
+     - 후보 우선순위: 안 낸 문제이면서 안 푼 세부 항목을 다루는 문제 → 안 낸 문제 → 안 푼 문제. 무작위는 `user_id:시도 수:출제 수` 시드
+   - `no_match` 형식: `{"status": "no_match", "reason": "not_in_pool" | "all_solved", "message", "alternatives": [{domain, task_id, scenario_id, count, relaxed}]}`. alternatives는 시나리오 → TS(같은 도메인 안) → 도메인 순으로 조건을 하나씩 뺀 조합, 최대 6개
+2. `no_match`이면 문제를 지어내지 않고 "해당 조합의 문제가 없다"고 밝힌 뒤 `alternatives` 중 하나로 대체 문제를 제안하거나 바로 출제 — **S2 구현: get_quiz 래퍼가 코드로 처리**. "요청한 조합의 검토된 문제는 아직 풀에 없습니다. 문제를 새로 만들지는 않습니다" + 첫 대체 조합으로 바로 출제 + 다른 대안 나열
 3. 사용자에게 지문과 보기만 보여주고 `pending_quiz_id` 저장
 
 `no_match`가 나는 경우: **풀에 실제로 없는 조합** 요청(approved 문항이 0개인 TS·시나리오 등. 예: TS-1.7 × SC-5 — `FORBIDDEN_SCENARIOS`로 어떤 경로로도 만들지 않음, `test_queries.csv` 13번), 해당 범위 문제를 사용자가 모두 푼 경우. 배정 규칙 밖이라도 보충·예외 슬롯으로 승인된 조합은 출제함 (§5-2).
 
 ### 5-4. 채점
-"답은 B" 또는 UI 보기 클릭 → `pending_quiz_id` 확인 → `submit_answer`(MCP)가 문제 은행의 정답으로 **코드 채점 + 기록 저장** → quiz_master가 보기별 해설을 한국어로 정리. `pending_quiz_id`가 없으면 "채점할 문제가 없다"고 안내.
+"답은 B" 또는 UI 보기 클릭 → `pending_quiz_id` 확인 → `submit_answer`(MCP)가 문제 은행의 정답으로 **코드 채점 + 기록 저장** → 채점 결과(정오, 정답, 풀의 한국어 보기별 해설, `[근거: TS-x.y]`)를 **submit_answer 래퍼가 코드로 서식화해 그대로 답변으로 씀**(return_direct, §3-1). `pending_quiz_id`가 없으면 "채점할 문제가 없다"고 안내.
 
 채점을 LLM 판단이 아니라 코드로 하고, 기록 저장을 같은 도구 안에 묶어 "채점은 했는데 기록이 빠지는" 경우를 없앰 (TS 1.4 프로그램적 강제).
 
@@ -492,11 +523,21 @@ State 확장 (Supervisor 그래프 messages 외):
 ```
 POST /query
 Body: {"question": "...", "user_id": "demo_user"?, "thread_id": "..."?}   # 뒤 2개는 선택, 기본값 있음
-Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "trace": [...]}
+Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "trace": [...], "thread_id": "..."}
 ```
-- `contexts`: `search_guide`/`get_chunk` 결과와, 출제 시에는 해당 문제의 근거 TS 발췌를 콜백으로 수집 (Day 7 `run_eval.py`의 ToolRecorder 방식)
-- `trace`: step 단위 `guard → route(agent) → rewrite → retrieve → get_quiz → submit → output_check`. Day 7 `local_tracer.py` 확장
+- `thread_id` (S2 추가): 요청에 없으면 새로 만들어 돌려줌. 같은 thread_id로 이어 부르면 출제 → 채점이 이어짐 (checkpointer `InMemorySaver`, 서버 재시작 시 초기화). `user_id`는 `^[A-Za-z0-9_-]+$`
+- `answer` 구성 (S2): 이번 턴의 하위 에이전트 최종 답변 + quiz_master return_direct 도구 결과를 순서대로 이어 붙임 (`agent.turn_answer`). Supervisor는 처리가 끝나면 "완료"만 출력하고 그 메시지는 쓰지 않음 → 문항 원문 보존, 재작성 없음
+- Supervisor 동시 핸드오프 금지: Bedrock Converse는 parallel_tool_calls 끄기를 지원하지 않으므로 `post_model_hook`(`agent.single_handoff`)이 첫 핸드오프만 남김 (복합 요청은 concept_tutor → quiz_master 순서로 이어서 처리)
+- `contexts`: `search_guide`/`get_chunk` 결과와, 출제 시에는 해당 문제의 TS 청크(정답 단서인 source_excerpt는 넣지 않음)를 콜백으로 수집 (Day 7 `run_eval.py`의 ToolRecorder 방식)
+- `trace`: step 단위 `guard → route(agent) → rewrite → retrieve → get_quiz → submit → output_check` + 마지막 `llm` step(호출 수·토큰·실제 응답 모델). Day 7 `local_tracer.py` 확장. 로컬 사본 `logs/trace.jsonl`(커밋 안 함). S2에는 guard·output_check 없음(S3)
 - 서버: FastAPI (Day 6 `api_server.py` 재사용, 경로만 `/query`로 변경)
+
+### 7-1. 런타임 모델 전환 (S2, `src/llm.py`)
+- 기본은 고정 모델 `us.anthropic.claude-sonnet-4-5-20250929-v1:0` @ us-east-1. **쓰로틀링·일일 토큰 할당량 소진 등 일시 오류일 때만** `config.RUNTIME_MODEL_CHAIN` 순서로 전환: Sonnet 4.5(global@us-east-1 → us@us-west-2 → global@us-west-2 → global@ap-northeast-2) → Sonnet 4.6(같은 순서). Haiku는 쓰지 않음
+- 도입 경위: S2 스모크 시점에 us Sonnet 4.5의 일일 토큰 할당량이 문제 풀 생성으로 소진됨 (사용자 합의로 런타임에도 전환 허용, 사용 가능 모델·리전은 사용자 확인 목록)
+- `FallbackChatModel`(BaseChatModel): 후보마다 ChatBedrockConverse(botocore 재시도 1회). 쓰로틀된 후보는 쿨다운(일일 할당량 60분, 그 외 4·2^k초, 최대 60초)을 걸고 다음 후보로. 쿨다운은 프로세스 안 모든 에이전트가 공유. 일시 오류가 아닌 오류는 전환하지 않고 올림, 권한 없음·모델 없음은 제외
+- `bind_tools`는 첫 후보로 Bedrock 형식 도구 kwargs를 만들고 호출 때 실제 후보의 `_generate`에 같은 kwargs를 넘김 (Converse 도구 형식은 모델 간 동일). 응답 메시지 `response_metadata.served_by`에 실제 모델·리전을 남기고 trace `llm.models`에 집계
+- 판정 함수(`is_transient`, `is_unavailable`)는 문제 풀 생성 `quiz_gen.ModelPool`과 공용
 
 ---
 
@@ -534,6 +575,7 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 - reference는 가이드 원문 근거로 사람이 작성 (순환 평가 방지)
 - RAGAS LLM/임베딩도 Bedrock 래퍼로 연결. **S2(=P0)에서 3건짜리 스모크 테스트**
 - 주의: 가이드는 영어, 답변은 한국어 → answer_relevancy가 낮게 나올 수 있음. 필요하면 답변에 영어 핵심 용어 병기
+- S2 스모크 기준선 (`evaluation/ragas_smoke.py` → `ragas_smoke.json`, 1~3번): faithfulness 0.896 · context_recall 1.0 · context_precision 0.917 · answer_relevancy 0.681. ragas 0.4.3은 langchain-community 0.4에서 사라진 `chat_models.vertexai`를 import하므로 스크립트 안에서만 자리표시 모듈을 끼움
 
 ### 9-3. 문제 풀 품질 지표 (round 리포트에 함께 기재)
 - 승인 문제 수 (목표 270, 최소 250), 세부 항목 커버리지 (목표 95% 이상)
@@ -607,9 +649,11 @@ LangGraph는 시험의 Claude Agent SDK와 다른 프레임워크이므로, 용�
 ```
 mini-pjt_{이름}/
 ├── src/
-│   ├── config.py              # 상위 폴더 ..\.env 로드, 모델 ID·리전·경로 상수
-│   ├── agent.py               # Supervisor 그래프 조립 (build_app)
-│   ├── agents/                # concept_tutor.py, quiz_master.py, study_coach.py
+│   ├── config.py              # 상위 폴더 ..\.env 로드, 모델 ID·리전·경로 상수, 모델 전환 체인
+│   ├── llm.py                 # 런타임 LLM (쓰로틀링 시 모델·리전 전환, §7-1)
+│   ├── agent.py               # Supervisor 그래프 조립 (build_app, CoachState, turn_answer)
+│   ├── agents/                # concept_tutor.py, quiz_master.py, general.py, study_coach.py(P1)
+│   ├── quiz_client.py         # MCP stdio 세션 클라이언트
 │   ├── tools.py               # search_guide, get_chunk, allocate_study_time
 │   ├── quiz_gen.py            # 생성 → 검증 → 독립 검토 → 재시도 (오프라인 전용)
 │   ├── prompts/               # 문제 생성·검토 프롬프트

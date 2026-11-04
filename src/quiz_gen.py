@@ -22,6 +22,7 @@ from typing import Callable, Optional
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from src import config
+from src.llm import is_transient, is_unavailable
 from src.prompts import FIX_HINTS, load, load_pair
 from src.schemas import (
     LABELS, GuideBullet, GuideChunk, ManifestSlot, QuizDraft, QuizItem, QuizOption, QuizOptionsRepair,
@@ -45,11 +46,7 @@ FORBIDDEN_SCENARIOS: dict[str, set[int]] = {"TS-1.7": {5}}
 def allowed_scenarios(task_id: str) -> list[int]:
     return [n for n in ALL_SCENARIOS if n not in FORBIDDEN_SCENARIOS.get(task_id, set())]
 
-# 일시 오류: 지수 백오프 대상이며 재시도 횟수(attempts)에 넣지 않는다
-TRANSIENT_CODES = {
-    "ThrottlingException", "TooManyRequestsException", "ServiceUnavailableException",
-    "ModelNotReadyException", "InternalServerException", "ModelTimeoutException",
-}
+# 일시 오류(TRANSIENT_CODES, src/llm.py): 지수 백오프 대상이며 재시도 횟수(attempts)에 넣지 않는다
 # 모델 전환 (ModelPool): 쓰로틀된 모델은 min(COOLDOWN_CAP, COOLDOWN_BASE·2^k)초 쉬고 다음 모델로 바로 넘어감.
 # 체인 전체가 막혀 한 호출에서 기다린 시간이 WAIT_BUDGET을 넘으면 TransientError (슬롯은 pending).
 # 일일 토큰 할당량 소진("Too many tokens per day")은 분 단위로 풀리지 않으므로 DAILY_COOLDOWN 동안 쉬게 한다.
@@ -377,32 +374,8 @@ def dedupe(items: list[QuizItem], order: dict[str, int],
 
 # ---------------------------------------------------------------- LLM 호출
 
-def _is_transient(e: BaseException, depth: int = 0) -> bool:
-    if e is None or depth > 5:
-        return False
-    try:
-        from botocore.exceptions import (ClientError, ConnectTimeoutError, EndpointConnectionError,
-                                         ReadTimeoutError)
-        if isinstance(e, ClientError):
-            return e.response.get("Error", {}).get("Code") in TRANSIENT_CODES
-        if isinstance(e, (ReadTimeoutError, ConnectTimeoutError, EndpointConnectionError)):
-            return True
-    except ImportError:
-        pass
-    if any(code in str(e) for code in TRANSIENT_CODES):
-        return True
-    return _is_transient(e.__cause__ or e.__context__, depth + 1)
-
-
-def _is_unavailable(e: BaseException) -> bool:
-    """이 계정·리전에서 쓸 수 없는 모델 (권한 없음, 모델 id 없음). 체인에서 빼고 다음 모델로 간다."""
-    try:
-        from botocore.exceptions import ClientError
-        if isinstance(e, ClientError):
-            return e.response.get("Error", {}).get("Code") in ("AccessDeniedException", "ResourceNotFoundException")
-    except ImportError:
-        pass
-    return "AccessDeniedException" in str(e) or "ResourceNotFoundException" in str(e)
+# 일시 오류·사용 불가 판정은 런타임과 공용 (src/llm.py)
+_is_transient, _is_unavailable = is_transient, is_unavailable
 
 
 class ModelPool:

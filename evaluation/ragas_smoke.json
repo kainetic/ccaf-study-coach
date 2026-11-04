@@ -1,0 +1,71 @@
+{
+  "n": 3,
+  "means": {
+    "faithfulness": 0.896,
+    "context_recall": 1.0,
+    "llm_context_precision_with_reference": 0.917,
+    "answer_relevancy": 0.681
+  },
+  "rows": [
+    {
+      "id": "1",
+      "reference_doc_ids": [
+        "TS-1.1"
+      ],
+      "retrieved_doc_ids": [
+        "TS-1.1",
+        "EX-1",
+        "D1",
+        "TS-1.4"
+      ],
+      "reference_hit": [
+        "TS-1.1"
+      ],
+      "faithfulness": 1.0,
+      "context_recall": 1.0,
+      "llm_context_precision_with_reference": 1.0,
+      "answer_relevancy": 0.768
+    },
+    {
+      "id": "2",
+      "reference_doc_ids": [
+        "TS-2.4"
+      ],
+      "retrieved_doc_ids": [
+        "TS-2.4",
+        "EX-2",
+        "SCOPE-in",
+        "TS-3.1"
+      ],
+      "reference_hit": [
+        "TS-2.4"
+      ],
+      "faithfulness": 0.75,
+      "context_recall": 1.0,
+      "llm_context_precision_with_reference": 1.0,
+      "answer_relevancy": 0.697
+    },
+    {
+      "id": "3",
+      "reference_doc_ids": [
+        "TS-4.3",
+        "TS-2.3"
+      ],
+      "retrieved_doc_ids": [
+        "TS-2.3",
+        "SQ-02",
+        "TS-2.1",
+        "TS-4.3"
+      ],
+      "reference_hit": [
+        "TS-2.3",
+        "TS-4.3"
+      ],
+      "faithfulness": 0.938,
+      "context_recall": 1.0,
+      "llm_context_precision_with_reference": 0.75,
+      "answer_relevancy": 0.577
+    }
+  ],
+  "note": "S2 RAGAS 스모크 기준선. 목표치는 round2 (SERVICE.md §5)"
+}

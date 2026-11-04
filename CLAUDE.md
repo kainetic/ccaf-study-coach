@@ -4,7 +4,7 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
 기획: SERVICE.md · 설계: docs/DESIGN.md · 평가: evaluation/test_queries.csv
 설계 세부는 필요할 때 docs/DESIGN.md의 해당 절(§)을 읽을 것. 전체를 미리 읽지 말 것.
 
-## 현재 단계: S1 후반 ∥ S2(=P0) (DESIGN §1-1 단계표)
+## 현재 단계: S2 완료 → S3(=P1) 시작 가능 · S1 후반 병행 (DESIGN §1-1 단계표)
 - 완료: S0(ingest 62/240) · S1 전반(문제 풀 승인 266/284 슬롯(93.7%), 세부 항목 커버리지 240/240,
   정답이 가장 긴 보기 54% → 33.8%(목표 35% 이하 달성, --rebalance-length 성공 55·원본 유지 20),
   5% 초과 비율 28% → 7.9%(참고). 수치·예외 기록은 evaluation/quiz_pool_report.md)
@@ -12,10 +12,11 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
   - 사람 표본 검토: evaluation/review_sample.xlsx 시트1에 내 답·판정·사유 기입 → python scripts/review_sample.py --apply
     (성공 기준 오류 = 판정 "오류"만, 경미는 별도. xlsx는 커밋 금지, 결과는 human_review_results.csv)
   - scripts/seed_study_log.py (더미 사용자 demo_heavy·demo_new)
-- S2(=P0) 도구 3개만: search_guide, get_quiz(MCP), submit_answer(MCP)
-- S2 완료 기준: /query 3회 호출로 "개념 질문 → 풀 출제 → 채점"이 동작하고
-  채점 결과가 data/study_log.json에 기록됨 (evaluation/smoke_p0.py 통과)
-- S2가 끝나기 전에는 S3(=P1)·선택 항목(v2) 작업을 시작하지 않는다
+- S2(=P0) 완료: search_guide, get_quiz(MCP), submit_answer(MCP) + Supervisor + /query
+  - evaluation/smoke_p0.py 18/18 PASS (개념 질문 → 풀 출제 → 채점, study_log.json 기록, 정답 비노출)
+  - RAGAS 3건 기준선 (evaluation/ragas_smoke.json): faithfulness 0.896 · recall 1.0 · precision 0.917 · relevancy 0.681
+- 다음: S3(=P1) — 가드레일 G1~G7, get_chunk, get_progress·get_weak_domains, study_coach, run_eval.py
+- 선택 항목(v2)은 요청 전까지 시작하지 않는다
 - S4(round1)는 S3 완료 즉시, 개선 작업보다 먼저 실행한다
 
 ## 명령 (Windows PowerShell)
@@ -35,14 +36,17 @@ python scripts/review_sample.py                      # 사람 표본 검토 xlsx
 python scripts/review_sample.py --apply             # 검토 반영: human_checked, 오류 → needs_fix, 리포트 갱신 (--dry-run 가능)
 python scripts/pool_report.py                        # evaluation/quiz_pool_report.md 자동 절 갱신
 uvicorn src.api:api --port 8000                      # API 서버
-python evaluation/smoke_p0.py                        # P0 한 바퀴 검증
+python evaluation/smoke_p0.py                        # P0 한 바퀴 검증 (--url 실행 중 서버, --keep 기록 남김)
+python evaluation/ragas_smoke.py                     # RAGAS 3건 스모크 → evaluation/ragas_smoke.json
 python evaluation/run_eval.py                        # 20건 평가 (P1부터)
 MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언트가 sys.executable로 stdio 자식 프로세스로 띄움.
 
 ## 고정값
 - LLM: ChatBedrockConverse, model "us.anthropic.claude-sonnet-4-5-20250929-v1:0", region "us-east-1", temperature 0
-  - 예외: 문제 풀 생성(오프라인 quiz_gen)만 쓰로틀링 시 config.QUIZ_GEN_MODEL_CHAIN 순서로 전환
-    (Sonnet 4.5/4.6 × us/global, Haiku 미사용). 런타임 에이전트는 위 고정 모델 (DESIGN §5-2)
+  - 예외: 쓰로틀링·일일 할당량 소진 등 일시 오류일 때만 모델 전환 (Haiku 미사용)
+    - 문제 풀 생성(오프라인 quiz_gen): config.QUIZ_GEN_MODEL_CHAIN (Sonnet 4.5/4.6 × us/global, DESIGN §5-2)
+    - 런타임 에이전트: src/llm.py FallbackChatModel, config.RUNTIME_MODEL_CHAIN (Sonnet 4.5 다른 프로필·리전
+      → Sonnet 4.6, us-east-1·us-west-2·ap-northeast-2, DESIGN §7-1). LLM은 config.get_llm()이 아니라 get_runtime_llm()
 - 임베딩: BedrockEmbeddings "amazon.titan-embed-text-v2:0"
 - Chroma: persist ./chroma_db, collection "ccaf_guide"
 - 자격 증명: 상위 폴더의 ..\.env (sds-ax-practice\.env)를 사용. mini_pjt 안에 .env를 만들거나 복사하지 않음.
@@ -89,6 +93,10 @@ MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언�
 - 가이드는 영어, 질문은 한국어 → BM25 전에 rewrite_query로 영어 키워드 질의 생성
 - Store namespace 라벨에 점(.)을 쓸 수 없음 (user_id에 점 금지)
 - MCP 도구는 비동기로 로드 → build_app은 async, 실행은 ainvoke
+- MultiServerMCPClient.get_tools()는 호출마다 서버 프로세스를 새로 띄움 → src/quiz_client.py가 세션 1개를 열어 두고 call_tool
+- Bedrock Converse는 parallel_tool_calls 끄기를 지원하지 않음 → Supervisor 동시 핸드오프는 post_model_hook(single_handoff)로 제거
+- output_mode="last_message"는 하위 에이전트의 마지막 메시지만 올림 → 출제·채점은 return_direct 도구 결과를 답변으로 씀 (agent.turn_answer)
+- ragas 0.4.3은 langchain_community.chat_models.vertexai를 import (0.4에서 삭제) → ragas_smoke.py 안의 자리표시 모듈로 우회
 
 ## 작업 방식
 - 새 모듈이나 여러 파일에 걸친 작업은 plan mode로 계획을 먼저 보여준다

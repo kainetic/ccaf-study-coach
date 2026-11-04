@@ -4,6 +4,7 @@
   다른 모듈은 load_dotenv()를 직접 부르지 말고 이 모듈을 import한다.
 - 제출용 독립 저장소로 분리할 때는 ENV_PATH 한 줄만 바꾼다.
 """
+import os
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -27,6 +28,22 @@ QUIZ_GEN_MODEL_CHAIN = [
     "us.anthropic.claude-sonnet-4-6",                      # us  Sonnet 4.6
     "global.anthropic.claude-sonnet-4-6",                  # global Sonnet 4.6
 ]
+
+# 런타임 에이전트: 기본은 MODEL_ID(us-east-1). 쓰로틀링·일일 할당량 소진 시에만 이 순서로 전환 (src/llm.py, DESIGN §5-2·§7).
+# 같은 Sonnet 4.5를 다른 추론 프로필·리전으로 먼저 쓰고, 그다음 Sonnet 4.6. Haiku는 쓰지 않는다. (model_id, region)
+_S45, _S46 = "anthropic.claude-sonnet-4-5-20250929-v1:0", "anthropic.claude-sonnet-4-6"
+RUNTIME_MODEL_CHAIN = [
+    (MODEL_ID, REGION),                         # 기본: us Sonnet 4.5 @ us-east-1
+    (f"global.{_S45}", "us-east-1"),
+    (f"us.{_S45}", "us-west-2"),
+    (f"global.{_S45}", "us-west-2"),
+    (f"global.{_S45}", "ap-northeast-2"),
+    (f"us.{_S46}", "us-east-1"),
+    (f"global.{_S46}", "us-east-1"),
+    (f"us.{_S46}", "us-west-2"),
+    (f"global.{_S46}", "us-west-2"),
+    (f"global.{_S46}", "ap-northeast-2"),
+]
 EMBED_MODEL_ID = "amazon.titan-embed-text-v2:0"
 
 # ---- 경로 ----
@@ -36,20 +53,26 @@ CHUNKS_PATH = DATA_DIR / "guide_chunks.jsonl"
 BULLETS_PATH = DATA_DIR / "guide_bullets.jsonl"
 CHROMA_DIR = ROOT / "chroma_db"
 COLLECTION = "ccaf_guide"
+QUIZ_POOL_PATH = DATA_DIR / "quiz_pool.json"
+# 풀이 기록. 테스트에서만 CCAF_STUDY_LOG로 다른 파일을 가리킬 수 있다.
+STUDY_LOG_PATH = Path(os.environ.get("CCAF_STUDY_LOG", DATA_DIR / "study_log.json"))
+
+# 시험 도메인 비중 (가이드 v0.2). 출제 도메인 가중에 쓴다 (DESIGN §5-3).
+DOMAIN_WEIGHTS = {1: 0.27, 2: 0.18, 3: 0.20, 4: 0.20, 5: 0.15}
 
 GUIDE_VERSION = "0.2"
 
 
-def get_llm(model_id: str = MODEL_ID, max_retries: int | None = None):
-    """Bedrock Claude (temperature 0). 호출부에서 필요할 때만 생성. model_id는 문제 풀 생성 체인에서만 바꾼다.
-    max_retries: botocore 내부 재시도 횟수. 문제 풀 생성은 1로 줄여 쓰로틀 시 모델 전환(ModelPool)이 바로 일어나게 한다."""
+def get_llm(model_id: str = MODEL_ID, max_retries: int | None = None, region: str = REGION):
+    """Bedrock Claude (temperature 0) 단일 모델. 런타임 에이전트는 이 함수 대신 src.llm.get_runtime_llm()(전환 포함)을 쓴다.
+    max_retries: botocore 내부 재시도 횟수. 모델 전환을 쓰는 곳은 1로 줄여 쓰로틀 시 전환이 바로 일어나게 한다."""
     from langchain_aws import ChatBedrockConverse
 
     kwargs = {}
     if max_retries is not None:
         from botocore.config import Config
         kwargs["config"] = Config(retries={"max_attempts": max_retries, "mode": "standard"})
-    return ChatBedrockConverse(model=model_id, region_name=REGION, temperature=0, **kwargs)
+    return ChatBedrockConverse(model=model_id, region_name=region, temperature=0, **kwargs)
 
 
 def get_embeddings():

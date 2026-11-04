@@ -188,3 +188,33 @@ class QuizManifest(BaseModel):
     updated_at: str
     summary: dict[str, int] = Field(default_factory=dict)
     slots: list[ManifestSlot]
+
+
+# ---------------------------------------------------------------- 풀이 기록 (§3-2, §8)
+
+class StudyAttempt(BaseModel):
+    """submit_answer 한 번. 채점은 코드로 하고 이 기록과 한 도구 안에서 저장한다 (§5-4)."""
+    quiz_id: str
+    task_id: str
+    domain: int
+    focus_bullet_ids: list[str]
+    choice: Label
+    correct: bool
+    answered_at: str
+
+
+class QuizIssued(BaseModel):
+    """get_quiz 출제 한 번 (같은 문제 반복 출제를 줄이는 데 씀)."""
+    quiz_id: str
+    issued_at: str
+
+
+class UserStudyLog(BaseModel):
+    attempts: list[StudyAttempt] = Field(default_factory=list)
+    issued: list[QuizIssued] = Field(default_factory=list)
+
+
+class StudyLog(BaseModel):
+    """data/study_log.json. user_id는 Store namespace 규칙에 맞춰 영문·숫자·_·-만 (점 금지)."""
+    version: int = 1
+    users: dict[str, UserStudyLog] = Field(default_factory=dict)

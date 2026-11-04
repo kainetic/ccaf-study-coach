@@ -71,7 +71,7 @@ S2(=P0) 완료 기준: "개념 질문 → 풀 출제 → 채점"이 `/query` 3�
 | 사용자 풀이 기록 | JSON (MCP 서버) | **가짜** (더미 사용자 2명 시드) |
 | 사용자 프로필 (시험일, 선호) | LangGraph Store | **가짜** (데모 값) |
 
-LLM: AWS Bedrock Claude Sonnet 4.5 (과정 제공 키. 런타임은 us Sonnet 4.5 고정, 오프라인 문제 풀 생성에서만 쓰로틀링 시 Sonnet 4.5/4.6 × us/global 순으로 전환 — 실제로 us 일일 할당량 소진 후 global Sonnet 4.5로 전환해 승인 문항 57개 생성), 임베딩: Titan Text Embeddings v2
+LLM: AWS Bedrock Claude Sonnet 4.5 (과정 제공 키. 기본은 us Sonnet 4.5, 쓰로틀링·일일 할당량 소진 시에만 같은 모델의 다른 추론 프로필·리전 → Sonnet 4.6 순으로 전환. 문제 풀 생성은 us 일일 할당량 소진 후 global Sonnet 4.5로 전환해 승인 문항 57개 생성, 런타임도 같은 방식으로 전환), 임베딩: Titan Text Embeddings v2
 
 **이번 과제에서 하지 않는 것**
 - 실제 시험 문항 재현·덤프 제공, 합격 예측

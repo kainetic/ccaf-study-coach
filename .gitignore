@@ -19,3 +19,6 @@ data/guide_bullets.jsonl
 evaluation/review_sample.xlsx
 evaluation/~$*.xlsx
 evaluation/*.tmp.xlsx
+
+# trace 로그 (src/tracer.py)
+logs/

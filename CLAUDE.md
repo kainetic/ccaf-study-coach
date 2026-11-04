@@ -4,7 +4,7 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
 기획: SERVICE.md · 설계: docs/DESIGN.md · 평가: evaluation/test_queries.csv
 설계 세부는 필요할 때 docs/DESIGN.md의 해당 절(§)을 읽을 것. 전체를 미리 읽지 말 것.
 
-## 현재 단계: S1~S4 완료 → S5(round2) (DESIGN §1-1 단계표)
+## 현재 단계: S1~S5 완료 → S6(제출 정리) (DESIGN §1-1 단계표)
 - 완료: S0(ingest 62/240) · S1 전반(문제 풀 승인 266/284 슬롯(93.7%), 세부 항목 커버리지 240/240,
   정답이 가장 긴 보기 54% → 33.8%(목표 35% 이하 달성, --rebalance-length 성공 55·원본 유지 20),
   5% 초과 비율 28% → 7.9%(참고). 수치·예외 기록은 evaluation/quiz_pool_report.md)
@@ -24,8 +24,11 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
   - 실패: 오라우팅 10·12·14 (general_agent, 검색 없음) · 답변 누락 4·16 (청크에 있는 제약·오답 해설 빠뜨림)
   - RAGAS 14건 (evaluation/ragas_round1.json): faithfulness 0.663 · recall 0.786 · precision 0.665 · relevancy 0.456
     (오라우팅 3건 제외 11건: 0.844 · 1.000 · 0.846 · 0.514)
-- 다음: S5(round2) — §9-4 #2 오라우팅 보강 + #4 TutorAnswer few-shot (사용자 선택) → run_eval --label round2
-  → ragas --from logs/eval/round2_full.json --out evaluation/ragas_round2.json → evaluation/round2_report.md
+- S5(round2) 완료: evaluation/round2_report.md — 19/20 (positive 8/8 · negative 3/4 · edge 5/5 · guardrail 3/3, 목표 17/20 충족)
+  - 적용: §9-4 #2 오라우팅 보강(SUPERVISOR_PROMPT 배분 기준·예시, general 방어 규칙) + #4 TutorAnswer 완결성 규칙·형식 템플릿 (프롬프트만)
+  - RAGAS 14건 (evaluation/ragas_round2.json): faithfulness 0.858 · recall 1.000 · precision 0.744 · relevancy 0.446 (목표 2개 충족)
+  - 출처 표기율 100%, forbidden 위반 0. 남은 실패 12번("공식 채널 확인 권고" 누락). 개념 평균 27.6s(목표 15s 미달), 입력 토큰 +39%
+- 다음: S6 — README("활용한 패턴" 포함, DESIGN §10) · 시연 캡처 · 최종 점검. push는 원격 URL 받은 뒤
 - 선택 항목(v2)은 요청 전까지 시작하지 않는다
 
 ## 명령 (Windows PowerShell)

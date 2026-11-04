@@ -1,8 +1,11 @@
-# DESIGN · CCA-F 학습 코치 (설계 v0.5.2)
+# DESIGN · CCA-F 학습 코치 (설계 v0.5.3)
 
 > 기준 문서: Claude Certified Architect – Foundations Exam Guide (Version 0.2, 2026-06-30)
 > 과제 규약: [Day 8,9,10] mini PJT 문서 §4 (산출물 규약), §5 (12개 패턴)
 > 이 문서는 Claude Code에 넘기는 구현 기준 문서입니다. SERVICE.md가 "왜/누구를", 이 문서는 "어떻게"를 다룹니다.
+
+**v0.5.3 변경 사항 (S5 round2)**
+- round1 15/20의 실패 원인(오라우팅 3, 답변 누락 2)에 맞춰 §9-4 #2·#4 채택 (§9-4 채택 메모). 도구·스키마·가드 고정 문구는 바꾸지 않고 프롬프트만 변경
 
 **v0.5.2 변경 사항 (S3 구현)**
 - 가드레일 `src/guards.py`: G1·G2 입력 차단(규칙 → LLM 판별), **G4는 입력 정정(고정 문구, 그래프 미호출) + 출력 금지어 백스톱**, G3은 concept_tutor `TutorAnswer` 검증, 고정 문구 상수화 (§6)
@@ -632,6 +635,11 @@ S3 구현 메모 (`evaluation/run_eval.py`, `evaluation/llm_judge.py`):
 4. 개념 답변 `TutorAnswer` few-shot 보강 (claims·출처 표기·`coverage_gap` 예시. 출처 표기율·faithfulness 개선 목적)
    - 기존 후보 "`detected_pattern` 기반 프롬프트 수정 후 취약 도메인 풀 재생성"은 round2 범위에서 빼고 `evaluation/quiz_pool_report.md` "향후 개선"으로 이동 (풀이 S1 기준을 이미 충족)
 5. reranker 추가 (Day 2 `rerank_demo.py`)
+
+**S5 채택 (round1 결과 기준, 사용자 선택): #2, #4**
+- #2 (`src/agent.py` SUPERVISOR_PROMPT, `src/agents/general.py`): 배분 기준 재작성 — 시험에 관한 모든 사실 질문(합격률·접수·비용 포함)과 Claude·에이전트 설계 비교 질문은 concept_tutor, general_agent는 인사·기능 안내·명백히 무관한 주제만, 애매하면 concept_tutor. 배분 예시 7개(평가 문항과 다른 표현). general_agent는 시험 사실·URL을 직접 말하지 않음(지어내기 방지)
+- #4 (`src/agents/concept_tutor.py` PROMPT): [완결성] 규칙 — 보기 해설은 모든 보기, 제약·한계 질문은 관련 bullet을 항목 단위로 빠짐없이 — 과 answer_ko 형식 템플릿 2개(내용 없는 형식 예시)
+- 평가 세트 누출 방지: few-shot·예시에 test_queries 문장과 정답 내용을 쓰지 않음
 
 ---
 

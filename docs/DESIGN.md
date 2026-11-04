@@ -292,7 +292,7 @@ class ManifestSlot(BaseModel):          # data/quiz_pool_manifest.json의 슬롯
     target_answer: Literal["A","B","C","D"]   # 보기 섞기 후 정답 위치 (균등 배정)
     order: int                          # 생성·중복 판정 순서: 기본 → 추가 → 보충
     pilot: bool = False
-    status: Literal["pending", "approved", "rejected", "duplicate"] = "pending"
+    status: Literal["pending", "approved", "rejected", "duplicate", "needs_fix"] = "pending"   # needs_fix: 사람 검토 "오류"
     attempts: int = 0                   # 생성 호출 수 0~3 (QuizItem.review_retries = attempts - 1)
     repairs: int = 0                    # 길이 repair 호출 수 (attempts에 포함하지 않음)
     repairs_ok: int = 0                 # repair 후 코드 검증을 통과한 수
@@ -428,9 +428,15 @@ State 확장 (Supervisor 그래프 messages 외):
 **사람 표본 검토 (TS 5.5 층화 표본)**
 - 도메인별로 **재시도 없이 통과한 문제의 10% + 재시도 거친 문제의 20%** 무작위 추출 (약 35~40문제). 재시도 문제는 오류 가능성이 높아 표본 비율을 높임
 - 층(도메인 × 재시도 유무, 10개)마다 **repair 문항(생성 단계 길이 repair 또는 정답 길이 재조정) 최소 1개**를 먼저 넣음. 보기를 사후에 고친 문항이라 오류 가능성 확인 필요
-- `python scripts/review_sample.py` → `evaluation/human_review_sample.csv` (고정 시드, utf-8-sig). 검토자는 verdict(ok/needs_fix)·error_type·comment 기입. 검토 입력이 있는 CSV는 `--force` 없이 덮어쓰지 않음
+- `python scripts/review_sample.py` → **`evaluation/review_sample.xlsx`** (고정 시드) + `evaluation/human_review_results.csv`(빈 판정). 검토 입력이 있으면 `--force` 없이 덮어쓰지 않음
+  - 시트1 **"검토"**(정답 없음, 먼저 풀기): quiz_id · 층(도메인/재시도/repair) · 시나리오 · 지문 · 보기 A~D · **내 답**(드롭다운 A~D) · **판정**(드롭다운 OK/경미/오류) · **사유**(드롭다운 정답복수/근거불일치/오답뻔함/초점이탈/시나리오부적합/기타) · 메모
+  - 시트2 **"정답·근거"**: quiz_id · 정답 · 보기별 해설 · 초점 세부 항목 원문 · source_excerpt
+  - xlsx는 세부 항목 원문(가이드 문장)이 있어 **커밋하지 않음**(.gitignore, §2-4). 결과는 가이드 원문 없이 `human_review_results.csv`에 남기고(커밋), 리포트는 이 CSV만 읽음
+  - 사유 → 검토 패턴 slug: 정답복수 `multiple_correct` · 근거불일치 `answer_not_supported` · 오답뻔함 `distractor_obviously_wrong` · 초점이탈 `off_focus_bullet` · 시나리오부적합 `scenario_mismatch` · 기타 `other`
+- **`python scripts/review_sample.py --apply`** (`--dry-run`이면 검증·집계만): 값 검증(경미·오류는 사유 필수, 기타는 메모 필수, 하나라도 틀리면 아무것도 바꾸지 않고 종료 1, 판정 빈 행은 미검토) → 검토한 문항 `human_checked=True` → **판정 "오류"는 문항·슬롯 status `needs_fix`**(출제 대상 제외, 커버리지에서도 빠짐. 판정을 고쳐 다시 반영하면 approved로 복귀) → 결과 CSV 갱신 → 리포트 자동 절 갱신. 콘솔·리포트에 판정 분포, 사유 분포, **내 답 ≠ 정답 목록**, 같은 사유 2건 이상인 도메인 경고
+- **오류 정의**: 성공 기준(오류 0건 목표, 최대 1건)의 "오류"는 **판정=오류 전부**(대표 사유: 정답복수·근거불일치). **경미는 별도 집계**하고 성공 기준에 넣지 않음
 - 결과 집계: `python scripts/pool_report.py`가 리포트 자동 절을 갱신 (수기 절은 보존)
-- 오류 발견 시 해당 문제 `needs_fix`, 같은 유형이 한 도메인에서 2건 이상이면 그 도메인 프롬프트 수정 후 재생성
+- 같은 사유가 한 도메인에서 2건 이상(오류+경미 합산)이면 그 도메인 프롬프트 수정 후 재생성 검토
 - 결과 문서: `evaluation/quiz_pool_report.md` (도메인·시나리오별 승인 수, 세부 항목 커버리지, 승인율, 실패 유형 분포, 정답 위치 분포, 중복 제거 수, 사람 검토 오류율)
 
 **실제 결과 (S1 전반 완료, 2026-11-04)** — 세부 수치는 `evaluation/quiz_pool_report.md`
@@ -534,7 +540,7 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 - 승인율(승인 ÷ 생성 슬롯), 실패 유형 분포: 검토 패턴(`detected_pattern`) + 코드 검증 세부 패턴(`format`, `excerpt_not_verbatim`, `answer_too_long` 등, §5-2)을 함께 집계. `answer_too_long:repaired`(repair로 복구)는 따로 셈
 - 길이 repair 성공률 (`repairs_ok ÷ repairs`)
 - 생성 모델별 승인 수·승인율, 승인 문항의 검토 모델 분포 (모델 전환, §5-2). 사람 표본 검토에서는 Sonnet 4.6이 생성한 문항이 있으면 층마다 최소 1개 포함
-- 사람 표본 검토 오류율 (목표 0건, 최대 1건)
+- 사람 표본 검토 오류율 (목표 0건, 최대 1건). **판정=오류만 셈**, 경미는 별도 집계 (§5-2)
 - 정답 위치 분포 (A~D 각 20~30%), 중복 제거 수
 - **정답이 가장 긴 보기 비율** (승인 문항 기준, 동률은 가장 긴 것으로 침. **목표 35% 이하 유지**, 우연 수준 25%, 길이 규칙 도입 전 파일럿 80%). 현재 33.8% (재조정 전 54%)
   - 참고 지표(목표 없음, 병기만): **"정답이 가장 긴 오답보다 5% 넘게 긴 비율"** — 근소한 차이의 동률성 1위를 걸러 실제 단서에 가까운 비율. `--rebalance-length` 대상 기준과 같음. 현재 7.9% (재조정 전 28%). 리포트 `evaluation/quiz_pool_report.md`

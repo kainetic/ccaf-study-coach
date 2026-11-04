@@ -153,7 +153,7 @@ class GradeResult(BaseModel):
 
 # ---------------------------------------------------------------- 매니페스트 (§5-2)
 
-SlotStatus = Literal["pending", "approved", "rejected", "duplicate"]
+SlotStatus = Literal["pending", "approved", "rejected", "duplicate", "needs_fix"]   # needs_fix: 사람 검토 "오류" (§5-2)
 
 
 class ManifestSlot(BaseModel):

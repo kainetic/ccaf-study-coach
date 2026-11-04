@@ -14,3 +14,8 @@ data/guide_bullets.jsonl
 
 # 원자적 쓰기 임시 파일 (중단 시 남을 수 있음)
 *.tmp
+
+# 사람 표본 검토 양식: 시트2에 세부 항목 원문(가이드 문장)이 있어 커밋 금지 (결과는 human_review_results.csv)
+evaluation/review_sample.xlsx
+evaluation/~$*.xlsx
+evaluation/*.tmp.xlsx

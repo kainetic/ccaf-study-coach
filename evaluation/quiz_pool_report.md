@@ -4,14 +4,14 @@
 
 <!-- AUTO:START -->
 
-_생성 시각: 2026-11-04T06:46:09+00:00 · 매니페스트 updated_at 2026-11-04T06:42:01+00:00_
+_생성 시각: 2026-11-04T06:59:15+00:00 · 매니페스트 updated_at 2026-11-04T06:58:24+00:00_
 
 ## 1. 규모와 커버리지
 
 | 지표 | 값 | 목표 |
 |---|---|---|
 | 승인 문항 | **266** | 270 (최소 250) |
-| 슬롯 상태 | approved 266 · rejected 16 · duplicate 2 · pending 0 | – |
+| 슬롯 상태 | approved 266 · rejected 16 · duplicate 2 · needs_fix 0 · pending 0 | – |
 | 승인율 (승인 ÷ 처리 슬롯) | 266/284 (93.7%) | – |
 | 세부 항목 커버리지 | **240/240 (100.0%)** | 228 이상 (95%) |
 | 미커버 세부 항목 | 없음 | – |
@@ -57,24 +57,35 @@ _생성 시각: 2026-11-04T06:46:09+00:00 · 매니페스트 updated_at 2026-11-
 
 승인 문항 검토 모델(마지막 검토): (기록 전, us/sonnet-4-5) 170 · global/sonnet-4-5 96
 
-## 6. 사람 표본 검토 표본
+## 6. 사람 표본 검토
 
-`evaluation/human_review_sample.csv` — 38문항 (재시도 없음 10% + 재시도 20%, 층마다 repair 문항 최소 1개)
+`evaluation/human_review_results.csv` — 38문항 (재시도 없음 10% + 재시도 20%, 층마다 repair 문항 최소 1개). 검토 양식 `evaluation/review_sample.xlsx`(커밋 안 함)
 
-| 층 | 표본 | repair 포함 |
+| 층 | 표본 | repair 포함 | 검토 | 오류 | 경미 |
+|---|---|---|---|---|---|
+| D1-first | 5 | 2 | 0 | 0 | 0 |
+| D1-retry | 3 | 2 | 0 | 0 | 0 |
+| D2-first | 4 | 2 | 0 | 0 | 0 |
+| D2-retry | 2 | 1 | 0 | 0 | 0 |
+| D3-first | 4 | 1 | 0 | 0 | 0 |
+| D3-retry | 4 | 1 | 0 | 0 | 0 |
+| D4-first | 4 | 2 | 0 | 0 | 0 |
+| D4-retry | 3 | 2 | 0 | 0 | 0 |
+| D5-first | 4 | 1 | 0 | 0 | 0 |
+| D5-retry | 5 | 2 | 0 | 0 | 0 |
+
+| 지표 | 값 | 목표 |
 |---|---|---|
-| D1-first | 5 | 2 |
-| D1-retry | 3 | 2 |
-| D2-first | 4 | 2 |
-| D2-retry | 2 | 1 |
-| D3-first | 4 | 1 |
-| D3-retry | 4 | 1 |
-| D4-first | 4 | 2 |
-| D4-retry | 3 | 2 |
-| D5-first | 4 | 1 |
-| D5-retry | 5 | 2 |
+| 검토 진행 | 0/38 | 38 |
+| 판정 | OK 0 · 경미 0 · 오류 0 | – |
+| **오류** (판정=오류, 성공 기준) | **0건** — 검토 전 | 0건 (최대 1건) |
+| 경미 (별도 집계, 성공 기준 제외) | 0건 | – |
 
-검토 완료 0/38 · needs_fix 0 (목표 0건, 최대 1건)
+같은 도메인·같은 사유 2건 이상 (오류+경미, DESIGN §5-2 프롬프트 수정 후 재생성 검토): 없음
+
+내 답 ≠ 정답: 0건
+
+needs_fix (출제 제외): 없음
 
 <!-- AUTO:END -->
 
@@ -106,6 +117,6 @@ _생성 시각: 2026-11-04T06:46:09+00:00 · 매니페스트 updated_at 2026-11-
 
 ## 사람 표본 검토 결과 (수기 — 검토 후 기입)
 
-- 표본: `evaluation/human_review_sample.csv` 38문항 (층 10개, 층마다 repair 문항 1개 이상 — repair 16 · 그중 재조정 12)
-- 검토 방법: `verdict`(ok / needs_fix) · `error_type` · `comment` 기입 → `python scripts/pool_report.py` 재실행 시 §6 자동 집계
+- 표본: `evaluation/review_sample.xlsx`(로컬, 커밋 안 함) · 결과 `evaluation/human_review_results.csv` 38문항 (층 10개, 층마다 repair 문항 1개 이상 — repair 16 · 그중 재조정 12)
+- 검토 방법: 시트1 "검토"에서 먼저 내 답 → 시트2 "정답·근거" 확인 → 판정(OK/경미/오류)·사유·메모 → `python scripts/review_sample.py --apply` (§6 자동 집계, 오류 → needs_fix)
 - 결과: (검토 후 기입)

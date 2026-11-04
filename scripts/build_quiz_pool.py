@@ -149,7 +149,7 @@ def atomic_write(path: Path, text: str) -> None:
 
 def summarize(manifest: QuizManifest) -> dict[str, int]:
     c = Counter(s.status for s in manifest.slots)
-    return {k: c.get(k, 0) for k in ("pending", "approved", "rejected", "duplicate")}
+    return {k: c.get(k, 0) for k in ("pending", "approved", "rejected", "duplicate", "needs_fix")}
 
 
 def save(manifest: QuizManifest, pool: dict[str, QuizItem]) -> None:

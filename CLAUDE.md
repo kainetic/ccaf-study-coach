@@ -9,7 +9,8 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
   정답이 가장 긴 보기 54% → 33.8%(목표 35% 이하 달성, --rebalance-length 성공 55·원본 유지 20),
   5% 초과 비율 28% → 7.9%(참고). 수치·예외 기록은 evaluation/quiz_pool_report.md)
 - S1 후반 남은 작업 (S2와 병행 가능):
-  - 사람 표본 검토: evaluation/human_review_sample.csv에 verdict 기입 → python scripts/pool_report.py
+  - 사람 표본 검토: evaluation/review_sample.xlsx 시트1에 내 답·판정·사유 기입 → python scripts/review_sample.py --apply
+    (성공 기준 오류 = 판정 "오류"만, 경미는 별도. xlsx는 커밋 금지, 결과는 human_review_results.csv)
   - scripts/seed_study_log.py (더미 사용자 demo_heavy·demo_new)
 - S2(=P0) 도구 3개만: search_guide, get_quiz(MCP), submit_answer(MCP)
 - S2 완료 기준: /query 3회 호출로 "개념 질문 → 풀 출제 → 채점"이 동작하고
@@ -30,7 +31,8 @@ python scripts/build_quiz_pool.py --rebalance-length # 정답이 가장 긴 오�
 python scripts/build_quiz_pool.py --exception-slot TS-5.2-K2:1   # 미커버 항목 시나리오 고정 예외 슬롯
 python scripts/build_quiz_pool.py --reset-stale      # 이전 prompt_version으로 처리된 슬롯을 pending으로 (LLM 호출 없음)
 python scripts/build_quiz_pool.py --resume --concurrency 1   # 동시 실행 수 (기본 2, 쓰로틀링 심하면 1)
-python scripts/review_sample.py                      # 사람 표본 검토 CSV (층화, repair 문항 층마다 1개 이상)
+python scripts/review_sample.py                      # 사람 표본 검토 xlsx + 결과 CSV (층화, repair 문항 층마다 1개 이상)
+python scripts/review_sample.py --apply             # 검토 반영: human_checked, 오류 → needs_fix, 리포트 갱신 (--dry-run 가능)
 python scripts/pool_report.py                        # evaluation/quiz_pool_report.md 자동 절 갱신
 uvicorn src.api:api --port 8000                      # API 서버
 python evaluation/smoke_p0.py                        # P0 한 바퀴 검증
@@ -57,7 +59,7 @@ MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언�
 - 런타임에 문제를 생성하지 않는다. quiz_gen은 scripts/build_quiz_pool.py에서만 호출하고 에이전트 도구로 노출하지 않는다
 - 세부 항목 수가 240개가 아니면 ingest 파싱 오류로 보고 멈춘다
 - 선택 항목(v2)은 요청 전까지 만들지 않는다: reset_progress HITL, 요약 미들웨어, 웹 UI, Dockerfile
-- 커밋 금지: data/raw/*.pdf, data/guide_chunks.jsonl, data/guide_bullets.jsonl, chroma_db/, .env
+- 커밋 금지: data/raw/*.pdf, data/guide_chunks.jsonl, data/guide_bullets.jsonl, chroma_db/, .env, evaluation/review_sample.xlsx
   (data/quiz_pool.json, quiz_pool_manifest.json, study_log.json은 커밋)
 - evaluation/test_queries.csv와 ragas_reference.csv의 기대값은 묻지 않고 바꾸지 않는다
 - 설계와 다르게 구현해야 하면 먼저 말하고, 합의되면 docs/DESIGN.md를 같이 고친다

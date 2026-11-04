@@ -2,7 +2,7 @@
 
 실행: python scripts/pool_report.py
 
-매니페스트·문제 풀·표본 CSV에서 지표를 계산해 리포트의 자동 절(<!-- AUTO:START --> ~ <!-- AUTO:END -->)만
+매니페스트·문제 풀·사람 검토 결과 CSV에서 지표를 계산해 리포트의 자동 절(<!-- AUTO:START --> ~ <!-- AUTO:END -->)만
 다시 쓴다. 그 밖의 수기 절(예외 기록, 향후 개선, 사람 검토 결과)은 그대로 두므로 언제든 다시 실행해도 된다.
 LLM·임베딩 호출 없음.
 """
@@ -19,9 +19,9 @@ from src import config  # noqa: E402
 from src.quiz_gen import REBALANCE_SELECT, correct_vs_longest, load_corpus, now_iso, short_model  # noqa: E402
 from src.schemas import LABELS, QuizItem, QuizManifest  # noqa: E402
 from build_quiz_pool import EXPECTED_TOTAL, LONGEST_TARGET, MANIFEST_PATH, POOL_PATH, longest_is_correct  # noqa: E402
+from review_sample import ERROR_VERDICT, REASONS, RESULTS_PATH, VERDICTS, same_reason_alerts  # noqa: E402
 
 REPORT_PATH = config.ROOT / "evaluation" / "quiz_pool_report.md"
-SAMPLE_PATH = config.ROOT / "evaluation" / "human_review_sample.csv"
 START, END = "<!-- AUTO:START -->", "<!-- AUTO:END -->"
 
 MANUAL_TEMPLATE = """# 문제 풀 품질 리포트
@@ -56,7 +56,7 @@ def build_auto(manifest: QuizManifest, pool: dict[str, QuizItem]) -> str:
     L += ["## 1. 규모와 커버리지", "",
           "| 지표 | 값 | 목표 |", "|---|---|---|",
           f"| 승인 문항 | **{len(approved)}** | 270 (최소 250) |",
-          f"| 슬롯 상태 | approved {st['approved']} · rejected {st['rejected']} · duplicate {st['duplicate']} · pending {st['pending']} | – |",
+          f"| 슬롯 상태 | approved {st['approved']} · rejected {st['rejected']} · duplicate {st['duplicate']} · needs_fix {st['needs_fix']} · pending {st['pending']} | – |",
           f"| 승인율 (승인 ÷ 처리 슬롯) | {pct(st['approved'], len(processed))} | – |",
           f"| 세부 항목 커버리지 | **{pct(len(covered), len(corpus.bullets))}** | 228 이상 (95%) |",
           f"| 미커버 세부 항목 | {', '.join(uncovered) or '없음'} | – |", ""]
@@ -109,27 +109,55 @@ def build_auto(manifest: QuizManifest, pool: dict[str, QuizItem]) -> str:
           "승인 문항 생성 모델: " + " · ".join(f"{k} {v}" for k, v in gen_c.most_common()), "",
           "승인 문항 검토 모델(마지막 검토): " + " · ".join(f"{k} {v}" for k, v in rev_c.most_common()), ""]
 
-    # 6. 사람 표본
-    L += ["## 6. 사람 표본 검토 표본", ""]
-    if SAMPLE_PATH.is_file():
-        rows = list(csv.DictReader(SAMPLE_PATH.open(encoding="utf-8-sig")))
+    # 6. 사람 표본 검토 (결과 CSV만 읽음 — xlsx는 가이드 원문이 있어 커밋하지 않음)
+    L += ["## 6. 사람 표본 검토", ""]
+    rows = list(csv.DictReader(RESULTS_PATH.open(encoding="utf-8-sig"))) if RESULTS_PATH.is_file() else []
+    if rows:
         strata = Counter(r["stratum"] for r in rows)
         rep_s = Counter(r["stratum"] for r in rows if r["repaired"] == "Y")
-        done = [r for r in rows if r["verdict"].strip()]
-        bad = [r for r in done if r["verdict"].strip().lower() == "needs_fix"]
-        L += [f"`{SAMPLE_PATH.relative_to(config.ROOT).as_posix()}` — {len(rows)}문항 (재시도 없음 10% + 재시도 20%, 층마다 repair 문항 최소 1개)", "",
-              "| 층 | 표본 | repair 포함 |", "|---|---|---|"]
-        L += [f"| {k} | {v} | {rep_s[k]} |" for k, v in sorted(strata.items())]
-        L += ["", f"검토 완료 {len(done)}/{len(rows)} · needs_fix {len(bad)}"
-              + (f" · 오류율 {len(bad) / len(done):.1%}" if done else "") + " (목표 0건, 최대 1건)", ""]
+        done = [r for r in rows if r["verdict"]]
+        vc = Counter(r["verdict"] for r in done)
+        n_err = vc[ERROR_VERDICT]
+        L += [f"`{RESULTS_PATH.relative_to(config.ROOT).as_posix()}` — {len(rows)}문항 "
+              "(재시도 없음 10% + 재시도 20%, 층마다 repair 문항 최소 1개). 검토 양식 `evaluation/review_sample.xlsx`(커밋 안 함)", "",
+              "| 층 | 표본 | repair 포함 | 검토 | 오류 | 경미 |", "|---|---|---|---|---|---|"]
+        for k in sorted(strata):
+            sk = [r for r in done if r["stratum"] == k]
+            L.append(f"| {k} | {strata[k]} | {rep_s[k]} | {len(sk)} | {sum(r['verdict'] == ERROR_VERDICT for r in sk)} "
+                     f"| {sum(r['verdict'] == '경미' for r in sk)} |")
+        L += ["", "| 지표 | 값 | 목표 |", "|---|---|---|",
+              f"| 검토 진행 | {len(done)}/{len(rows)} | {len(rows)} |",
+              "| 판정 | " + " · ".join(f"{v} {vc[v]}" for v in VERDICTS) + " | – |",
+              f"| **오류** (판정=오류, 성공 기준) | **{n_err}건**" + (f" ({n_err / len(done):.1%})" if done else "")
+              + f" — {('충족' if n_err <= 1 else '미충족') if done else '검토 전'} | 0건 (최대 1건) |",
+              f"| 경미 (별도 집계, 성공 기준 제외) | {vc['경미']}건 | – |", ""]
+        reasons = Counter((r["reason"], r["verdict"]) for r in done if r["reason"])
+        if reasons:
+            L += ["사유 분포", "", "| 사유 | 오류 | 경미 |", "|---|---|---|"]
+            L += [f"| {k} (`{slug}`) | {reasons[(k, ERROR_VERDICT)]} | {reasons[(k, '경미')]} |"
+                  for k, slug in REASONS.items() if reasons[(k, ERROR_VERDICT)] or reasons[(k, '경미')]]
+            L.append("")
+        alerts = same_reason_alerts(rows)
+        L.append("같은 도메인·같은 사유 2건 이상 (오류+경미, DESIGN §5-2 프롬프트 수정 후 재생성 검토): "
+                 + ("; ".join(f"{d} {reason} {len(ids)}건 ({', '.join(ids)})" for d, reason, ids in alerts) or "없음"))
+        L.append("")
+        diff = [r for r in done if r["my_answer"] and r["my_answer"] != r["answer"]]
+        L.append(f"내 답 ≠ 정답: {len(diff)}건")
+        if diff:
+            L += ["", "| quiz_id | 층 | 내 답 | 정답 | 판정 | 사유 |", "|---|---|---|---|---|---|"]
+            L += [f"| {r['quiz_id']} | {r['stratum']} | {r['my_answer']} | {r['answer']} | {r['verdict']} | {r['reason']} |"
+                  for r in diff]
+        L.append("")
+        nf = sorted(i.quiz_id for i in pool.values() if i.status == "needs_fix")
+        L += [f"needs_fix (출제 제외): {', '.join(nf) or '없음'}", ""]
     else:
-        L += ["표본 CSV 없음 — `python scripts/review_sample.py`로 생성", ""]
+        L += ["결과 CSV 없음 — `python scripts/review_sample.py`로 표본 생성", ""]
     L.append(END)
     return "\n".join(L)
 
 
-def main() -> int:
-    sys.stdout.reconfigure(errors="replace")
+def refresh() -> int:
+    """리포트 자동 절을 다시 쓴다. review_sample.py --apply도 이 함수를 호출한다."""
     manifest = QuizManifest.model_validate_json(MANIFEST_PATH.read_text(encoding="utf-8"))
     pool = {d["quiz_id"]: QuizItem.model_validate(d) for d in json.loads(POOL_PATH.read_text(encoding="utf-8"))}
     auto = build_auto(manifest, pool)
@@ -147,6 +175,11 @@ def main() -> int:
     REPORT_PATH.write_text(text, encoding="utf-8")
     print(f"[report] {REPORT_PATH.relative_to(config.ROOT).as_posix()} 갱신 (자동 절만)")
     return 0
+
+
+def main() -> int:
+    sys.stdout.reconfigure(errors="replace")
+    return refresh()
 
 
 if __name__ == "__main__":

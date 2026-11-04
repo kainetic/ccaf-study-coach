@@ -1,0 +1,6585 @@
+{
+  "manifest_version": 1,
+  "guide_version": "0.2",
+  "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+  "created_at": "2026-11-04T03:56:13+00:00",
+  "updated_at": "2026-11-04T04:11:05+00:00",
+  "summary": {
+    "pending": 251,
+    "approved": 18,
+    "rejected": 2,
+    "duplicate": 0
+  },
+  "slots": [
+    {
+      "quiz_id": "Q-1.1-K1",
+      "slot_type": "base",
+      "task_id": "TS-1.1",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.1-K1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 0,
+      "pilot": true,
+      "status": "approved",
+      "attempts": 1,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": "b7011918",
+      "updated_at": "2026-11-04T04:06:11+00:00"
+    },
+    {
+      "quiz_id": "Q-1.1-K2",
+      "slot_type": "base",
+      "task_id": "TS-1.1",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.1-K2"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 1,
+      "pilot": false,
+      "status": "approved",
+      "attempts": 3,
+      "detected_patterns": [
+        "code",
+        "scenario_mismatch"
+      ],
+      "last_errors": [],
+      "prompt_version": "b7011918",
+      "updated_at": "2026-11-04T04:10:10+00:00"
+    },
+    {
+      "quiz_id": "Q-1.1-K3",
+      "slot_type": "base",
+      "task_id": "TS-1.1",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.1-K3"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 2,
+      "pilot": false,
+      "status": "approved",
+      "attempts": 1,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": "b7011918",
+      "updated_at": "2026-11-04T04:08:15+00:00"
+    },
+    {
+      "quiz_id": "Q-1.1-S1",
+      "slot_type": "base",
+      "task_id": "TS-1.1",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.1-S1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 3,
+      "pilot": false,
+      "status": "approved",
+      "attempts": 2,
+      "detected_patterns": [
+        "off_focus_bullet"
+      ],
+      "last_errors": [],
+      "prompt_version": "b7011918",
+      "updated_at": "2026-11-04T04:08:43+00:00"
+    },
+    {
+      "quiz_id": "Q-1.1-S2",
+      "slot_type": "base",
+      "task_id": "TS-1.1",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.1-S2"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 4,
+      "pilot": false,
+      "status": "approved",
+      "attempts": 2,
+      "detected_patterns": [
+        "other"
+      ],
+      "last_errors": [],
+      "prompt_version": "b7011918",
+      "updated_at": "2026-11-04T04:08:29+00:00"
+    },
+    {
+      "quiz_id": "Q-1.1-S3",
+      "slot_type": "base",
+      "task_id": "TS-1.1",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.1-S3"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 5,
+      "pilot": false,
+      "status": "approved",
+      "attempts": 1,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": "b7011918",
+      "updated_at": "2026-11-04T04:08:37+00:00"
+    },
+    {
+      "quiz_id": "Q-1.2-K1",
+      "slot_type": "base",
+      "task_id": "TS-1.2",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.2-K1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 6,
+      "pilot": false,
+      "status": "approved",
+      "attempts": 1,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": "b7011918",
+      "updated_at": "2026-11-04T04:09:33+00:00"
+    },
+    {
+      "quiz_id": "Q-1.2-K2",
+      "slot_type": "base",
+      "task_id": "TS-1.2",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.2-K2"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 7,
+      "pilot": false,
+      "status": "approved",
+      "attempts": 1,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": "b7011918",
+      "updated_at": "2026-11-04T04:08:55+00:00"
+    },
+    {
+      "quiz_id": "Q-1.2-K3",
+      "slot_type": "base",
+      "task_id": "TS-1.2",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.2-K3"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 8,
+      "pilot": false,
+      "status": "approved",
+      "attempts": 1,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": "b7011918",
+      "updated_at": "2026-11-04T04:09:36+00:00"
+    },
+    {
+      "quiz_id": "Q-1.2-K4",
+      "slot_type": "base",
+      "task_id": "TS-1.2",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.2-K4"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 9,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.2-S1",
+      "slot_type": "base",
+      "task_id": "TS-1.2",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.2-S1"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 10,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.2-S2",
+      "slot_type": "base",
+      "task_id": "TS-1.2",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.2-S2"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 11,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.2-S3",
+      "slot_type": "base",
+      "task_id": "TS-1.2",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.2-S3"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 12,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.2-S4",
+      "slot_type": "base",
+      "task_id": "TS-1.2",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.2-S4"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 13,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.3-K1",
+      "slot_type": "base",
+      "task_id": "TS-1.3",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.3-K1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 14,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.3-K2",
+      "slot_type": "base",
+      "task_id": "TS-1.3",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.3-K2"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 15,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.3-K3",
+      "slot_type": "base",
+      "task_id": "TS-1.3",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.3-K3"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 16,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.3-K4",
+      "slot_type": "base",
+      "task_id": "TS-1.3",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.3-K4"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 17,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.3-S1",
+      "slot_type": "base",
+      "task_id": "TS-1.3",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.3-S1"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 18,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.3-S2",
+      "slot_type": "base",
+      "task_id": "TS-1.3",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.3-S2"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 19,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.3-S3",
+      "slot_type": "base",
+      "task_id": "TS-1.3",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.3-S3"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 20,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.3-S4",
+      "slot_type": "base",
+      "task_id": "TS-1.3",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.3-S4"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 21,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.4-K1",
+      "slot_type": "base",
+      "task_id": "TS-1.4",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.4-K1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 22,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.4-K2",
+      "slot_type": "base",
+      "task_id": "TS-1.4",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.4-K2"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 23,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.4-K3",
+      "slot_type": "base",
+      "task_id": "TS-1.4",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.4-K3"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 24,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.4-S1",
+      "slot_type": "base",
+      "task_id": "TS-1.4",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.4-S1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 25,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.4-S2",
+      "slot_type": "base",
+      "task_id": "TS-1.4",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.4-S2"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 26,
+      "pilot": true,
+      "status": "rejected",
+      "attempts": 3,
+      "detected_patterns": [
+        "scenario_mismatch",
+        "code",
+        "answer_not_supported"
+      ],
+      "last_errors": [
+        "[review:answer_not_supported] TS-1.4-S2는 '병렬로 조사한 후 통합된 해결책을 합성'하는 것을 요구하지만, 정답 A는 '두 조사 결과를 함께 제시'하여 여전히 4분 후에 응답을 제공합니다. 문제 상황에서 개발자는 '인증 설명이 즉시 유용했을 것'이라고 명시했으므로, 옵션 B('인증 결과를 분석 완료 즉시 보고한 후 에러 처리 조사를 별도로 계속')가 실제로 개발자의 긴급한 요구를 해결합니다.",
+        "[review:answer_not_supported] 정답 A의 rationale은 '병렬 실행으로 전체 지연 시간이 줄어든다'고 주장하지만, '두 결과를 함께 제시'한다면 개발자는 여전히 두 작업이 모두 완료될 때까지 기다려야 하므로 긴급 디버깅 작업이 차단됩니다. 이는 stem에서 명시한 문제('인증 설명이 즉시 유용했을 것')를 해결하지 못합니다.",
+        "[review:answer_not_supported] 옵션 B는 중간 결과 스트리밍을 통해 인증 분석을 먼저 제공하고, 에러 처리 조사는 별도로 계속하므로, 개발자가 긴급 디버깅을 즉시 시작할 수 있게 합니다. 이는 stem의 핵심 문제를 직접 해결하며, TS-1.4-S2의 '다중 관심사 분해 및 조사' 원칙과도 일치합니다."
+      ],
+      "prompt_version": "b7011918",
+      "updated_at": "2026-11-04T04:07:01+00:00"
+    },
+    {
+      "quiz_id": "Q-1.4-S3",
+      "slot_type": "base",
+      "task_id": "TS-1.4",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.4-S3"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 27,
+      "pilot": true,
+      "status": "approved",
+      "attempts": 3,
+      "detected_patterns": [
+        "scenario_mismatch",
+        "code"
+      ],
+      "last_errors": [],
+      "prompt_version": "b363d75a",
+      "updated_at": "2026-11-04T04:01:08+00:00"
+    },
+    {
+      "quiz_id": "Q-1.5-K1",
+      "slot_type": "base",
+      "task_id": "TS-1.5",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.5-K1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 28,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.5-K2",
+      "slot_type": "base",
+      "task_id": "TS-1.5",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.5-K2"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 29,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.5-K3",
+      "slot_type": "base",
+      "task_id": "TS-1.5",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.5-K3"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 30,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.5-S1",
+      "slot_type": "base",
+      "task_id": "TS-1.5",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.5-S1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 31,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.5-S2",
+      "slot_type": "base",
+      "task_id": "TS-1.5",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.5-S2"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 32,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.5-S3",
+      "slot_type": "base",
+      "task_id": "TS-1.5",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.5-S3"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 33,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.6-K1",
+      "slot_type": "base",
+      "task_id": "TS-1.6",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.6-K1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 34,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.6-K2",
+      "slot_type": "base",
+      "task_id": "TS-1.6",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.6-K2"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 35,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.6-K3",
+      "slot_type": "base",
+      "task_id": "TS-1.6",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.6-K3"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 36,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.6-S1",
+      "slot_type": "base",
+      "task_id": "TS-1.6",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.6-S1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 37,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.6-S2",
+      "slot_type": "base",
+      "task_id": "TS-1.6",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.6-S2"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 38,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.6-S3",
+      "slot_type": "base",
+      "task_id": "TS-1.6",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.6-S3"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 39,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.7-K1",
+      "slot_type": "base",
+      "task_id": "TS-1.7",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.7-K1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 40,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.7-K2",
+      "slot_type": "base",
+      "task_id": "TS-1.7",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.7-K2"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 41,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.7-K3",
+      "slot_type": "base",
+      "task_id": "TS-1.7",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.7-K3"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 42,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.7-K4",
+      "slot_type": "base",
+      "task_id": "TS-1.7",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.7-K4"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 43,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.7-S1",
+      "slot_type": "base",
+      "task_id": "TS-1.7",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.7-S1"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 44,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.7-S2",
+      "slot_type": "base",
+      "task_id": "TS-1.7",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.7-S2"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 45,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.7-S3",
+      "slot_type": "base",
+      "task_id": "TS-1.7",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.7-S3"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 46,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.7-S4",
+      "slot_type": "base",
+      "task_id": "TS-1.7",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.7-S4"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 47,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.1-K1",
+      "slot_type": "base",
+      "task_id": "TS-2.1",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.1-K1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 48,
+      "pilot": true,
+      "status": "approved",
+      "attempts": 1,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": "b7011918",
+      "updated_at": "2026-11-04T04:06:09+00:00"
+    },
+    {
+      "quiz_id": "Q-2.1-K2",
+      "slot_type": "base",
+      "task_id": "TS-2.1",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.1-K2"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 49,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.1-K3",
+      "slot_type": "base",
+      "task_id": "TS-2.1",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.1-K3"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 50,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.1-K4",
+      "slot_type": "base",
+      "task_id": "TS-2.1",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.1-K4"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 51,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.1-S1",
+      "slot_type": "base",
+      "task_id": "TS-2.1",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.1-S1"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 52,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.1-S2",
+      "slot_type": "base",
+      "task_id": "TS-2.1",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.1-S2"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 53,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.1-S3",
+      "slot_type": "base",
+      "task_id": "TS-2.1",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.1-S3"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 54,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.1-S4",
+      "slot_type": "base",
+      "task_id": "TS-2.1",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.1-S4"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 55,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.2-K1",
+      "slot_type": "base",
+      "task_id": "TS-2.2",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.2-K1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 56,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.2-K2",
+      "slot_type": "base",
+      "task_id": "TS-2.2",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.2-K2"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 57,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.2-K3",
+      "slot_type": "base",
+      "task_id": "TS-2.2",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.2-K3"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 58,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.2-K4",
+      "slot_type": "base",
+      "task_id": "TS-2.2",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.2-K4"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 59,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.2-S1",
+      "slot_type": "base",
+      "task_id": "TS-2.2",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.2-S1"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 60,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.2-S2",
+      "slot_type": "base",
+      "task_id": "TS-2.2",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.2-S2"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 61,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.2-S3",
+      "slot_type": "base",
+      "task_id": "TS-2.2",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.2-S3"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 62,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.2-S4",
+      "slot_type": "base",
+      "task_id": "TS-2.2",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.2-S4"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 63,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.3-K1",
+      "slot_type": "base",
+      "task_id": "TS-2.3",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.3-K1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 64,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.3-K2",
+      "slot_type": "base",
+      "task_id": "TS-2.3",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.3-K2"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 65,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.3-K3",
+      "slot_type": "base",
+      "task_id": "TS-2.3",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.3-K3"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 66,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.3-K4",
+      "slot_type": "base",
+      "task_id": "TS-2.3",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.3-K4"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 67,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.3-S1",
+      "slot_type": "base",
+      "task_id": "TS-2.3",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.3-S1"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 68,
+      "pilot": true,
+      "status": "approved",
+      "attempts": 1,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": "b7011918",
+      "updated_at": "2026-11-04T04:06:07+00:00"
+    },
+    {
+      "quiz_id": "Q-2.3-S2",
+      "slot_type": "base",
+      "task_id": "TS-2.3",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.3-S2"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 69,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.3-S3",
+      "slot_type": "base",
+      "task_id": "TS-2.3",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.3-S3"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 70,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.3-S4",
+      "slot_type": "base",
+      "task_id": "TS-2.3",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.3-S4"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 71,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.3-S5",
+      "slot_type": "base",
+      "task_id": "TS-2.3",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.3-S5"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 72,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.4-K1",
+      "slot_type": "base",
+      "task_id": "TS-2.4",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.4-K1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 73,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.4-K2",
+      "slot_type": "base",
+      "task_id": "TS-2.4",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.4-K2"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 74,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.4-K3",
+      "slot_type": "base",
+      "task_id": "TS-2.4",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.4-K3"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 75,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.4-K4",
+      "slot_type": "base",
+      "task_id": "TS-2.4",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.4-K4"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 76,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.4-S1",
+      "slot_type": "base",
+      "task_id": "TS-2.4",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.4-S1"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 77,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.4-S2",
+      "slot_type": "base",
+      "task_id": "TS-2.4",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.4-S2"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 78,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.4-S3",
+      "slot_type": "base",
+      "task_id": "TS-2.4",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.4-S3"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 79,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.4-S4",
+      "slot_type": "base",
+      "task_id": "TS-2.4",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.4-S4"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 80,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.4-S5",
+      "slot_type": "base",
+      "task_id": "TS-2.4",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.4-S5"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 81,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.5-K1",
+      "slot_type": "base",
+      "task_id": "TS-2.5",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.5-K1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 82,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.5-K2",
+      "slot_type": "base",
+      "task_id": "TS-2.5",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.5-K2"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 83,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.5-K3",
+      "slot_type": "base",
+      "task_id": "TS-2.5",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.5-K3"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 84,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.5-K4",
+      "slot_type": "base",
+      "task_id": "TS-2.5",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.5-K4"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 85,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.5-S1",
+      "slot_type": "base",
+      "task_id": "TS-2.5",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.5-S1"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 86,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.5-S2",
+      "slot_type": "base",
+      "task_id": "TS-2.5",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.5-S2"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 87,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.5-S3",
+      "slot_type": "base",
+      "task_id": "TS-2.5",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.5-S3"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 88,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.5-S4",
+      "slot_type": "base",
+      "task_id": "TS-2.5",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.5-S4"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 89,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.5-S5",
+      "slot_type": "base",
+      "task_id": "TS-2.5",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.5-S5"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 90,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.1-K1",
+      "slot_type": "base",
+      "task_id": "TS-3.1",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.1-K1"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "B",
+      "order": 91,
+      "pilot": true,
+      "status": "approved",
+      "attempts": 1,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": "b7011918",
+      "updated_at": "2026-11-04T04:06:26+00:00"
+    },
+    {
+      "quiz_id": "Q-3.1-K2",
+      "slot_type": "base",
+      "task_id": "TS-3.1",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.1-K2"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "D",
+      "order": 92,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.1-K3",
+      "slot_type": "base",
+      "task_id": "TS-3.1",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.1-K3"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "B",
+      "order": 93,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.1-K4",
+      "slot_type": "base",
+      "task_id": "TS-3.1",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.1-K4"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "B",
+      "order": 94,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.1-S1",
+      "slot_type": "base",
+      "task_id": "TS-3.1",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.1-S1"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "B",
+      "order": 95,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.1-S2",
+      "slot_type": "base",
+      "task_id": "TS-3.1",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.1-S2"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "A",
+      "order": 96,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.1-S3",
+      "slot_type": "base",
+      "task_id": "TS-3.1",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.1-S3"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "C",
+      "order": 97,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.1-S4",
+      "slot_type": "base",
+      "task_id": "TS-3.1",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.1-S4"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "B",
+      "order": 98,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.2-K1",
+      "slot_type": "base",
+      "task_id": "TS-3.2",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.2-K1"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "A",
+      "order": 99,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.2-K2",
+      "slot_type": "base",
+      "task_id": "TS-3.2",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.2-K2"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "A",
+      "order": 100,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.2-K3",
+      "slot_type": "base",
+      "task_id": "TS-3.2",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.2-K3"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "C",
+      "order": 101,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.2-K4",
+      "slot_type": "base",
+      "task_id": "TS-3.2",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.2-K4"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "A",
+      "order": 102,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.2-S1",
+      "slot_type": "base",
+      "task_id": "TS-3.2",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.2-S1"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "C",
+      "order": 103,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.2-S2",
+      "slot_type": "base",
+      "task_id": "TS-3.2",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.2-S2"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "C",
+      "order": 104,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.2-S3",
+      "slot_type": "base",
+      "task_id": "TS-3.2",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.2-S3"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "B",
+      "order": 105,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.2-S4",
+      "slot_type": "base",
+      "task_id": "TS-3.2",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.2-S4"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "D",
+      "order": 106,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.2-S5",
+      "slot_type": "base",
+      "task_id": "TS-3.2",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.2-S5"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "A",
+      "order": 107,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.3-K1",
+      "slot_type": "base",
+      "task_id": "TS-3.3",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.3-K1"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "C",
+      "order": 108,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.3-K2",
+      "slot_type": "base",
+      "task_id": "TS-3.3",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.3-K2"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "A",
+      "order": 109,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.3-K3",
+      "slot_type": "base",
+      "task_id": "TS-3.3",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.3-K3"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "B",
+      "order": 110,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.3-S1",
+      "slot_type": "base",
+      "task_id": "TS-3.3",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.3-S1"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "A",
+      "order": 111,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.3-S2",
+      "slot_type": "base",
+      "task_id": "TS-3.3",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.3-S2"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "D",
+      "order": 112,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.3-S3",
+      "slot_type": "base",
+      "task_id": "TS-3.3",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.3-S3"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "A",
+      "order": 113,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.4-K1",
+      "slot_type": "base",
+      "task_id": "TS-3.4",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.4-K1"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "C",
+      "order": 114,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.4-K2",
+      "slot_type": "base",
+      "task_id": "TS-3.4",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.4-K2"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "C",
+      "order": 115,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.4-K3",
+      "slot_type": "base",
+      "task_id": "TS-3.4",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.4-K3"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "D",
+      "order": 116,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.4-K4",
+      "slot_type": "base",
+      "task_id": "TS-3.4",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.4-K4"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "B",
+      "order": 117,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.4-S1",
+      "slot_type": "base",
+      "task_id": "TS-3.4",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.4-S1"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "C",
+      "order": 118,
+      "pilot": true,
+      "status": "approved",
+      "attempts": 3,
+      "detected_patterns": [
+        "code",
+        "code"
+      ],
+      "last_errors": [],
+      "prompt_version": "b7011918",
+      "updated_at": "2026-11-04T04:06:52+00:00"
+    },
+    {
+      "quiz_id": "Q-3.4-S2",
+      "slot_type": "base",
+      "task_id": "TS-3.4",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.4-S2"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "A",
+      "order": 119,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.4-S3",
+      "slot_type": "base",
+      "task_id": "TS-3.4",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.4-S3"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "B",
+      "order": 120,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.4-S4",
+      "slot_type": "base",
+      "task_id": "TS-3.4",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.4-S4"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "B",
+      "order": 121,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.5-K1",
+      "slot_type": "base",
+      "task_id": "TS-3.5",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.5-K1"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "C",
+      "order": 122,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.5-K2",
+      "slot_type": "base",
+      "task_id": "TS-3.5",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.5-K2"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "C",
+      "order": 123,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.5-K3",
+      "slot_type": "base",
+      "task_id": "TS-3.5",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.5-K3"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "A",
+      "order": 124,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.5-K4",
+      "slot_type": "base",
+      "task_id": "TS-3.5",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.5-K4"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "B",
+      "order": 125,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.5-S1",
+      "slot_type": "base",
+      "task_id": "TS-3.5",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.5-S1"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "D",
+      "order": 126,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.5-S2",
+      "slot_type": "base",
+      "task_id": "TS-3.5",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.5-S2"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "C",
+      "order": 127,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.5-S3",
+      "slot_type": "base",
+      "task_id": "TS-3.5",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.5-S3"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "A",
+      "order": 128,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.5-S4",
+      "slot_type": "base",
+      "task_id": "TS-3.5",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.5-S4"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "B",
+      "order": 129,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.5-S5",
+      "slot_type": "base",
+      "task_id": "TS-3.5",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.5-S5"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "D",
+      "order": 130,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.6-K1",
+      "slot_type": "base",
+      "task_id": "TS-3.6",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.6-K1"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "D",
+      "order": 131,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.6-K2",
+      "slot_type": "base",
+      "task_id": "TS-3.6",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.6-K2"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "B",
+      "order": 132,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.6-K3",
+      "slot_type": "base",
+      "task_id": "TS-3.6",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.6-K3"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "B",
+      "order": 133,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.6-K4",
+      "slot_type": "base",
+      "task_id": "TS-3.6",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.6-K4"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "C",
+      "order": 134,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.6-S1",
+      "slot_type": "base",
+      "task_id": "TS-3.6",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.6-S1"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "B",
+      "order": 135,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.6-S2",
+      "slot_type": "base",
+      "task_id": "TS-3.6",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.6-S2"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "B",
+      "order": 136,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.6-S3",
+      "slot_type": "base",
+      "task_id": "TS-3.6",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.6-S3"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "A",
+      "order": 137,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.6-S4",
+      "slot_type": "base",
+      "task_id": "TS-3.6",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.6-S4"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "B",
+      "order": 138,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.6-S5",
+      "slot_type": "base",
+      "task_id": "TS-3.6",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.6-S5"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "D",
+      "order": 139,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.1-K1",
+      "slot_type": "base",
+      "task_id": "TS-4.1",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.1-K1"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "D",
+      "order": 140,
+      "pilot": true,
+      "status": "approved",
+      "attempts": 1,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": "b7011918",
+      "updated_at": "2026-11-04T04:06:33+00:00"
+    },
+    {
+      "quiz_id": "Q-4.1-K2",
+      "slot_type": "base",
+      "task_id": "TS-4.1",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.1-K2"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "C",
+      "order": 141,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.1-K3",
+      "slot_type": "base",
+      "task_id": "TS-4.1",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.1-K3"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "C",
+      "order": 142,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.1-S1",
+      "slot_type": "base",
+      "task_id": "TS-4.1",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.1-S1"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "D",
+      "order": 143,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.1-S2",
+      "slot_type": "base",
+      "task_id": "TS-4.1",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.1-S2"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "B",
+      "order": 144,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.1-S3",
+      "slot_type": "base",
+      "task_id": "TS-4.1",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.1-S3"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "C",
+      "order": 145,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.2-K1",
+      "slot_type": "base",
+      "task_id": "TS-4.2",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.2-K1"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "B",
+      "order": 146,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.2-K2",
+      "slot_type": "base",
+      "task_id": "TS-4.2",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.2-K2"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "D",
+      "order": 147,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.2-K3",
+      "slot_type": "base",
+      "task_id": "TS-4.2",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.2-K3"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "A",
+      "order": 148,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.2-K4",
+      "slot_type": "base",
+      "task_id": "TS-4.2",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.2-K4"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "D",
+      "order": 149,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.2-S1",
+      "slot_type": "base",
+      "task_id": "TS-4.2",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.2-S1"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "A",
+      "order": 150,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.2-S2",
+      "slot_type": "base",
+      "task_id": "TS-4.2",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.2-S2"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "C",
+      "order": 151,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.2-S3",
+      "slot_type": "base",
+      "task_id": "TS-4.2",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.2-S3"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "D",
+      "order": 152,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.2-S4",
+      "slot_type": "base",
+      "task_id": "TS-4.2",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.2-S4"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "B",
+      "order": 153,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.2-S5",
+      "slot_type": "base",
+      "task_id": "TS-4.2",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.2-S5"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "B",
+      "order": 154,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.3-K1",
+      "slot_type": "base",
+      "task_id": "TS-4.3",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.3-K1"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "D",
+      "order": 155,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.3-K2",
+      "slot_type": "base",
+      "task_id": "TS-4.3",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.3-K2"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "A",
+      "order": 156,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.3-K3",
+      "slot_type": "base",
+      "task_id": "TS-4.3",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.3-K3"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "A",
+      "order": 157,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.3-K4",
+      "slot_type": "base",
+      "task_id": "TS-4.3",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.3-K4"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "A",
+      "order": 158,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.3-S1",
+      "slot_type": "base",
+      "task_id": "TS-4.3",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.3-S1"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "A",
+      "order": 159,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.3-S2",
+      "slot_type": "base",
+      "task_id": "TS-4.3",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.3-S2"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "A",
+      "order": 160,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.3-S3",
+      "slot_type": "base",
+      "task_id": "TS-4.3",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.3-S3"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "B",
+      "order": 161,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.3-S4",
+      "slot_type": "base",
+      "task_id": "TS-4.3",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.3-S4"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "A",
+      "order": 162,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.3-S5",
+      "slot_type": "base",
+      "task_id": "TS-4.3",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.3-S5"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "A",
+      "order": 163,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.3-S6",
+      "slot_type": "base",
+      "task_id": "TS-4.3",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.3-S6"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "C",
+      "order": 164,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.4-K1",
+      "slot_type": "base",
+      "task_id": "TS-4.4",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.4-K1"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "C",
+      "order": 165,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.4-K2",
+      "slot_type": "base",
+      "task_id": "TS-4.4",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.4-K2"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "B",
+      "order": 166,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.4-K3",
+      "slot_type": "base",
+      "task_id": "TS-4.4",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.4-K3"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "C",
+      "order": 167,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.4-K4",
+      "slot_type": "base",
+      "task_id": "TS-4.4",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.4-K4"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "D",
+      "order": 168,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.4-S1",
+      "slot_type": "base",
+      "task_id": "TS-4.4",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.4-S1"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "A",
+      "order": 169,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.4-S2",
+      "slot_type": "base",
+      "task_id": "TS-4.4",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.4-S2"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "C",
+      "order": 170,
+      "pilot": true,
+      "status": "approved",
+      "attempts": 1,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": "b7011918",
+      "updated_at": "2026-11-04T04:06:46+00:00"
+    },
+    {
+      "quiz_id": "Q-4.4-S3",
+      "slot_type": "base",
+      "task_id": "TS-4.4",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.4-S3"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "D",
+      "order": 171,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.4-S4",
+      "slot_type": "base",
+      "task_id": "TS-4.4",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.4-S4"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "D",
+      "order": 172,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.5-K1",
+      "slot_type": "base",
+      "task_id": "TS-4.5",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.5-K1"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "B",
+      "order": 173,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.5-K2",
+      "slot_type": "base",
+      "task_id": "TS-4.5",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.5-K2"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "A",
+      "order": 174,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.5-K3",
+      "slot_type": "base",
+      "task_id": "TS-4.5",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.5-K3"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "D",
+      "order": 175,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.5-K4",
+      "slot_type": "base",
+      "task_id": "TS-4.5",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.5-K4"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "B",
+      "order": 176,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.5-S1",
+      "slot_type": "base",
+      "task_id": "TS-4.5",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.5-S1"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "A",
+      "order": 177,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.5-S2",
+      "slot_type": "base",
+      "task_id": "TS-4.5",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.5-S2"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "D",
+      "order": 178,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.5-S3",
+      "slot_type": "base",
+      "task_id": "TS-4.5",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.5-S3"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "B",
+      "order": 179,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.5-S4",
+      "slot_type": "base",
+      "task_id": "TS-4.5",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.5-S4"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "A",
+      "order": 180,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.6-K1",
+      "slot_type": "base",
+      "task_id": "TS-4.6",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.6-K1"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "C",
+      "order": 181,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.6-K2",
+      "slot_type": "base",
+      "task_id": "TS-4.6",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.6-K2"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "B",
+      "order": 182,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.6-K3",
+      "slot_type": "base",
+      "task_id": "TS-4.6",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.6-K3"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "B",
+      "order": 183,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.6-S1",
+      "slot_type": "base",
+      "task_id": "TS-4.6",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.6-S1"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "C",
+      "order": 184,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.6-S2",
+      "slot_type": "base",
+      "task_id": "TS-4.6",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.6-S2"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "D",
+      "order": 185,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.6-S3",
+      "slot_type": "base",
+      "task_id": "TS-4.6",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.6-S3"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "D",
+      "order": 186,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.1-K1",
+      "slot_type": "base",
+      "task_id": "TS-5.1",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.1-K1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "C",
+      "order": 187,
+      "pilot": true,
+      "status": "approved",
+      "attempts": 1,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": "b7011918",
+      "updated_at": "2026-11-04T04:06:55+00:00"
+    },
+    {
+      "quiz_id": "Q-5.1-K2",
+      "slot_type": "base",
+      "task_id": "TS-5.1",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.1-K2"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "D",
+      "order": 188,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.1-K3",
+      "slot_type": "base",
+      "task_id": "TS-5.1",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.1-K3"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "C",
+      "order": 189,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.1-K4",
+      "slot_type": "base",
+      "task_id": "TS-5.1",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.1-K4"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "B",
+      "order": 190,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.1-S1",
+      "slot_type": "base",
+      "task_id": "TS-5.1",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.1-S1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "C",
+      "order": 191,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.1-S2",
+      "slot_type": "base",
+      "task_id": "TS-5.1",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.1-S2"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "A",
+      "order": 192,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.1-S3",
+      "slot_type": "base",
+      "task_id": "TS-5.1",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.1-S3"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "D",
+      "order": 193,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.1-S4",
+      "slot_type": "base",
+      "task_id": "TS-5.1",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.1-S4"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "C",
+      "order": 194,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.1-S5",
+      "slot_type": "base",
+      "task_id": "TS-5.1",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.1-S5"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "D",
+      "order": 195,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.1-S6",
+      "slot_type": "base",
+      "task_id": "TS-5.1",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.1-S6"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "D",
+      "order": 196,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.2-K1",
+      "slot_type": "base",
+      "task_id": "TS-5.2",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.2-K1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "A",
+      "order": 197,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.2-K2",
+      "slot_type": "base",
+      "task_id": "TS-5.2",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.2-K2"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "B",
+      "order": 198,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.2-K3",
+      "slot_type": "base",
+      "task_id": "TS-5.2",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.2-K3"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "A",
+      "order": 199,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.2-K4",
+      "slot_type": "base",
+      "task_id": "TS-5.2",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.2-K4"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "C",
+      "order": 200,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.2-S1",
+      "slot_type": "base",
+      "task_id": "TS-5.2",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.2-S1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "C",
+      "order": 201,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.2-S2",
+      "slot_type": "base",
+      "task_id": "TS-5.2",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.2-S2"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "D",
+      "order": 202,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.2-S3",
+      "slot_type": "base",
+      "task_id": "TS-5.2",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.2-S3"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "A",
+      "order": 203,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.2-S4",
+      "slot_type": "base",
+      "task_id": "TS-5.2",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.2-S4"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "C",
+      "order": 204,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.2-S5",
+      "slot_type": "base",
+      "task_id": "TS-5.2",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.2-S5"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "A",
+      "order": 205,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.3-K1",
+      "slot_type": "base",
+      "task_id": "TS-5.3",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.3-K1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "D",
+      "order": 206,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.3-K2",
+      "slot_type": "base",
+      "task_id": "TS-5.3",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.3-K2"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "C",
+      "order": 207,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.3-K3",
+      "slot_type": "base",
+      "task_id": "TS-5.3",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.3-K3"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "B",
+      "order": 208,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.3-K4",
+      "slot_type": "base",
+      "task_id": "TS-5.3",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.3-K4"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "B",
+      "order": 209,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.3-S1",
+      "slot_type": "base",
+      "task_id": "TS-5.3",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.3-S1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "C",
+      "order": 210,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.3-S2",
+      "slot_type": "base",
+      "task_id": "TS-5.3",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.3-S2"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "A",
+      "order": 211,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.3-S3",
+      "slot_type": "base",
+      "task_id": "TS-5.3",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.3-S3"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "C",
+      "order": 212,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.3-S4",
+      "slot_type": "base",
+      "task_id": "TS-5.3",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.3-S4"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "D",
+      "order": 213,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.4-K1",
+      "slot_type": "base",
+      "task_id": "TS-5.4",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.4-K1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "A",
+      "order": 214,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.4-K2",
+      "slot_type": "base",
+      "task_id": "TS-5.4",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.4-K2"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "D",
+      "order": 215,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.4-K3",
+      "slot_type": "base",
+      "task_id": "TS-5.4",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.4-K3"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "B",
+      "order": 216,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.4-K4",
+      "slot_type": "base",
+      "task_id": "TS-5.4",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.4-K4"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "D",
+      "order": 217,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.4-S1",
+      "slot_type": "base",
+      "task_id": "TS-5.4",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.4-S1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "B",
+      "order": 218,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.4-S2",
+      "slot_type": "base",
+      "task_id": "TS-5.4",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.4-S2"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "B",
+      "order": 219,
+      "pilot": true,
+      "status": "approved",
+      "attempts": 2,
+      "detected_patterns": [
+        "code"
+      ],
+      "last_errors": [],
+      "prompt_version": "b7011918",
+      "updated_at": "2026-11-04T04:07:20+00:00"
+    },
+    {
+      "quiz_id": "Q-5.4-S3",
+      "slot_type": "base",
+      "task_id": "TS-5.4",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.4-S3"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "A",
+      "order": 220,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.4-S4",
+      "slot_type": "base",
+      "task_id": "TS-5.4",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.4-S4"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "D",
+      "order": 221,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.4-S5",
+      "slot_type": "base",
+      "task_id": "TS-5.4",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.4-S5"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "A",
+      "order": 222,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.5-K1",
+      "slot_type": "base",
+      "task_id": "TS-5.5",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.5-K1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "A",
+      "order": 223,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.5-K2",
+      "slot_type": "base",
+      "task_id": "TS-5.5",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.5-K2"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "B",
+      "order": 224,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.5-K3",
+      "slot_type": "base",
+      "task_id": "TS-5.5",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.5-K3"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "D",
+      "order": 225,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.5-K4",
+      "slot_type": "base",
+      "task_id": "TS-5.5",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.5-K4"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "D",
+      "order": 226,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.5-S1",
+      "slot_type": "base",
+      "task_id": "TS-5.5",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.5-S1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "B",
+      "order": 227,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.5-S2",
+      "slot_type": "base",
+      "task_id": "TS-5.5",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.5-S2"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "A",
+      "order": 228,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.5-S3",
+      "slot_type": "base",
+      "task_id": "TS-5.5",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.5-S3"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "A",
+      "order": 229,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.5-S4",
+      "slot_type": "base",
+      "task_id": "TS-5.5",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.5-S4"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "D",
+      "order": 230,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.6-K1",
+      "slot_type": "base",
+      "task_id": "TS-5.6",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.6-K1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "D",
+      "order": 231,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.6-K2",
+      "slot_type": "base",
+      "task_id": "TS-5.6",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.6-K2"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "C",
+      "order": 232,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.6-K3",
+      "slot_type": "base",
+      "task_id": "TS-5.6",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.6-K3"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "B",
+      "order": 233,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.6-K4",
+      "slot_type": "base",
+      "task_id": "TS-5.6",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.6-K4"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "C",
+      "order": 234,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.6-S1",
+      "slot_type": "base",
+      "task_id": "TS-5.6",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.6-S1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "B",
+      "order": 235,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.6-S2",
+      "slot_type": "base",
+      "task_id": "TS-5.6",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.6-S2"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "C",
+      "order": 236,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.6-S3",
+      "slot_type": "base",
+      "task_id": "TS-5.6",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.6-S3"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "D",
+      "order": 237,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.6-S4",
+      "slot_type": "base",
+      "task_id": "TS-5.6",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.6-S4"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "A",
+      "order": 238,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.6-S5",
+      "slot_type": "base",
+      "task_id": "TS-5.6",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.6-S5"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "A",
+      "order": 239,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.1-X1",
+      "slot_type": "extra",
+      "task_id": "TS-1.1",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.1-K1",
+        "TS-1.1-S1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 240,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.1-X2",
+      "slot_type": "extra",
+      "task_id": "TS-1.1",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.1-K2",
+        "TS-1.1-S2"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 241,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.2-X1",
+      "slot_type": "extra",
+      "task_id": "TS-1.2",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.2-K1",
+        "TS-1.2-S1"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 242,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.3-X1",
+      "slot_type": "extra",
+      "task_id": "TS-1.3",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.3-K1",
+        "TS-1.3-S1"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 243,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.4-X1",
+      "slot_type": "extra",
+      "task_id": "TS-1.4",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.4-K1",
+        "TS-1.4-S1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 244,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.5-X1",
+      "slot_type": "extra",
+      "task_id": "TS-1.5",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.5-K1",
+        "TS-1.5-S1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 245,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.6-X1",
+      "slot_type": "extra",
+      "task_id": "TS-1.6",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.6-K1",
+        "TS-1.6-S1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 246,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.7-X1",
+      "slot_type": "extra",
+      "task_id": "TS-1.7",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.7-K1",
+        "TS-1.7-S1"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 247,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.1-X1",
+      "slot_type": "extra",
+      "task_id": "TS-2.1",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.1-K1",
+        "TS-2.1-S1"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "A",
+      "order": 248,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.2-X1",
+      "slot_type": "extra",
+      "task_id": "TS-2.2",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.2-K1",
+        "TS-2.2-S1"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 249,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.3-X1",
+      "slot_type": "extra",
+      "task_id": "TS-2.3",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.3-K1",
+        "TS-2.3-S1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "B",
+      "order": 250,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.4-X1",
+      "slot_type": "extra",
+      "task_id": "TS-2.4",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.4-K1",
+        "TS-2.4-S1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "D",
+      "order": 251,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-2.5-X1",
+      "slot_type": "extra",
+      "task_id": "TS-2.5",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.5-K1",
+        "TS-2.5-S1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 252,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.1-X1",
+      "slot_type": "extra",
+      "task_id": "TS-3.1",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.1-K1",
+        "TS-3.1-S1"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "B",
+      "order": 253,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.2-X1",
+      "slot_type": "extra",
+      "task_id": "TS-3.2",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.2-K1",
+        "TS-3.2-S1"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "A",
+      "order": 254,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.3-X1",
+      "slot_type": "extra",
+      "task_id": "TS-3.3",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.3-K1",
+        "TS-3.3-S1"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "C",
+      "order": 255,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.4-X1",
+      "slot_type": "extra",
+      "task_id": "TS-3.4",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.4-K1",
+        "TS-3.4-S1"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "D",
+      "order": 256,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.5-X1",
+      "slot_type": "extra",
+      "task_id": "TS-3.5",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.5-K1",
+        "TS-3.5-S1"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "A",
+      "order": 257,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-3.6-X1",
+      "slot_type": "extra",
+      "task_id": "TS-3.6",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.6-K1",
+        "TS-3.6-S1"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "A",
+      "order": 258,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.1-X1",
+      "slot_type": "extra",
+      "task_id": "TS-4.1",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.1-K1",
+        "TS-4.1-S1"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "C",
+      "order": 259,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.2-X1",
+      "slot_type": "extra",
+      "task_id": "TS-4.2",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.2-K1",
+        "TS-4.2-S1"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "C",
+      "order": 260,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.3-X1",
+      "slot_type": "extra",
+      "task_id": "TS-4.3",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.3-K1",
+        "TS-4.3-S1"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "D",
+      "order": 261,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.4-X1",
+      "slot_type": "extra",
+      "task_id": "TS-4.4",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.4-K1",
+        "TS-4.4-S1"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "D",
+      "order": 262,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.5-X1",
+      "slot_type": "extra",
+      "task_id": "TS-4.5",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.5-K1",
+        "TS-4.5-S1"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "A",
+      "order": 263,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-4.6-X1",
+      "slot_type": "extra",
+      "task_id": "TS-4.6",
+      "domain": 4,
+      "focus_bullet_ids": [
+        "TS-4.6-K1",
+        "TS-4.6-S1"
+      ],
+      "scenario_id": 5,
+      "scenario_candidates": [
+        5,
+        6
+      ],
+      "target_answer": "A",
+      "order": 264,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.2-X1",
+      "slot_type": "extra",
+      "task_id": "TS-5.2",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.2-K1",
+        "TS-5.2-S1"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "C",
+      "order": 265,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.3-X1",
+      "slot_type": "extra",
+      "task_id": "TS-5.3",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.3-K1",
+        "TS-5.3-S1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "C",
+      "order": 266,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.4-X1",
+      "slot_type": "extra",
+      "task_id": "TS-5.4",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.4-K1",
+        "TS-5.4-S1"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "D",
+      "order": 267,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.5-X1",
+      "slot_type": "extra",
+      "task_id": "TS-5.5",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.5-K1",
+        "TS-5.5-S1"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "A",
+      "order": 268,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-5.6-X1",
+      "slot_type": "extra",
+      "task_id": "TS-5.6",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.6-K1",
+        "TS-5.6-S1"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "D",
+      "order": 269,
+      "pilot": false,
+      "status": "pending",
+      "attempts": 0,
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": null,
+      "updated_at": null
+    },
+    {
+      "quiz_id": "Q-1.4-S2-F",
+      "slot_type": "fill",
+      "task_id": "TS-1.4",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.4-S2"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 270,
+      "pilot": false,
+      "status": "rejected",
+      "attempts": 3,
+      "detected_patterns": [
+        "code",
+        "code",
+        "scenario_mismatch"
+      ],
+      "last_errors": [
+        "[review:scenario_mismatch] SC-4는 '개발자 생산성 도구'를 구축하는 시나리오이며 '엔지니어가 낯선 코드베이스를 탐색하고, 레거시 시스템을 이해하고, 보일러플레이트 코드를 생성하고, 반복 작업을 자동화'하는 것을 돕는 상황입니다. 그러나 TS-1.4-S2의 focus item은 'multi-concern customer requests'를 분해하는 것으로, 원래 고객 지원 맥락(customer service context)에서 작성된 것입니다. 문항의 stem은 'customer requests'가 아닌 'developer submits the request'와 'engineers report frustration'으로 시나리오에 맞게 조정했지만, source_excerpt는 여전히 'multi-concern customer requests'라고 명시하고 있어 focus item 자체가 SC-4 시나리오와 맞지 않습니다.",
+        "[review:scenario_mismatch] 옵션 A의 rationale에서 '통합된 해결책을 합성(synthesize a unified resolution)'이라는 표현은 고객 지원 맥락에서 자연스럽지만, 코드베이스 탐색 맥락에서는 '통합된 응답(unified response)' 또는 '통합된 분석 결과'가 더 적절합니다. Source_excerpt의 'unified resolution'이 고객 문제 해결을 암시합니다.",
+        "[review:scenario_mismatch] Focus item TS-1.4-S2가 명시적으로 'customer requests'를 언급하고 있어, 이를 developer/engineer 요청 시나리오에 적용하는 것은 scope 불일치입니다. Task statement의 다른 부분들(identity verification before financial operations, customer details, refund amount 등)도 모두 고객 지원 맥락을 가정하고 있습니다."
+      ],
+      "prompt_version": "b7011918",
+      "updated_at": "2026-11-04T04:11:05+00:00"
+    }
+  ]
+}

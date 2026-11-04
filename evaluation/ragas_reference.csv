@@ -1,0 +1,21 @@
+﻿id,ragas,reference_doc_ids,reference
+1,Y,TS-1.1,"agentic loop은 Claude에 요청을 보내고 stop_reason을 확인한다. stop_reason이 ""tool_use""면 요청된 도구를 실행하고 그 결과를 대화 이력에 추가해 다음 반복을 진행하며, ""end_turn""이면 종료한다. 자연어 신호를 파싱해 종료를 판단하거나, 임의의 반복 상한을 주된 종료 수단으로 쓰거나, assistant 텍스트가 있는지로 완료를 판단하는 것은 안티패턴이다."
+2,Y,TS-2.4,"팀이 공유하는 MCP 서버는 프로젝트 범위의 .mcp.json에, 개인용·실험용 서버는 사용자 범위의 ~/.claude.json에 설정한다. .mcp.json에서는 ${GITHUB_TOKEN} 같은 환경변수 확장을 써서 자격 증명을 커밋하지 않는다. 설정된 모든 MCP 서버의 도구는 연결 시점에 발견되어 동시에 사용 가능하다."
+3,Y,TS-4.3;TS-2.3,"tool_choice ""auto""는 모델이 도구 대신 텍스트를 반환할 수 있다. ""any""는 반드시 도구를 호출하되 어떤 도구인지는 모델이 고른다. {""type"": ""tool"", ""name"": ""...""} 강제 지정은 특정 도구 호출을 보장한다. 문서 유형을 모르고 추출 스키마가 여럿이면 any로 구조화 출력을 보장하고, extract_metadata 같은 단계를 먼저 실행해야 하면 해당 도구를 강제 지정한다."
+4,Y,TS-4.5;SQ-11,"Message Batches API는 50% 비용 절감이 있지만 처리에 최대 24시간이 걸리고 지연 SLA가 보장되지 않는다. 따라서 개발자가 결과를 기다리는 pre-merge 체크 같은 blocking 워크플로에는 부적합하고, 야간 리포트·주간 감사 같은 지연 허용 작업에 적합하다. 한 요청 안에서 도구를 실행하고 결과를 돌려주는 멀티턴 tool calling을 지원하지 않으며, 요청-응답 매칭에는 custom_id를 쓴다."
+5,N,,
+6,Y,OV-details;D1;D2;D3;D4;D5,"시험은 60문항, 120분, 정답 1개와 오답 3개의 객관식이다. 6개 시나리오 중 4개가 무작위로 출제된다. 점수는 100~1,000 스케일이며 합격 최저점은 720, 결과는 pass/fail로 보고된다. 비중은 Domain 1 Agentic Architecture & Orchestration 27%, Domain 2 Tool Design & MCP Integration 18%, Domain 3 Claude Code Configuration & Workflows 20%, Domain 4 Prompt Engineering & Structured Output 20%, Domain 5 Context Management & Reliability 15%이다."
+7,N,,
+8,Y,TS-3.3;SQ-06,.claude/rules/ 파일은 YAML frontmatter의 paths 필드에 glob 패턴을 넣어 일치하는 파일을 편집할 때만 로드되므로 관련 없는 컨텍스트와 토큰 사용이 줄어든다. 테스트 파일처럼 여러 디렉터리에 흩어진 파일에 같은 규칙을 적용해야 할 때(예: **/*.test.tsx) 디렉터리에 묶이는 하위 CLAUDE.md보다 적합하다.
+9,Y,SCOPE-out,"Out-of-scope 목록에 따르면 프롬프트 캐싱 구현 세부사항(존재를 아는 것 이상)과 rate limit, 할당량, API 가격 계산은 출제되지 않는다. 가이드에는 TTL이나 가격 수치가 없다."
+10,Y,OV-details,"가이드에는 합격률이나 평균 점수 정보가 없다. 가이드가 밝히는 것은 100~1,000 스케일 점수, 최저 합격점 720, 결과는 pass/fail로 보고된다는 점뿐이다."
+11,Y,SCOPE-out,"특정 클라우드 제공자(AWS, GCP, Azure) 설정과 Claude API 인증, OAuth, API 키 교체 등은 out-of-scope로 출제되지 않는다."
+12,Y,OV-details,"가이드에는 온라인 감독 또는 시험 센터에서 응시하며 응시료가 125달러라는 정보만 있고, 접수 절차나 링크는 없다."
+13,N,,
+14,Y,TS-1.4;TS-1.5;SQ-01,"결정적 준수가 필요한 비즈니스 규칙(예: 금융 작업 전 신원 확인, 일정 금액 초과 환불 차단)은 hook이나 프로그램적 선행조건으로 강제해야 한다. 프롬프트 지시는 확률적 준수라 실패율이 0이 아니다. hook은 규칙 위반 도구 호출을 가로채 차단하고 사람 에스컬레이션 같은 대체 흐름으로 보낼 수 있다."
+15,Y,TS-3.2,SKILL.md frontmatter의 context: fork는 skill을 격리된 sub-agent 컨텍스트에서 실행해 skill 출력이 메인 대화를 오염시키지 않게 한다. 코드베이스 분석처럼 장황한 출력이나 대안 브레인스토밍 같은 탐색적 작업을 격리할 때 쓴다.
+16,Y,SQ-01,"정답은 A로, get_customer가 검증된 고객 ID를 반환하기 전까지 lookup_order와 process_refund 호출을 막는 프로그램적 선행조건이다. 고객 신원 확인처럼 중요한 순서가 필요한 비즈니스 로직에는 프로그램적 강제가 결정적 보장을 준다. B와 C는 확률적인 LLM 준수에 의존해 금전적 결과가 걸린 경우 불충분하고, D는 도구 순서가 아니라 도구 가용성을 다뤄 실제 문제를 해결하지 못한다."
+17,Y,D3,공식 가이드 번호 기준 Domain 3은 Claude Code Configuration & Workflows이며 비중은 20%이다.
+18,N,,
+19,N,,
+20,N,,

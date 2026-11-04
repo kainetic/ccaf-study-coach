@@ -1,0 +1,16 @@
+# 환경
+.venv/
+.env
+__pycache__/
+*.pyc
+
+# 벡터 DB
+chroma_db/
+
+# 가이드 원본과 파생물 (공개 저장소 커밋 금지, DESIGN §2-4)
+data/raw/*.pdf
+data/guide_chunks.jsonl
+data/guide_bullets.jsonl
+
+# 원자적 쓰기 임시 파일 (중단 시 남을 수 있음)
+*.tmp

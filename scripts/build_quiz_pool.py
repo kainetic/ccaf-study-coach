@@ -1,0 +1,430 @@
+"""문제 풀 사전 생성 (DESIGN §5-2). 오프라인 전용 — 런타임에는 문제를 만들지 않는다.
+
+실행:
+    python scripts/build_quiz_pool.py --dry-run          # 슬롯 270개 배정만 확인 (LLM 호출·파일 쓰기 없음)
+    python scripts/build_quiz_pool.py --pilot 10         # 파일럿: 도메인당 2슬롯을 매번 새로 생성
+    python scripts/build_quiz_pool.py --resume           # pending 슬롯을 순서대로 (기본 240 → 추가 30 → 보충)
+    python scripts/build_quiz_pool.py --resume --limit 20
+    python scripts/build_quiz_pool.py --fill-gaps        # 승인 문제가 없는 세부 항목만 보충 슬롯 생성
+
+상태는 슬롯 하나가 끝날 때마다 data/quiz_pool_manifest.json, data/quiz_pool.json에 원자적으로 저장된다.
+중단(Ctrl+C)하면 진행 중이던 슬롯은 pending으로 남고 --resume으로 이어진다.
+"""
+import argparse
+import hashlib
+import json
+import os
+import sys
+from collections import Counter, defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from src import config  # noqa: E402  (.env 로드)
+from src.prompts import prompt_version  # noqa: E402
+from src.quiz_gen import (  # noqa: E402
+    DOMAIN_SCENARIOS, Corpus, CorpusError, QuizGenerator, TransientError, check_domain_scenarios,
+    dedupe, load_corpus, now_iso, pick_fewshot, seeded_rng,
+)
+from src.schemas import LABELS, ManifestSlot, QuizItem, QuizManifest  # noqa: E402
+
+POOL_PATH = config.DATA_DIR / "quiz_pool.json"
+MANIFEST_PATH = config.DATA_DIR / "quiz_pool_manifest.json"
+
+EXTRA_PER_DOMAIN = {1: 8, 2: 5, 3: 6, 4: 6, 5: 5}          # 추가 슬롯 30 (DESIGN §5-2 표)
+EXPECTED_TOTAL = {1: 56, 2: 48, 3: 55, 4: 53, 5: 58}         # 기본 + 추가
+TARGET_SEED = "ccaf-pool-v1"
+COVERAGE_TARGET = 228                                        # 240의 95%
+
+
+# ---------------------------------------------------------------- 슬롯 배정
+
+def ts_key(task_id: str) -> tuple[int, int]:
+    major, minor = task_id.removeprefix("TS-").split(".")
+    return int(major), int(minor)
+
+
+def bullet_key(bullet_id: str) -> tuple[int, int]:
+    suffix = bullet_id.rsplit("-", 1)[1]                     # "K2"
+    return (0 if suffix[0] == "K" else 1), int(suffix[1:])
+
+
+def qid(task_id: str, suffix: str) -> str:
+    return f"Q-{task_id.removeprefix('TS-')}-{suffix}"
+
+
+def fill_target(quiz_id: str) -> str:
+    return LABELS[int(hashlib.sha256(quiz_id.encode()).hexdigest(), 16) % 4]
+
+
+def build_slots(corpus: Corpus) -> list[ManifestSlot]:
+    """기본 240 + 추가 30. 같은 코퍼스면 항상 같은 결과."""
+    slots: list[ManifestSlot] = []
+    cursor: dict[str, int] = {}                              # TS별 시나리오 순환 위치
+
+    def add(slot_type, task_id, domain, focus, suffix):
+        cands = DOMAIN_SCENARIOS[domain]
+        i = cursor.get(task_id, 0)
+        cursor[task_id] = i + 1
+        slots.append(ManifestSlot(
+            quiz_id=qid(task_id, suffix), slot_type=slot_type, task_id=task_id, domain=domain,
+            focus_bullet_ids=focus, scenario_id=cands[i % len(cands)], scenario_candidates=cands,
+            target_answer="A", order=len(slots),
+        ))
+
+    ts_ids = sorted(corpus.bullets_by_ts, key=ts_key)
+    for tid in ts_ids:
+        for b in sorted(corpus.bullets_by_ts[tid], key=lambda b: bullet_key(b.bullet_id)):
+            add("base", tid, b.domain, [b.bullet_id], b.bullet_id.rsplit("-", 1)[1])
+
+    for d, n_extra in EXTRA_PER_DOMAIN.items():
+        # 세부 항목 수가 적은 TS부터 라운드로빈 배정
+        ranked = sorted((t for t in ts_ids if corpus.bullets_by_ts[t][0].domain == d),
+                        key=lambda t: (len(corpus.bullets_by_ts[t]), ts_key(t)))
+        counts = Counter(ranked[k % len(ranked)] for k in range(n_extra))
+        for tid in sorted(counts, key=ts_key):
+            bs = sorted(corpus.bullets_by_ts[tid], key=lambda b: bullet_key(b.bullet_id))
+            ks = [b for b in bs if b.kind == "knowledge"]
+            ss = [b for b in bs if b.kind == "skill"]
+            for j in range(1, counts[tid] + 1):
+                if j > min(len(ks), len(ss)):
+                    raise CorpusError(f"{tid}: K/S 쌍이 부족해 추가 슬롯 X{j}를 만들 수 없음")
+                add("extra", tid, d, [ks[j - 1].bullet_id, ss[j - 1].bullet_id], f"X{j}")
+
+    # 정답 위치 목표값: A~D 균등 리스트를 고정 시드로 섞어 순서대로 배정
+    n = len(slots)
+    labels = [LABELS[i % 4] for i in range(n)]
+    seeded_rng(TARGET_SEED).shuffle(labels)
+    for s, lab in zip(slots, labels):
+        s.target_answer = lab
+    return slots
+
+
+def plan_errors(slots: list[ManifestSlot], corpus: Corpus) -> list[str]:
+    errs = check_domain_scenarios(corpus)
+    per_dom = Counter(s.domain for s in slots if s.slot_type in ("base", "extra"))
+    for d, exp in EXPECTED_TOTAL.items():
+        if per_dom.get(d, 0) != exp:
+            errs.append(f"D{d}: 슬롯 {per_dom.get(d, 0)} (기대 {exp})")
+    ids = [s.quiz_id for s in slots]
+    if len(set(ids)) != len(ids):
+        errs.append("quiz_id 중복")
+    for s in slots:
+        if s.scenario_id not in DOMAIN_SCENARIOS[s.domain]:
+            errs.append(f"{s.quiz_id}: SC-{s.scenario_id}는 D{s.domain} 배정 시나리오가 아님")
+        for b in s.focus_bullet_ids:
+            if b not in corpus.bullet_by_id:
+                errs.append(f"{s.quiz_id}: 알 수 없는 세부 항목 {b}")
+    return errs
+
+
+# ---------------------------------------------------------------- 파일 입출력
+
+def atomic_write(path: Path, text: str) -> None:
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(text, encoding="utf-8")
+    os.replace(tmp, path)
+
+
+def summarize(manifest: QuizManifest) -> dict[str, int]:
+    c = Counter(s.status for s in manifest.slots)
+    return {k: c.get(k, 0) for k in ("pending", "approved", "rejected", "duplicate")}
+
+
+def save(manifest: QuizManifest, pool: dict[str, QuizItem]) -> None:
+    manifest.updated_at = now_iso()
+    manifest.summary = summarize(manifest)
+    atomic_write(MANIFEST_PATH, manifest.model_dump_json(indent=2))
+    order = {s.quiz_id: s.order for s in manifest.slots}
+    items = sorted(pool.values(), key=lambda i: order.get(i.quiz_id, 10**9))
+    atomic_write(POOL_PATH, json.dumps([i.model_dump() for i in items], ensure_ascii=False, indent=2))
+
+
+def load_state(corpus: Corpus) -> tuple[QuizManifest, dict[str, QuizItem]]:
+    built = build_slots(corpus)
+    if MANIFEST_PATH.is_file():
+        manifest = QuizManifest.model_validate_json(MANIFEST_PATH.read_text(encoding="utf-8"))
+        have = {s.quiz_id for s in manifest.slots if s.slot_type != "fill"}
+        want = {s.quiz_id for s in built}
+        if have != want:
+            raise CorpusError(f"매니페스트 슬롯이 현재 코퍼스와 다름 (누락 {len(want - have)}, 초과 {len(have - want)}). "
+                              "가이드가 바뀌었으면 매니페스트를 백업 후 다시 만들 것")
+    else:
+        ts = now_iso()
+        manifest = QuizManifest(guide_version=config.GUIDE_VERSION, generator_model=config.MODEL_ID,
+                                created_at=ts, updated_at=ts, slots=built)
+        print(f"[manifest] 새로 생성: 슬롯 {len(built)}개 → {MANIFEST_PATH.name}")
+    pool: dict[str, QuizItem] = {}
+    if POOL_PATH.is_file():
+        for d in json.loads(POOL_PATH.read_text(encoding="utf-8") or "[]"):
+            it = QuizItem.model_validate(d)
+            pool[it.quiz_id] = it
+    return manifest, pool
+
+
+# ---------------------------------------------------------------- 대상 선정
+
+def select_pilot(slots: list[ManifestSlot], n: int) -> list[ManifestSlot]:
+    """도메인마다 서로 다른 TS의 기본 슬롯에서 K/S를 번갈아, 시나리오가 겹치지 않게 고른다."""
+    picks = []
+    for d in range(1, 6):
+        per_d = n // 5 + (1 if d <= n % 5 else 0)
+        base = [s for s in slots if s.slot_type == "base" and s.domain == d]
+        ts_ids = sorted({s.task_id for s in base}, key=ts_key)
+        used_sc: set[int] = set()
+        for k in range(per_d):
+            tid = ts_ids[(k * len(ts_ids)) // max(per_d, 1) % len(ts_ids)]
+            kind = "K" if k % 2 == 0 else "S"
+            cands = [s for s in base if s.task_id == tid and s.quiz_id.rsplit("-", 1)[1].startswith(kind)
+                     and s not in picks]
+            pick = next((s for s in cands if s.scenario_id not in used_sc), cands[0] if cands else None)
+            if pick:
+                picks.append(pick)
+                used_sc.add(pick.scenario_id)
+    return picks
+
+
+def add_fill_slots(manifest: QuizManifest, pool: dict[str, QuizItem], corpus: Corpus) -> list[ManifestSlot]:
+    """공백 = 승인 문항의 focus에 없고 그 항목을 포함한 pending 슬롯도 없는 세부 항목. 항목당 base+fill 최대 2슬롯."""
+    covered = {b for it in pool.values() if it.status == "approved" for b in it.focus_bullet_ids}
+    pending = {b for s in manifest.slots if s.status == "pending" for b in s.focus_bullet_ids}
+    existing = {s.quiz_id for s in manifest.slots}
+    next_order = max(s.order for s in manifest.slots) + 1
+    new = []
+    for b in sorted(corpus.bullets, key=lambda b: (ts_key(b.task_id), bullet_key(b.bullet_id))):
+        if b.bullet_id in covered or b.bullet_id in pending:
+            continue
+        own = [s for s in manifest.slots if s.slot_type in ("base", "fill") and s.focus_bullet_ids == [b.bullet_id]]
+        quiz_id = qid(b.task_id, b.bullet_id.rsplit("-", 1)[1] + "-F")
+        if len(own) >= 2 or quiz_id in existing:
+            continue
+        cands = DOMAIN_SCENARIOS[b.domain]
+        if not own:
+            sc = cands[0]
+        else:
+            # 직전 슬롯의 마지막 시나리오가 시나리오 문제로 실패했거나 중복이면 다음 후보, 아니면 그대로 재사용
+            prev, pats = own[-1].scenario_id, own[-1].detected_patterns
+            last = pats[-1].split(":")[0] if pats else ""
+            if last in ("scenario_mismatch", "duplicate_of") and prev in cands:
+                sc = cands[(cands.index(prev) + 1) % len(cands)]
+            else:
+                sc = prev if prev in cands else cands[0]
+        slot = ManifestSlot(quiz_id=quiz_id, slot_type="fill", task_id=b.task_id, domain=b.domain,
+                            focus_bullet_ids=[b.bullet_id], scenario_id=sc, scenario_candidates=cands,
+                            target_answer=fill_target(quiz_id), order=next_order)
+        next_order += 1
+        manifest.slots.append(slot)
+        new.append(slot)
+    return new
+
+
+# ---------------------------------------------------------------- 실행
+
+def run_slots(gen: QuizGenerator, manifest: QuizManifest, pool: dict[str, QuizItem],
+              targets: list[ManifestSlot], concurrency: int, verbose: bool) -> None:
+    if not targets:
+        print("[run] 처리할 슬롯 없음")
+        return
+    pv = prompt_version()
+    print(f"[run] 슬롯 {len(targets)}개, 동시 {concurrency}, prompt_version {pv}")
+
+    def avoid_for(s: ManifestSlot) -> list[str]:
+        if s.slot_type != "fill":
+            return []
+        return [it.stem for it in pool.values() if it.status == "approved" and it.task_id == s.task_id]
+
+    ex = ThreadPoolExecutor(max_workers=concurrency)
+    futs = {ex.submit(gen.run_slot, s, avoid_for(s)): s for s in targets}
+    done = 0
+    try:
+        for fut in as_completed(futs):
+            s = futs[fut]
+            done += 1
+            try:
+                r = fut.result()
+            except (TransientError, Exception) as e:  # noqa: BLE001 — 슬롯은 pending으로 남김
+                s.last_errors = [f"[error] {type(e).__name__}: {str(e)[:300]}"]
+                s.updated_at = now_iso()
+                save(manifest, pool)
+                print(f"  [{done}/{len(targets)}] {s.quiz_id}: 오류 → pending 유지 ({type(e).__name__}: {str(e)[:120]})")
+                continue
+            s.status, s.attempts, s.scenario_id = r.status, r.attempts, r.scenario_id
+            s.detected_patterns, s.last_errors = r.detected_patterns, r.last_errors
+            s.prompt_version, s.updated_at = pv, now_iso()
+            if r.item is not None:
+                pool[s.quiz_id] = r.item
+            else:
+                pool.pop(s.quiz_id, None)          # 코드 검증 단계 실패: 매니페스트에만 기록
+            save(manifest, pool)
+            pats = f" {r.detected_patterns}" if r.detected_patterns else ""
+            print(f"  [{done}/{len(targets)}] {s.quiz_id} SC-{r.scenario_id}: {r.status} (시도 {r.attempts}){pats}")
+            if verbose:
+                print_item(r, pool.get(s.quiz_id))
+    except KeyboardInterrupt:
+        save(manifest, pool)
+        print("\n[run] 중단 — 완료된 슬롯은 저장됨, 진행 중이던 슬롯은 pending. --resume으로 이어서 실행", flush=True)
+        os._exit(130)
+    ex.shutdown(wait=True)
+
+
+def print_item(r, item: QuizItem | None) -> None:
+    for line in r.log:
+        print(f"      · {line}")
+    if item is None:
+        print(f"      (문항 없음) {r.last_errors[:2]}")
+        return
+    print(f"      focus {item.focus_bullet_ids} · SC-{item.scenario_id} · status {item.status}")
+    print(f"      Q: {item.stem}")
+    for o in item.options:
+        mark = "*" if o.label == item.answer else " "
+        print(f"      {mark}{o.label}) {o.text}")
+        print(f"          - {o.rationale}")
+    print(f"      excerpt: {item.source_excerpt}")
+    if r.status != "approved":
+        for e in r.last_errors:
+            print(f"      ! {e}")
+    print()
+
+
+def apply_dedupe(manifest: QuizManifest, pool: dict[str, QuizItem]) -> int:
+    order = {s.quiz_id: s.order for s in manifest.slots}
+    emb = config.get_embeddings()
+    dups = dedupe(list(pool.values()), order, emb.embed_documents)
+    by_id = {s.quiz_id: s for s in manifest.slots}
+    for dup_id, orig_id, sim in dups:
+        tag = f"duplicate_of:{orig_id}"
+        it = pool[dup_id]
+        pool[dup_id] = it.model_copy(update={"status": "duplicate", "detected_patterns": it.detected_patterns + [tag]})
+        if (s := by_id.get(dup_id)) is not None:
+            s.status = "duplicate"
+            s.detected_patterns = s.detected_patterns + [tag]
+            s.updated_at = now_iso()
+        print(f"[dedupe] {dup_id} ≈ {orig_id} (cos {sim:.3f}) → duplicate")
+    if dups:
+        save(manifest, pool)
+    return len(dups)
+
+
+# ---------------------------------------------------------------- 리포트
+
+def print_plan(slots: list[ManifestSlot], corpus: Corpus) -> None:
+    print("\n[slots] 도메인  기본  추가  합계(기대)  시나리오 분포")
+    for d in range(1, 6):
+        ds = [s for s in slots if s.domain == d]
+        base = sum(1 for s in ds if s.slot_type == "base")
+        extra = sum(1 for s in ds if s.slot_type == "extra")
+        sc = Counter(s.scenario_id for s in ds)
+        print(f"  D{d}      {base:>4}  {extra:>4}  {base + extra:>4}({EXPECTED_TOTAL[d]})   "
+              + ", ".join(f"SC-{k}:{v}" for k, v in sorted(sc.items())))
+    print(f"  합계    {sum(1 for s in slots if s.slot_type == 'base'):>4}  "
+          f"{sum(1 for s in slots if s.slot_type == 'extra'):>4}  {len(slots):>4}")
+    tc = Counter(s.target_answer for s in slots)
+    print("[slots] 정답 위치 목표: " + ", ".join(f"{k}:{tc[k]}" for k in LABELS))
+    print("[slots] 추가 슬롯: " + ", ".join(f"{s.quiz_id}{s.focus_bullet_ids}" for s in slots if s.slot_type == "extra"))
+    print("[fewshot] 시나리오별 SQ: " + ", ".join(f"SC-{k}:{v}" for k, v in sorted(corpus.sq_by_scenario.items())))
+
+
+def print_summary(manifest: QuizManifest, pool: dict[str, QuizItem], corpus: Corpus, n_dups: int) -> None:
+    summ = summarize(manifest)
+    approved = [i for i in pool.values() if i.status == "approved"]
+    tried = sum(v for k, v in summ.items() if k != "pending")
+    print("\n[summary] 상태: " + ", ".join(f"{k} {v}" for k, v in summ.items()))
+    print("[summary] 도메인별 승인/목표: " + ", ".join(
+        f"D{d} {sum(1 for i in approved if i.domain == d)}/{EXPECTED_TOTAL[d]}" for d in range(1, 6)))
+    covered = {b for i in approved for b in i.focus_bullet_ids}
+    print(f"[summary] 세부 항목 커버리지: {len(covered)}/{len(corpus.bullets)} "
+          f"({len(covered) / len(corpus.bullets):.1%}, 목표 {COVERAGE_TARGET} 이상)")
+    if tried:
+        print(f"[summary] 승인율: {summ['approved']}/{tried} ({summ['approved'] / tried:.1%})")
+    pats = Counter(p.split(":")[0] for s in manifest.slots for p in s.detected_patterns)
+    if pats:
+        print("[summary] 실패 유형: " + ", ".join(f"{k} {v}" for k, v in pats.most_common()))
+    if approved:
+        ac = Counter(i.answer for i in approved)
+        dist = ", ".join(f"{k} {ac[k]} ({ac[k] / len(approved):.0%})" for k in LABELS)
+        print(f"[summary] 정답 위치: {dist}")
+        if len(approved) >= 20 and any(not 0.20 <= ac[k] / len(approved) <= 0.30 for k in LABELS):
+            print("[summary] 경고: 정답 위치 분포가 20~30% 범위를 벗어남")
+    print(f"[summary] 이번 실행 중복 판정: {n_dups}")
+
+
+# ---------------------------------------------------------------- main
+
+def main() -> int:
+    sys.stdout.reconfigure(errors="replace")
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    mode = ap.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--dry-run", action="store_true", help="슬롯 배정만 확인 (LLM·파일 쓰기 없음)")
+    mode.add_argument("--pilot", type=int, nargs="?", const=10, metavar="N", help="파일럿 N슬롯 재생성 (기본 10)")
+    mode.add_argument("--resume", action="store_true", help="pending 슬롯을 순서대로 생성")
+    mode.add_argument("--fill-gaps", action="store_true", help="승인 문제가 없는 세부 항목만 보충")
+    ap.add_argument("--limit", type=int, help="--resume에서 처리할 최대 슬롯 수")
+    ap.add_argument("--concurrency", type=int, default=4)
+    ap.add_argument("--no-dedupe", action="store_true", help="실행 후 중복 제거 생략")
+    args = ap.parse_args()
+
+    try:
+        corpus = load_corpus()
+        slots = build_slots(corpus)
+    except CorpusError as e:
+        print(f"[build] {e}", file=sys.stderr)
+        return 1
+    errs = plan_errors(slots, corpus)
+    if errs:
+        print("[build] 슬롯 배정 오류:", file=sys.stderr)
+        for e in errs:
+            print(f"  - {e}", file=sys.stderr)
+        return 1
+
+    if args.dry_run:
+        print_plan(slots, corpus)
+        gen = QuizGenerator(corpus)              # 클라이언트만 만들고 호출하지 않음
+        for s in (slots[0], next(s for s in slots if s.slot_type == "extra")):
+            msgs = gen.generation_messages(s, s.scenario_id, [], [])
+            print(f"[dry-run] {s.quiz_id} 생성 프롬프트 {len(msgs[0].content) + len(msgs[1].content)}자, "
+                  f"few-shot {pick_fewshot(s.quiz_id, s.domain, s.scenario_id, corpus)}")
+        print(f"[dry-run] prompt_version {prompt_version()} — 파일 변경 없음")
+        return 0
+
+    try:
+        manifest, pool = load_state(corpus)
+    except CorpusError as e:
+        print(f"[build] {e}", file=sys.stderr)
+        return 1
+    gen = QuizGenerator(corpus)
+
+    if args.pilot is not None:
+        by_id = {s.quiz_id: s for s in manifest.slots}
+        # 새로 만든 슬롯(원래 시나리오)으로 고른다 — 재시도로 바뀐 scenario_id 때문에 선택이 흔들리지 않게
+        targets = [by_id[s.quiz_id] for s in select_pilot(slots, args.pilot)]
+        fresh = {s.quiz_id: s for s in slots}
+        for s in targets:                          # 프롬프트 조정 반복용: 매번 새로 생성
+            s.pilot, s.status, s.attempts = True, "pending", 0
+            s.scenario_id = fresh[s.quiz_id].scenario_id
+            s.detected_patterns, s.last_errors = [], []
+            pool.pop(s.quiz_id, None)
+        save(manifest, pool)
+        run_slots(gen, manifest, pool, targets, args.concurrency, verbose=True)
+    elif args.resume:
+        rank = {"base": 0, "extra": 1, "fill": 2}
+        targets = sorted((s for s in manifest.slots if s.status == "pending"),
+                         key=lambda s: (rank[s.slot_type], s.order))
+        if args.limit is not None:
+            targets = targets[:args.limit]
+        save(manifest, pool)
+        run_slots(gen, manifest, pool, targets, args.concurrency, verbose=False)
+    else:
+        new = add_fill_slots(manifest, pool, corpus)
+        targets = [s for s in manifest.slots if s.slot_type == "fill" and s.status == "pending"]
+        print(f"[fill-gaps] 새 보충 슬롯 {len(new)}개, 처리 대상 {len(targets)}개")
+        save(manifest, pool)
+        run_slots(gen, manifest, pool, targets, args.concurrency, verbose=False)
+
+    n_dups = 0 if args.no_dedupe else apply_dedupe(manifest, pool)
+    print_summary(manifest, pool, corpus, n_dups)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

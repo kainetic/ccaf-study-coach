@@ -59,6 +59,14 @@ STUDY_LOG_PATH = Path(os.environ.get("CCAF_STUDY_LOG", DATA_DIR / "study_log.jso
 
 # 시험 도메인 비중 (가이드 v0.2). 출제 도메인 가중에 쓴다 (DESIGN §5-3).
 DOMAIN_WEIGHTS = {1: 0.27, 2: 0.18, 3: 0.20, 4: 0.20, 5: 0.15}
+DOMAIN_NAMES = {
+    1: "Agentic Architecture & Orchestration",
+    2: "Tool Design & MCP Integration",
+    3: "Claude Code Configuration & Workflows",
+    4: "Prompt Engineering & Structured Output",
+    5: "Context Management & Reliability",
+}
+BULLET_TOTAL = 240          # 세부 항목 수 (ingest가 검증, 진도 커버리지 분모)
 
 GUIDE_VERSION = "0.2"
 

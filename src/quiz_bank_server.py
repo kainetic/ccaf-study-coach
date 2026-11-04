@@ -2,7 +2,7 @@
 
 단독 실행하지 않는다. 클라이언트(src/agent.py)가 `sys.executable -m src.quiz_bank_server`로 stdio 자식 프로세스로 띄운다.
 
-- 도구: get_quiz, submit_answer (P0). get_progress·get_weak_domains는 P1에서 추가
+- 도구: get_quiz, submit_answer (P0), get_progress, get_weak_domains (P1)
 - resource: quiz://catalog (도메인·TS·시나리오별 출제 가능 문항 수)
 - 출제는 data/quiz_pool.json의 status == "approved" 문항만. 런타임에 문제를 만들지 않는다
 - get_quiz는 정답·해설을 뺀 QuizPublic만 반환. 정답은 submit_answer가 코드로 채점한 뒤에만 공개
@@ -42,6 +42,13 @@ def error(category: str, message: str, retryable: bool = False) -> dict:
 def normalize_task_id(task_id: str) -> Optional[str]:
     m = TASK_ID_RE.match(task_id.strip())
     return f"TS-{m.group(1)}.{m.group(2)}" if m else None
+
+
+def weakness_factor(attempts: int, correct: int) -> float:
+    """약점 계수 (출제 도메인 가중 §5-3, 학습 시간 배분 §5-5 공용). 시도 3회 미만이면 1.0(기록 부족 → 비중만)."""
+    if attempts < MIN_ATTEMPTS_FOR_WEAKNESS:
+        return 1.0
+    return max(WEAKNESS_FLOOR, 1.0 - correct / attempts)
 
 
 def to_public(item: QuizItem) -> QuizPublic:
@@ -96,10 +103,7 @@ class QuizBank:
     # ---- 출제 ----
     def _domain_factor(self, attempts: list[StudyAttempt], d: int) -> float:
         mine = [a for a in attempts if a.domain == d]
-        if len(mine) < MIN_ATTEMPTS_FOR_WEAKNESS:
-            return 1.0
-        acc = sum(a.correct for a in mine) / len(mine)
-        return max(WEAKNESS_FLOOR, 1.0 - acc)
+        return weakness_factor(len(mine), sum(a.correct for a in mine))
 
     def _alternatives(self, unsolved: list[QuizItem], domain, task_id, scenario_id) -> list[dict]:
         """조건을 하나씩 뺐을 때 출제 가능한 조합. 시나리오 → TS → 도메인 순으로 완화 (주제를 최대한 유지)."""
@@ -193,6 +197,59 @@ class QuizBank:
         return {"status": "graded", **result.model_dump(),
                 "options": {o.label: o.text for o in item.options}}
 
+    # ---- 진도·약점 (P1) ----
+    def _user_log(self, user_id: str) -> UserStudyLog:
+        with self._lock:
+            return self._load_log().users.get(user_id, UserStudyLog())
+
+    def get_progress(self, user_id: str) -> dict:
+        """도메인별 시도·정답률, 세부 항목 커버리지, TS별 시도·정답·남은 승인 문제 수. 기록이 없어도 정상 결과."""
+        if not USER_ID_RE.match(user_id or ""):
+            return error("validation", f"user_id 형식 오류: {user_id!r} (영문·숫자·_·-만, 점 금지)")
+        att = self._user_log(user_id).attempts
+        solved = {a.quiz_id for a in att}
+        domains = []
+        for d, w in config.DOMAIN_WEIGHTS.items():
+            mine = [a for a in att if a.domain == d]
+            n, c = len(mine), sum(a.correct for a in mine)
+            domains.append({"domain": d, "name": config.DOMAIN_NAMES[d], "weight": w, "attempts": n, "correct": c,
+                            "accuracy": round(c / n, 3) if n else None})
+        tasks: dict[str, dict] = {}
+        for i in self.approved:
+            t = tasks.setdefault(i.task_id, {"domain": i.domain, "attempts": 0, "correct": 0, "remaining": 0})
+            t["remaining"] += i.quiz_id not in solved
+        for a in att:
+            if a.task_id in tasks:
+                tasks[a.task_id]["attempts"] += 1
+                tasks[a.task_id]["correct"] += a.correct
+        bullets = {b for a in att for b in a.focus_bullet_ids}
+        n_all, c_all = len(att), sum(a.correct for a in att)
+        return {"status": "ok", "user_id": user_id, "attempts": n_all, "correct": c_all,
+                "accuracy": round(c_all / n_all, 3) if n_all else None,
+                "bullet_coverage": {"solved": len(bullets), "total": config.BULLET_TOTAL},
+                "task_coverage": {"solved": sum(1 for t in tasks.values() if t["attempts"]), "total": len(tasks)},
+                "last_answered_at": att[-1].answered_at if att else None,
+                "domains": domains, "tasks": dict(sorted(tasks.items()))}
+
+    def get_weak_domains(self, user_id: str, top_k: int = 2) -> dict:
+        """약점 점수 = 비중 × (1 − 정답률). 시도 3회 미만 도메인은 점수 없이 insufficient로 분리."""
+        prog = self.get_progress(user_id)
+        if prog.get("isError"):
+            return prog
+        if not isinstance(top_k, int) or not 1 <= top_k <= 5:
+            return error("validation", f"top_k는 1~5: {top_k!r}")
+        ranked, insufficient = [], []
+        for d in prog["domains"]:
+            if d["attempts"] < MIN_ATTEMPTS_FOR_WEAKNESS:
+                insufficient.append({k: d[k] for k in ("domain", "name", "weight", "attempts")})
+                continue
+            ranked.append({**{k: d[k] for k in ("domain", "name", "weight", "attempts", "accuracy")},
+                           "score": round(d["weight"] * (1 - d["correct"] / d["attempts"]), 3)})
+        ranked.sort(key=lambda x: (-x["score"], x["domain"]))
+        return {"status": "ok", "user_id": user_id, "formula": "score = 시험 비중 × (1 − 정답률), 시도 3회 이상 도메인만",
+                "top": ranked[:top_k], "ranked": ranked, "insufficient": insufficient,
+                "message": None if ranked else "모든 도메인의 풀이 기록이 3회 미만이라 약점을 판단할 수 없음"}
+
     # ---- 카탈로그 ----
     def catalog(self) -> dict:
         by_dom = Counter(i.domain for i in self.approved)
@@ -253,6 +310,37 @@ def build_server(bank: Optional[QuizBank] = None):
         예: submit_answer(user_id="demo_new", quiz_id="Q-1.4-K2", choice="B")
         """
         return safe(bank.submit_answer, user_id, quiz_id, choice)
+
+    @mcp.tool()
+    def get_progress(user_id: str) -> str:
+        """사용자의 풀이 진도를 코드로 집계한다: 도메인별 시도·정답·정답률, 세부 항목 커버리지(푼 항목 / 240),
+        TS별 시도·정답·남은 승인 문제 수.
+
+        언제 쓰나: "내 진도 어때?", "지금까지 몇 문제 풀었어?", 학습 계획의 근거 수치가 필요할 때.
+        언제 쓰지 않나: 약점 순위만 필요할 때(get_weak_domains), 문제 출제·채점.
+
+        반환(JSON 문자열): {"status": "ok", attempts, accuracy, bullet_coverage{solved,total}, task_coverage,
+          domains[{domain, name, weight, attempts, correct, accuracy}], tasks{TS: {domain, attempts, correct, remaining}}}
+          기록이 없는 사용자도 attempts 0인 정상 결과. 에러: {"isError": true, "errorCategory": "validation", ...}
+
+        예: get_progress(user_id="demo_heavy")
+        """
+        return safe(bank.get_progress, user_id)
+
+    @mcp.tool()
+    def get_weak_domains(user_id: str, top_k: int = 2) -> str:
+        """약점 도메인을 점수 순으로 돌려준다. 점수 = 시험 비중 × (1 − 정답률) (코드 계산).
+        시도 3회 미만 도메인은 점수를 매기지 않고 insufficient(데이터 부족)로 따로 준다.
+
+        언제 쓰나: "내 약점이 뭐야?", 약점 기준 학습 계획을 짤 때.
+        언제 쓰지 않나: 전체 진도·TS별 기록이 필요할 때(get_progress).
+
+        반환(JSON 문자열): {"status": "ok", formula, top[...top_k], ranked[{domain, name, weight, attempts, accuracy, score}],
+          insufficient[{domain, name, weight, attempts}], message}
+
+        예: get_weak_domains(user_id="demo_heavy", top_k=2)
+        """
+        return safe(bank.get_weak_domains, user_id, top_k)
 
     @mcp.resource("quiz://catalog")
     def quiz_catalog() -> str:

@@ -4,7 +4,7 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
 기획: SERVICE.md · 설계: docs/DESIGN.md · 평가: evaluation/test_queries.csv
 설계 세부는 필요할 때 docs/DESIGN.md의 해당 절(§)을 읽을 것. 전체를 미리 읽지 말 것.
 
-## 현재 단계: S1·S2 완료 → S3(=P1) (DESIGN §1-1 단계표)
+## 현재 단계: S1·S2·S3 완료 → S4(round1) (DESIGN §1-1 단계표)
 - 완료: S0(ingest 62/240) · S1 전반(문제 풀 승인 266/284 슬롯(93.7%), 세부 항목 커버리지 240/240,
   정답이 가장 긴 보기 54% → 33.8%(목표 35% 이하 달성, --rebalance-length 성공 55·원본 유지 20),
   5% 초과 비율 28% → 7.9%(참고). 수치·예외 기록은 evaluation/quiz_pool_report.md)
@@ -13,9 +13,19 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
 - S2(=P0) 완료: search_guide, get_quiz(MCP), submit_answer(MCP) + Supervisor + /query
   - evaluation/smoke_p0.py 18/18 PASS (개념 질문 → 풀 출제 → 채점, study_log.json 기록, 정답 비노출)
   - RAGAS 3건 기준선 (evaluation/ragas_smoke.json): faithfulness 0.896 · recall 1.0 · precision 0.917 · relevancy 0.681
-- 다음: S3(=P1) — 가드레일 G1~G7, get_chunk, get_progress·get_weak_domains, study_coach, run_eval.py
+- S3(=P1) 완료: 가드레일 G1~G5(src/guards.py, G6·G7은 S2 도구), concept_tutor TutorAnswer+G3, get_chunk,
+  get_progress·get_weak_domains(MCP), study_coach(allocate_study_time·make_study_plan, src/planner.py), run_eval.py+llm_judge.py
+  - 설계 변경(DESIGN v0.5.2): G4는 입력 정정+출력 백스톱, search_guide 정확 조회 유지, allocate 인자는 days·hours만,
+    시험일 Store/case_facts 미구현(없으면 묻기), 평가 산출물은 evaluation/results(커밋)·logs/eval(비커밋)
+  - smoke_p1 19/19 · smoke_p0 18/18 · 20건 확인 실행(s3_check): 16/20 (positive 8/8 · negative 2/4 · edge 3/5 · guardrail 3/3).
+    실패 10·12·14는 Supervisor가 general_agent로 오라우팅(도구 0건, 12는 URL·접수 절차 지어냄), 16은 C·D 해설 누락
+    → 고치지 않고 round1에서 기준선으로 기록 (§9-4 #2 오라우팅 후보)
+- 다음: S4(round1) — 개선 작업 없이 아래 순서로 실행하고 evaluation/round1_report.md 작성
+  1) python evaluation/run_eval.py --label round1
+  2) python evaluation/ragas_smoke.py --from logs/eval/round1_full.json --out evaluation/ragas_round1.json
+  3) round1_report.md: 통과율(카테고리별)·실패 사유(results/round1_eval.json)·RAGAS 14건·풀 지표(quiz_pool_report.md, §9-3)
 - 선택 항목(v2)은 요청 전까지 시작하지 않는다
-- S4(round1)는 S3 완료 즉시, 개선 작업보다 먼저 실행한다
+- S4(round1)는 개선 작업보다 먼저 실행한다 (s3_check 실패 문항도 S5 전에는 고치지 않음)
 
 ## 명령 (Windows PowerShell)
 ..\.venv\Scripts\activate; pip install -r requirements.txt   # 상위 venv 공용 (버전 동일 고정, 독립 저장소 분리 시 새 venv)
@@ -37,7 +47,9 @@ python scripts/seed_study_log.py                     # 더미 사용자 demo_hea
 uvicorn src.api:api --port 8000                      # API 서버
 python evaluation/smoke_p0.py                        # P0 한 바퀴 검증 (--url 실행 중 서버, --keep 기록 남김)
 python evaluation/ragas_smoke.py                     # RAGAS 3건 스모크 → evaluation/ragas_smoke.json
-python evaluation/run_eval.py                        # 20건 평가 (P1부터)
+python evaluation/smoke_p1.py                        # P1 오프라인 검증 (가드 규칙·G3·진도·배분 합계, LLM 없음)
+python evaluation/run_eval.py --label round1         # 20건 평가 → evaluation/results/round1_eval.json + logs/eval/round1_full.json (--ids 7,13)
+python evaluation/ragas_smoke.py --from logs/eval/round1_full.json --out evaluation/ragas_round1.json   # 같은 답변으로 RAGAS 14건
 MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언트가 sys.executable로 stdio 자식 프로세스로 띄움.
 
 ## 고정값
@@ -96,6 +108,9 @@ MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언�
 - Bedrock Converse는 parallel_tool_calls 끄기를 지원하지 않음 → Supervisor 동시 핸드오프는 post_model_hook(single_handoff)로 제거
 - output_mode="last_message"는 하위 에이전트의 마지막 메시지만 올림 → 출제·채점은 return_direct 도구 결과를 답변으로 씀 (agent.turn_answer)
 - ragas 0.4.3은 langchain_community.chat_models.vertexai를 import (0.4에서 삭제) → ragas_smoke.py 안의 자리표시 모듈로 우회
+- concept_tutor는 ToolStrategy(TutorAnswer) + after_agent(TutorAnswerGuard)가 마지막 AIMessage를 만든다 → 답변 텍스트를 바꾸려면 프롬프트가 아니라 guards.check_tutor_answer
+- 평가·스모크가 출제하면 study_log에 issued가 쌓임 → run_eval은 임시 사본(CCAF_STUDY_LOG)을 씀. 다른 스크립트도 커밋 파일을 더럽히지 않게 주의
+- 가드 고정 문구(guards.REFUSALS·G4_CORRECTION·NO_EVIDENCE·OFF_TOPIC)는 run_eval이 문자열로 매칭 → 문구를 바꾸면 평가 기준도 바뀜
 
 ## 작업 방식
 - 새 모듈이나 여러 파일에 걸친 작업은 plan mode로 계획을 먼저 보여준다

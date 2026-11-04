@@ -4,6 +4,9 @@ Supervisor 구조에서는 하위 에이전트의 도구 결과가 최상위 mes
 - route: transfer_to_<agent> 핸드오프 도구
 - rewrite·retrieve: search_guide가 보내는 custom event
 - get_quiz·submit: quiz_master 도구 래퍼가 보내는 custom event (정답은 담지 않음)
+- guard·output_check: CoachApp.run(입력 가드, G4) + concept_tutor G3 custom event
+- progress·allocate·plan: study_coach 도구 래퍼·planner custom event
+- tools: 이번 턴에 실행된 앱 도구 이름 (핸드오프 transfer_*와 구조화 출력 도구 제외, 평가 판정용)
 - llm: 호출 수·토큰 합계
 """
 import json
@@ -16,6 +19,9 @@ from langchain_core.callbacks import AsyncCallbackHandler
 from src import config
 
 TRACE_LOG = config.ROOT / "logs" / "trace.jsonl"
+APP_TOOLS = {"search_guide", "get_chunk", "get_quiz", "submit_answer",
+             "get_progress", "get_weak_domains", "allocate_study_time", "make_study_plan"}
+PASSTHROUGH_EVENTS = ("progress", "allocate", "plan")
 
 
 class QueryTracer(AsyncCallbackHandler):
@@ -23,6 +29,7 @@ class QueryTracer(AsyncCallbackHandler):
         self.t0 = time.perf_counter()
         self.trace: list[dict] = []
         self.contexts: list[dict] = []
+        self.tools: list[str] = []
         self.llm_calls = 0
         self.tokens = {"input": 0, "output": 0}
         self.models: dict[str, int] = {}          # 실제로 응답한 모델 (런타임 전환 확인용)
@@ -40,6 +47,11 @@ class QueryTracer(AsyncCallbackHandler):
         self._starts[run_id] = time.perf_counter()
         if name.startswith("transfer_to_"):
             self.trace.append({"step": "route", "agent": name[len("transfer_to_"):], "t": self._t()})
+        elif name in APP_TOOLS:
+            self.tools.append(name)
+
+    def add_step(self, step: dict) -> None:
+        self.trace.append({**step, "t": self._t()})
 
     async def on_tool_end(self, output, *, run_id, **kw):
         self._starts.pop(run_id, None)
@@ -59,6 +71,10 @@ class QueryTracer(AsyncCallbackHandler):
             self.trace.append({"step": "get_quiz", **data, "t": self._t()})
         elif name == "submit":
             self.trace.append({"step": "submit", **data, "t": self._t()})
+        elif name == "output_check":
+            self.trace.append({"step": "output_check", **data, "t": self._t()})
+        elif name in PASSTHROUGH_EVENTS:
+            self.trace.append({"step": name, **data, "t": self._t()})
 
     async def on_chat_model_start(self, serialized, messages, *, run_id, **kw):
         self.llm_calls += 1
@@ -76,7 +92,8 @@ class QueryTracer(AsyncCallbackHandler):
         self.tokens["output"] += usage.get("output_tokens", 0)
 
     def summary(self) -> list[dict]:
-        return self.trace + [{"step": "llm", "calls": self.llm_calls, **self.tokens, "models": self.models, "t": self._t()}]
+        return self.trace + [{"step": "tools", "names": self.tools},
+                             {"step": "llm", "calls": self.llm_calls, **self.tokens, "models": self.models, "t": self._t()}]
 
     def write(self, record: dict, path: Optional[Path] = TRACE_LOG) -> None:
         """로컬 확인용 JSONL (logs/는 커밋하지 않음)."""

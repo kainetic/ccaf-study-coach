@@ -1,4 +1,4 @@
-"""concept_tutor 도구 (DESIGN §3-1). P0: search_guide. get_chunk는 P1에서 분리."""
+"""concept_tutor 도구 (DESIGN §3-1). search_guide(P0), get_chunk(P1)."""
 import asyncio
 from typing import Literal, Optional
 
@@ -32,3 +32,26 @@ async def search_guide(query: str, domain: Optional[int] = None, doc_type: Optio
     if not hits:
         return "검색 결과 없음 — 가이드에서 근거를 찾지 못했다고 답하라 (지어내지 말 것)."
     return "\n\n---\n\n".join(f"[{h.doc_id}] {h.title}\n{h.text}" for h in hits)
+
+
+@tool
+async def get_chunk(doc_id: str) -> str:
+    """가이드 청크 하나를 doc_id로 정확히 가져온다 (전문). 결과 형식은 search_guide와 같다: [doc_id] 제목 + 원문.
+
+    언제 쓰나: 질문이 특정 문서 번호를 가리킬 때 — TS 번호, 샘플 문항 번호, 도메인, 시나리오, Exercise, 시험 개요·범위.
+      search_guide 결과에 나온 doc_id의 전문을 다시 확인할 때도 쓴다.
+    언제 쓰지 않나: 번호 없이 개념으로 묻는 질문(search_guide 사용), 연습 문제 출제·채점.
+
+    입력 doc_id 형식: TS-1.4 | SQ-01 (샘플 문항 1~12) | D3 (도메인 개요) | SC-5 (시나리오) | EX-2 (Exercise)
+      | OV-details (시험 형식·점수·도메인 비중) | OV-candidate (대상 응시자) | SCOPE-in | SCOPE-out | SCOPE-tech
+      ("TS 1.4", "샘플 1번"처럼 써도 정규화한다)
+
+    예: get_chunk("SQ-01") / get_chunk("OV-details") / get_chunk("TS-1.7")
+    """
+    did = retriever.normalize_doc_id(doc_id)
+    if did is None:
+        return (f"알 수 없는 doc_id: {doc_id!r}. 형식: TS-1.4, SQ-01, D3, SC-5, EX-2, OV-details, OV-candidate, "
+                "SCOPE-in, SCOPE-out, SCOPE-tech. 번호를 모르면 search_guide를 쓴다.")
+    c = retriever.load_chunks()[did]
+    await adispatch_custom_event("retrieve", {"hits": [{"doc_id": c.doc_id, "how": "get_chunk", "text": c.text}]})
+    return f"[{c.doc_id}] {c.title}\n{c.text}"

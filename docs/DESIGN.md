@@ -1,8 +1,14 @@
-# DESIGN · CCA-F 학습 코치 (설계 v0.5)
+# DESIGN · CCA-F 학습 코치 (설계 v0.5.2)
 
 > 기준 문서: Claude Certified Architect – Foundations Exam Guide (Version 0.2, 2026-06-30)
 > 과제 규약: [Day 8,9,10] mini PJT 문서 §4 (산출물 규약), §5 (12개 패턴)
 > 이 문서는 Claude Code에 넘기는 구현 기준 문서입니다. SERVICE.md가 "왜/누구를", 이 문서는 "어떻게"를 다룹니다.
+
+**v0.5.2 변경 사항 (S3 구현)**
+- 가드레일 `src/guards.py`: G1·G2 입력 차단(규칙 → LLM 판별), **G4는 입력 정정(고정 문구, 그래프 미호출) + 출력 금지어 백스톱**, G3은 concept_tutor `TutorAnswer` 검증, 고정 문구 상수화 (§6)
+- concept_tutor `TutorAnswer` 구조화 출력 + G3, `[근거: …]`는 코드가 붙임 (§5-1). `get_chunk` 추가, search_guide의 정확 조회 선행은 유지 (§3-1)
+- `get_progress`·`get_weak_domains` MCP 도구 (§3-2). study_coach: `allocate_study_time`(LLM 인자는 days·hours_per_day만, 비중·정답률은 코드 조회) + `make_study_plan`(Plan-Execute, return_direct) (§3-1, §5-5). 시험일 Store/case_facts는 S3에서 하지 않음 (일수·시간이 없으면 묻기)
+- 평가 러너 `evaluation/run_eval.py` + `llm_judge.py`, 산출물은 커밋용 요약(`evaluation/results/`)과 비커밋 전체(`logs/eval/`)로 분리 (§9-1). `smoke_p1.py`(오프라인), `ragas_smoke.py --from` (§9-2)
 
 **v0.5.1 변경 사항 (S2 구현)**
 - 런타임 모델 전환 `config.RUNTIME_MODEL_CHAIN`(§7-1): us Sonnet 4.5 고정 → 쓰로틀링·일일 할당량 소진 시 같은 모델의 다른 프로필·리전, 그다음 Sonnet 4.6
@@ -189,7 +195,7 @@ flowchart TD
 | `study_coach` | 진도, 약점, 학습 계획 | `get_progress`, `get_weak_domains` (MCP, P1), `allocate_study_time`, `make_study_plan` (P1) | 진도 요약 / 학습 계획 |
 | (general 응대) | 인사, 기능 안내 | 없음 | Day 6 `general_agent` 재사용 |
 
-P0의 `search_guide`는 질문에 TS 번호가 있으면 내부에서 정확 조회로 처리 (`get_chunk`를 분리하기 전까지 임시).
+`search_guide`는 질문에 TS 번호 등이 있으면 그 청크를 먼저 정확 조회로 앞에 둔다. S3에서 `get_chunk(doc_id)`를 별도 도구로 분리했지만 이 정확 조회 선행은 **유지**한다 (빼면 S2 검색 기준선이 개선 전에 회귀함. `get_chunk`는 모델이 번호를 알 때·결과 전문 확인용).
 
 도구 설명은 "언제 쓰고 언제 쓰지 않는지, 입력 형식, 예시 질의"를 포함해 작성 (TS 2.1).
 - `get_quiz`: "문제 요청 시 사용. 도메인·TS·시나리오로 필터. 결과가 `no_match`면 문제를 만들지 말고 `alternatives` 중 하나를 사용자에게 제안."
@@ -201,13 +207,18 @@ P0의 `search_guide`는 질문에 TS 번호가 있으면 내부에서 정확 조
 - **두 도구 모두 `return_direct`**: 출제 문항(지문·보기 원문 그대로 + 시나리오 이름)과 채점 결과(정오 + 풀의 보기별 해설 + `[근거: TS-x.y]`)를 **코드가 서식화**해 그대로 답변으로 씀. LLM이 문항을 고쳐 쓰거나 채점 뒤에 덧붙인 말로 결과를 덮어쓰는 문제(구현 중 재현됨)를 막음
 - MCP 클라이언트는 앱 수명 동안 stdio 세션 1개를 열어 두고 `session.call_tool()`로 호출 (`src/quiz_client.py`. `get_tools()`는 호출마다 서버 프로세스를 새로 띄움)
 
+**study_coach 도구 (S3 구현, `src/agents/study_coach.py`)**
+- `get_progress()`, `get_weak_domains(top_k)`: MCP 래퍼, user_id는 config에서 주입
+- `allocate_study_time(days, hours_per_day)`: LLM에게는 두 인자만 보임. 비중(config)·정답률(study_log, MCP get_progress)은 래퍼가 코드로 가져와 계산 → 정답률을 지어낼 수 없음 (§5-5)
+- `make_study_plan(days, hours_per_day)`: **return_direct**. Plan-Execute 서브그래프 결과를 코드가 서식화해 그대로 답변으로 씀
+
 ### 3-2. MCP 서버: `quiz_bank_server.py` (fastmcp, Day 4 구조 재사용)
 
 | 도구 | 입력 | 출력 |
 |---|---|---|
 | `get_quiz` | user_id, domain?, task_id?, scenario_id? | 정답·해설을 **제외한** 문제(`QuizPublic`) 또는 `no_match` |
 | `submit_answer` | user_id, quiz_id, choice | 채점 결과 + 보기별 해설. **채점과 기록 저장을 한 번에 수행** |
-| `get_progress` | user_id | 도메인별 시도 수·정답률, 세부 항목 커버리지(푼 항목 수 / 240) |
+| `get_progress` | user_id | 도메인별 시도 수·정답률, 세부 항목 커버리지(푼 항목 수 / 240), TS별 시도·정답·남은 승인 문제 수. 기록 없는 사용자도 정상 결과(0건) |
 | `get_weak_domains` | user_id, top_k=2 | 약점 점수 순 도메인 (점수 = 비중 × (1 − 정답률), 시도 3회 미만 도메인은 "데이터 부족") |
 | `reset_progress` | user_id | **HITL interrupt 승인 후에만 실행** (v2, 패턴 7) |
 
@@ -353,8 +364,10 @@ State 확장 (Supervisor 그래프 messages 외):
 ### 5-1. 개념 Q&A
 1. `rewrite_query`: 한국어 질문 → 영어 키워드 질의 (+ TS 번호 감지)
 2. `search_guide` 하이브리드 검색 k=4 (도메인 힌트 있으면 필터)
-3. `TutorAnswer` 구조화 출력. claims가 비면 답을 지어내지 않고 `coverage_gap`으로 "가이드에 없음" 안내 — **S3에서 G3과 함께 구현**. S2(P0)는 프롬프트 규칙(검색 결과만 근거, 없으면 "가이드에 근거 없음")
+3. `TutorAnswer` 구조화 출력. claims가 비면 답을 지어내지 않고 `coverage_gap`으로 "가이드에 없음" 안내 — **S3에서 G3과 함께 구현** (아래 S3 구현 메모)
 4. 답변 끝에 출처 표기: `[근거: TS-1.4, SQ-01]`
+
+S3 구현 메모 (`src/agents/concept_tutor.py`, `src/guards.check_tutor_answer`): `create_agent(response_format=ToolStrategy(TutorAnswer))` + after_agent 미들웨어 `TutorAnswerGuard`. claim은 **이번 턴에 search_guide/get_chunk가 실제로 돌려준 doc_id를 가리킬 때만 유효**(대소문자 무시). 유효 claim 0개(또는 구조화 응답 없음)면 고정 문구 `NO_EVIDENCE`(+coverage_gap). 아니면 answer_ko + "가이드에 없는 부분: …"(coverage_gap) + 코드가 만든 `[근거: …]`(answer_ko의 LLM 표기는 지움). excerpt 원문 일치 수는 trace `output_check`에만 기록(강제 안 함). 결과는 `name="concept_tutor"` AIMessage로 마지막에 붙여 Supervisor last_message·turn_answer가 사용
 
 S2 구현 메모 (`src/retriever.py`): 정확 조회는 정규식(`TS 2.2`·`Task Statement 2.2`·`도메인 3`·`Domain 3`·`D3`·`샘플 1번`·`Sample Question 1`·`시나리오 5`·`Exercise 2`)으로 감지한 청크를 앞에 두고 남은 자리를 하이브리드로 채움. BM25는 영어 토크나이저(가이드가 영어), 가중치 BM25 0.4 · 벡터 0.6, 재작성은 `rewrite_query` LLM 1회(실패 시 원문). rewrite·retrieve 결과는 custom event로 trace에 기록
 
@@ -498,7 +511,14 @@ S2 구현 메모 (`src/retriever.py`): 정확 조회는 정규식(`TS 2.2`·`Tas
 1. `get_progress` / `get_weak_domains`
 2. `allocate_study_time(days, hours_per_day, weights, accuracy)` → 결정적 계산 (LLM 계산 금지)
 3. planner → execute(일자별 TS 배정 + 관련 Exercise 연결 + 해당 TS의 남은 문제 수 안내) → replan → finalize
-4. 시험일은 Store/`case_facts`에서 읽음. 없으면 묻기
+4. 시험일은 Store/`case_facts`에서 읽음. 없으면 묻기 — **S3에서는 하지 않음**: 일수·하루 시간이 질문에 없으면 study_coach가 묻는다
+
+S3 구현 메모 (`src/planner.py`):
+- 배분: 몫 ∝ 시험 비중 × 약점 계수(`quiz_bank_server.weakness_factor` — 출제 가중 §5-3과 같은 식: 시도 3회 이상 max(0.2, 1 − 정답률), 미만 1.0), 0.5시간 단위 최대 잔여법 → **합계 = 일수 × 하루 시간** 항상 일치. demo_heavy 10일×2시간 → D1 4.0 · D2 5.5 · D3 2.0 · D4 3.5 · D5 5.0 = 20h. LLM 인자는 days·hours_per_day만 (weights·accuracy는 내부 인자)
+- 일자별 도메인 시간표(grid)도 코드: 도메인 시간을 1시간 블록(+0.5 나머지)으로 나눠 기간 전체에 고르게 펼침
+- plan(LLM, `StudyPlanDraft`): grid의 각 (일차, 도메인) 칸에 TS·시간·초점 배정 (TS 제목·정답률·남은 문제 수 제공, 약한 TS 우선)
+- execute(코드): TS 유효성·칸 시간 합 검증 → replan: 위반 목록을 주고 LLM 수정 1회 → 그래도 어긋나면 결정적 기본 배정(정답률 낮은 TS부터)
+- finalize(코드 서식화): 약점 근거표 → 배분표(합계) → 일자별 계획(남은 문제 수) → 연결 Exercise(EX 청크의 "Domains reinforced" 파싱)
 
 ---
 
@@ -509,12 +529,19 @@ S2 구현 메모 (`src/retriever.py`): 정확 조회는 정규식(`TS 2.2`·`Tas
 | G1 | 실제 시험 문항·덤프·기출 요청 거절, 대신 원본 연습 문제 제안 | 입력 | 정규식(`덤프`, `기출`, `실제 (시험)?문제`, `exam dump`, `real questions`) + LLM 판별 |
 | G2 | 프롬프트 인젝션·시스템 프롬프트 요구 차단 | 입력 | Day 5 `guards_input.py` 재사용 |
 | G3 | 출처 없는 단정 금지: 개념 답변은 claims ≥ 1, 아니면 "가이드 근거 없음" 응답으로 대체 | 출력 | `TutorAnswer` 검증 후 분기 |
-| G4 | 공식·제휴 사칭, 합격 보장 표현 금지 (`공식 튜터`, `합격 보장`) | 출력 | 금지어 검사 + 고정 고지 문구 |
+| G4 | 공식·제휴 사칭, 합격 보장 표현 금지 (`공식 튜터`, `합격 보장`) | 입력 + 출력 | 입력: 공식·인증·제휴·합격 보장 질문은 고정 정정 문구로 바로 답함(그래프 미호출). 출력: 긍정형 금지 표현 문장 제거 + 고정 고지 (S3 변경) |
 | G5 | 범위 밖 주제(Claude 시험과 무관한 질문)는 한 줄 안내 후 종료 | 입력/라우팅 | Supervisor 배분 기준 + general 응대 |
 | G6 | 채점 전 정답 노출 금지 | 도구 | `get_quiz`는 `QuizPublic`만 반환. 정답은 `submit_answer`에서만 공개 |
 | G7 | 검토를 통과하지 못한 문제는 출제 금지, 런타임에 문제를 만들지 않음 | 도구 | `get_quiz`는 `approved`만 반환. 풀에 없으면 안내 + 대체 제안 |
 
 고정 거절 문구는 Day 5 `guards_refusal.py` 방식으로 상수화 (평가 시 문자열 매칭 가능하게).
+
+S3 구현 메모 (`src/guards.py`, 실행 순서는 `agent.CoachApp.run`):
+- 입력 `input_guard`: 1차 정규식 G1(`덤프`·`기출`·`실제 (시험에 나온) 문제` — "실제 시험 문제처럼" 같은 스타일 요청은 제외 — `exam dump`·`real questions`) → G2(Day 5 INJECTION_PATTERNS) → G4. 걸리지 않으면 2차 LLM `InputCheck` 1회(G1+G2 함께, confidence > 0.7만 차단, 실패 시 통과 + 기록). 차단·정정이면 그래프를 부르지 않음 → 도구 호출 0건
+- 상수: `REFUSALS["G1"]`·`REFUSALS["G2"]`, `G4_CORRECTION`, `G4_NOTICE`, `NO_EVIDENCE`(G3), `OFF_TOPIC`(G5, general_agent 프롬프트에 그대로 삽입)
+- 출력 `output_check`(G4 백스톱): 문장 단위로 금지 표현이 있고 부정어(아니·않·없·비공식 등)가 없으면 그 문장을 지우고 `G4_NOTICE`를 붙임
+- 차단 사유는 `logs/guard_audit.log`에만 (사용자에게 비노출)
+- 한계: G4 정정 질문과 개념 질문이 한 메시지에 섞이면 정정 문구만 답함
 
 ---
 
@@ -529,7 +556,7 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 - `answer` 구성 (S2): 이번 턴의 하위 에이전트 최종 답변 + quiz_master return_direct 도구 결과를 순서대로 이어 붙임 (`agent.turn_answer`). Supervisor는 처리가 끝나면 "완료"만 출력하고 그 메시지는 쓰지 않음 → 문항 원문 보존, 재작성 없음
 - Supervisor 동시 핸드오프 금지: Bedrock Converse는 parallel_tool_calls 끄기를 지원하지 않으므로 `post_model_hook`(`agent.single_handoff`)이 첫 핸드오프만 남김 (복합 요청은 concept_tutor → quiz_master 순서로 이어서 처리)
 - `contexts`: `search_guide`/`get_chunk` 결과와, 출제 시에는 해당 문제의 TS 청크(정답 단서인 source_excerpt는 넣지 않음)를 콜백으로 수집 (Day 7 `run_eval.py`의 ToolRecorder 방식)
-- `trace`: step 단위 `guard → route(agent) → rewrite → retrieve → get_quiz → submit → output_check` + 마지막 `llm` step(호출 수·토큰·실제 응답 모델). Day 7 `local_tracer.py` 확장. 로컬 사본 `logs/trace.jsonl`(커밋 안 함). S2에는 guard·output_check 없음(S3)
+- `trace`: step 단위 `guard → route(agent) → rewrite → retrieve → get_quiz → submit → progress → allocate → plan → output_check` + 끝에 `tools`(이번 턴 앱 도구 이름, 핸드오프·TutorAnswer 제외 — 평가 판정용)와 `llm`(호출 수·토큰·실제 응답 모델). `output_check`는 G3(concept_tutor)과 G4(최종 답변) 두 종류. Day 7 `local_tracer.py` 확장. 로컬 사본 `logs/trace.jsonl`(커밋 안 함)
 - 서버: FastAPI (Day 6 `api_server.py` 재사용, 경로만 `/query`로 변경)
 
 ### 7-1. 런타임 모델 전환 (S2, `src/llm.py`)
@@ -572,11 +599,18 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 - P0 한 바퀴 검증은 CSV와 별도로 `evaluation/smoke_p0.py`(개념 질문 → 출제 → 채점 3턴, 같은 thread_id)로 확인
 - Judge: Bedrock Claude Sonnet 4.5, temperature 0, 루브릭 고정 (Day 7 `llm_judge.py` 확장)
 
+S3 구현 메모 (`evaluation/run_eval.py`, `evaluation/llm_judge.py`):
+- in-process(TestClient `/query`), 문항마다 새 thread. 시작 전 `data/study_log.json`을 임시 파일로 복사해 `CCAF_STUDY_LOG`로 지정(커밋된 기록 보존). user_id는 note의 `user_id=…`, 없으면 `eval_user`
+- 도구 판정은 trace `tools` step. forbidden은 코드 검사(출제 문항의 정답이 "정답: X"로 노출됐는지, guardrail 문항은 note의 G1·G2·G4에 해당하는 고정 문구가 답변에 그대로 있는지) + judge
+- judge 입력: 질문·답변·trace 요약(경로·도구·출제·약점·배분 수치, 가이드 원문 없음) → `JudgeVerdict`(traits·forbidden 항목별 ok + 사유). 빠뜨린 항목은 실패로 둠. `JUDGE_VERSION`으로 루브릭 버전 구분, judge 실제 모델 기록
+- 산출물: `evaluation/results/<label>_eval.json`(커밋: 판정·사유·도구·doc_id·지연·호출 수, 답변 본문·가이드 원문 없음) + `logs/eval/<label>_full.json`(비커밋: 답변·contexts, RAGAS 재사용)
+- 오프라인 스모크 `evaluation/smoke_p1.py`: 가드 규칙 20건, G3 분기, get_chunk 정규화, 진도·약점, 배분 합계, 기본 일정 검증 (LLM 없음)
+
 ### 9-2. RAGAS
 - 대상: 근거 검색이 있는 문항만 (`evaluation/ragas_reference.csv`의 `ragas=Y`, 14건). 출제·학습 계획·가드레일 차단 문항은 judge로만 평가
 - 지표: context_recall, context_precision, faithfulness, answer_relevancy
 - reference는 가이드 원문 근거로 사람이 작성 (순환 평가 방지)
-- RAGAS LLM/임베딩도 Bedrock 래퍼로 연결. **S2(=P0)에서 3건짜리 스모크 테스트**
+- RAGAS LLM/임베딩도 Bedrock 래퍼로 연결. **S2(=P0)에서 3건짜리 스모크 테스트**. S4는 `ragas_smoke.py --from logs/eval/round1_full.json --out evaluation/ragas_round1.json`으로 run_eval이 만든 같은 답변·contexts를 14건 전부 채점
 - 주의: 가이드는 영어, 답변은 한국어 → answer_relevancy가 낮게 나올 수 있음. 필요하면 답변에 영어 핵심 용어 병기
 - S2 스모크 기준선 (`evaluation/ragas_smoke.py` → `ragas_smoke.json`, 1~3번): faithfulness 0.896 · context_recall 1.0 · context_precision 0.917 · answer_relevancy 0.681. ragas 0.4.3은 langchain-community 0.4에서 사라진 `chat_models.vertexai`를 import하므로 스크립트 안에서만 자리표시 모듈을 끼움
 
@@ -657,13 +691,13 @@ mini-pjt_{이름}/
 │   ├── agent.py               # Supervisor 그래프 조립 (build_app, CoachState, turn_answer)
 │   ├── agents/                # concept_tutor.py, quiz_master.py, general.py, study_coach.py(P1)
 │   ├── quiz_client.py         # MCP stdio 세션 클라이언트
-│   ├── tools.py               # search_guide, get_chunk, allocate_study_time
+│   ├── tools.py               # search_guide, get_chunk
 │   ├── quiz_gen.py            # 생성 → 검증 → 독립 검토 → 재시도 (오프라인 전용)
 │   ├── prompts/               # 문제 생성·검토 프롬프트
 │   ├── retriever.py           # 하이브리드 검색 + rewrite_query
 │   ├── schemas.py             # §2, §4 Pydantic 모델
 │   ├── guards.py              # G1~G7
-│   ├── planner.py             # Plan-Execute 서브그래프
+│   ├── planner.py             # allocate_study_time(결정적 배분) + Plan-Execute 서브그래프
 │   ├── tracer.py              # trace 수집
 │   ├── ingest.py              # PDF → 청크 62개 + 세부 항목 240개 → Chroma
 │   ├── quiz_bank_server.py    # MCP 서버 (문제 은행 + 학습 기록)
@@ -681,8 +715,11 @@ mini-pjt_{이름}/
 ├── evaluation/
 │   ├── test_queries.csv
 │   ├── ragas_reference.csv
-│   ├── run_eval.py
+│   ├── run_eval.py            # 20건 평가 (+ llm_judge.py)
+│   ├── results/               # <label>_eval.json (커밋용 요약)
 │   ├── smoke_p0.py            # P0 한 바퀴 검증 (3턴)
+│   ├── smoke_p1.py            # P1 오프라인 검증 (LLM 없음)
+│   ├── ragas_smoke.py         # RAGAS (S2 3건 / --from으로 run_eval 결과 14건)
 │   ├── quiz_pool_report.md
 │   ├── round1_report.md
 │   └── round2_report.md

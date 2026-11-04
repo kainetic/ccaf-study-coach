@@ -1,6 +1,9 @@
-"""RAGAS 3건 스모크 (DESIGN §1-1 S2, §9-2): ragas_reference.csv의 RAGAS 대상 앞 3건을 /query로 실행해 채점.
+"""RAGAS 평가 (DESIGN §1-1 S2·S4, §9-2): ragas_reference.csv의 RAGAS 대상(ragas=Y)을 채점.
 
-실행: python evaluation/ragas_smoke.py [--n 3]
+실행:
+    python evaluation/ragas_smoke.py [--n 3]          # S2 스모크: 앞 3건을 /query로 새로 실행해 채점 → ragas_smoke.json
+    python evaluation/ragas_smoke.py --from logs/eval/round1_full.json --out evaluation/ragas_round1.json
+        # S4: run_eval.py가 남긴 답변·contexts를 재사용해 RAGAS 대상 전부(14건)를 채점 (같은 답변을 judge·RAGAS가 함께 봄)
 - /query는 in-process(FastAPI TestClient)로 부른다. 문항마다 새 thread.
 - 지표: faithfulness, context_recall, context_precision(with reference), answer_relevancy
 - 평가 LLM은 런타임과 같은 전환 체인(src/llm.py), 임베딩은 Titan v2
@@ -37,21 +40,36 @@ def _ragas_compat_shim() -> None:
             sys.modules[name] = mod
 
 
-def load_cases(n: int) -> list[dict]:
+def load_cases(n: int | None) -> list[dict]:
     ev = config.ROOT / "evaluation"
     queries = {r["id"]: r for r in csv.DictReader((ev / "test_queries.csv").open(encoding="utf-8-sig"))}
     refs = [r for r in csv.DictReader((ev / "ragas_reference.csv").open(encoding="utf-8-sig")) if r["ragas"].strip().upper() == "Y"]
     return [{"id": r["id"], "question": queries[r["id"]]["input"], "reference": r["reference"],
-             "reference_doc_ids": r["reference_doc_ids"].split(";")} for r in refs[:n]]
+             "reference_doc_ids": r["reference_doc_ids"].split(";")} for r in (refs[:n] if n else refs)]
 
 
 def main() -> int:
     sys.stdout.reconfigure(errors="replace")
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--n", type=int, default=3, help="평가할 문항 수 (기본 3)")
+    ap.add_argument("--n", type=int, default=None, help="평가할 문항 수 (기본: 새로 실행하면 3, --from이면 전부)")
+    ap.add_argument("--from", dest="from_path", help="run_eval.py 전체 결과(logs/eval/<label>_full.json)의 답변·contexts 재사용")
+    ap.add_argument("--out", help="결과 JSON 경로 (기본 evaluation/ragas_smoke.json)")
     args = ap.parse_args()
+    out_path = Path(args.out).resolve() if args.out else OUT_PATH
 
-    cases = load_cases(args.n)
+    cases = load_cases(args.n if args.n or args.from_path else 3)
+    if args.from_path:
+        saved = {c["id"]: c for c in json.loads(Path(args.from_path).read_text(encoding="utf-8"))["cases"]}
+        cases = [c for c in cases if c["id"] in saved]
+        for c in cases:
+            c["response"], c["contexts"] = saved[c["id"]]["answer"], saved[c["id"]]["contexts"]
+        print(f"[ragas] {args.from_path}에서 {len(cases)}건 재사용: {[c['id'] for c in cases]}")
+    else:
+        run_queries(cases)
+    return score(cases, out_path, source=args.from_path)
+
+
+def run_queries(cases: list[dict]) -> None:
     from fastapi.testclient import TestClient
     import src.api as api_mod
     with TestClient(api_mod.api) as client:
@@ -63,6 +81,8 @@ def main() -> int:
             c["response"], c["contexts"] = out["answer"], out["contexts"]
             print(f"[query] #{c['id']} contexts {[x['doc_id'] for x in out['contexts']]} · 답변 {len(out['answer'])}자")
 
+
+def score(cases: list[dict], out_path: Path, source: str | None) -> int:
     _ragas_compat_shim()
     from ragas import EvaluationDataset, RunConfig, evaluate
     from ragas.embeddings import LangchainEmbeddingsWrapper
@@ -93,10 +113,11 @@ def main() -> int:
         print(f"{c['id']:<3} " + "  ".join(f"{'-' if scores[k] is None else scores[k]:>22}" for k in cols))
     means = {k: round(sum(r[k] for r in rows if r[k] is not None) / max(1, sum(r[k] is not None for r in rows)), 3) for k in cols}
     print("avg " + "  ".join(f"{means[k]:>22}" for k in cols))
-    OUT_PATH.write_text(json.dumps({"n": len(rows), "means": means, "rows": rows,
-                                    "note": "S2 RAGAS 스모크 기준선. 목표치는 round2 (SERVICE.md §5)"},
+    note = (f"run_eval 결과 재사용: {Path(source).name}" if source
+            else "S2 RAGAS 스모크 기준선. 목표치는 round2 (SERVICE.md §5)")
+    out_path.write_text(json.dumps({"n": len(rows), "means": means, "rows": rows, "note": note},
                                    ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"\n[ragas] {OUT_PATH.relative_to(config.ROOT).as_posix()} 저장")
+    print(f"\n[ragas] {out_path} 저장")
     return 0
 
 

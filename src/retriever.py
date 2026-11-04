@@ -27,7 +27,8 @@ into one concise English search query for that (English) guide.
 
 Question: {question}"""
 
-# 정확 조회 패턴: 질문에 문서 번호가 있으면 검색 대신 그 청크를 먼저 쓴다 (P0: get_chunk 분리 전 임시, §3-1)
+# 정확 조회 패턴: 질문에 문서 번호가 있으면 그 청크를 먼저 쓴다. S3에서 get_chunk(doc_id)를 따로 두었지만
+# search_guide의 정확 조회 선행도 유지한다 (S2 검색 기준선 회귀 방지, DESIGN §3-1)
 EXACT_PATTERNS = [
     (re.compile(r"(?:\bTS|task\s*statement)\s*-?\s*([1-5])\s*\.\s*([1-7])", re.I), lambda m: f"TS-{m[1]}.{m[2]}"),
     (re.compile(r"(?:도메인|domain)\s*-?\s*([1-5])(?!\s*\.\s*\d)", re.I), lambda m: f"D{m[1]}"),
@@ -68,6 +69,20 @@ def exact_ids(question: str) -> list[str]:
             if did in chunks and did not in out:
                 out.append(did)
     return out
+
+
+def normalize_doc_id(raw: str) -> str | None:
+    """get_chunk 입력 정규화: 'TS-1.4'·'ts 1.4'·'SQ-1'·'샘플 1번'·'D3'·'EX-2'·'scope-out' → 실제 doc_id. 없으면 None."""
+    chunks = load_chunks()
+    s = raw.strip()
+    by_lower = {k.lower(): k for k in chunks}
+    if s.lower() in by_lower:
+        return by_lower[s.lower()]
+    m = re.fullmatch(r"([1-5])\s*\.\s*([1-7])", s)
+    if m:
+        s = f"TS-{m[1]}.{m[2]}"
+    ids = exact_ids(s)
+    return ids[0] if ids else None
 
 
 @lru_cache(maxsize=1)

@@ -1,8 +1,10 @@
 """Supervisor 그래프 조립 (DESIGN §3). Day 6 final_scenario.py build_app 구조.
 
 MCP 도구를 비동기로 쓰므로 build_app은 async이고 실행은 ainvoke. 사용이 끝나면 close()로 MCP 세션을 닫는다.
-P0: concept_tutor(search_guide) · quiz_master(get_quiz, submit_answer) · general_agent.
-가드레일(G1~G5)·study_coach는 P1(S3).
+에이전트: concept_tutor(search_guide, get_chunk) · quiz_master(get_quiz, submit_answer)
+         · study_coach(get_progress, get_weak_domains, allocate_study_time, make_study_plan) · general_agent.
+한 턴 실행은 CoachApp.run: input_guard(G1·G2·G4) → Supervisor 그래프 → turn_answer → output_check(G4 백스톱).
+G3는 concept_tutor 안(TutorAnswerGuard), G5는 Supervisor 배분 + general_agent.
 """
 from dataclasses import dataclass
 from typing import NotRequired, Optional
@@ -12,14 +14,17 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.prebuilt.chat_agent_executor import AgentState
 from langgraph_supervisor import create_supervisor
 
-from src import config
+from src import config, guards
 from src.agents.concept_tutor import build_concept_tutor
 from src.agents.general import build_general_agent
-from src.agents.quiz_master import DIRECT_TOOLS, build_quiz_master
+from src.agents.quiz_master import DIRECT_TOOLS as QUIZ_DIRECT, build_quiz_master
+from src.agents.study_coach import DIRECT_TOOLS as COACH_DIRECT, build_study_coach
 from src.llm import get_runtime_llm
 from src.quiz_client import QuizBankClient
 
-AGENTS = ("concept_tutor", "quiz_master", "general_agent")
+AGENTS = ("concept_tutor", "quiz_master", "study_coach", "general_agent")
+DIRECT_TOOLS = QUIZ_DIRECT + COACH_DIRECT       # 결과 텍스트가 곧 사용자 답변
+RECURSION_LIMIT = 30
 
 
 class CoachState(AgentState):
@@ -32,7 +37,8 @@ SUPERVISOR_PROMPT = """너는 CCA-F 학습 코치(비공식 학습 도구)의 Su
 [배분 기준]
 - 시험 개념·용어 설명, 샘플 문항 해설, 시험 형식·비중·범위 질문 → concept_tutor
 - 연습 문제·퀴즈 요청, 그리고 출제된 문제에 대한 답 제출("답은 B", "C", "b요") → quiz_master
-- 인사, 잡담, 기능 안내 → general_agent
+- 내 진도·정답률·약점 확인, 남은 기간에 맞춘 학습 계획·시간 배분 → study_coach
+- 인사, 잡담, 기능 안내, 그리고 CCA-F 시험·Claude 학습과 무관한 질문(날씨, 주식, 일반 상식 등) → general_agent
 
 [규칙]
 - 한 번에 한 에이전트에게만 넘긴다 (동시 호출 금지). 같은 에이전트를 같은 요청으로 두 번 부르지 않는다.
@@ -64,11 +70,24 @@ class CoachApp:
     async def close(self) -> None:
         await self.bank.close()
 
+    async def run(self, question: str, user_id: str, thread_id: str, tracer) -> str:
+        """한 턴: 입력 가드 → 그래프 → 답변 조립 → 출력 검사. 차단·정정이면 그래프를 부르지 않는다 (도구 호출 0건)."""
+        d = await guards.input_guard(question)
+        tracer.add_step({"step": "guard", "action": d.action, "rule": d.rule, "layer": d.layer})
+        if d.action != "pass":
+            return guards.guard_reply(d)
+        cfg = {"configurable": {"thread_id": thread_id, "user_id": user_id},
+               "callbacks": [tracer], "recursion_limit": RECURSION_LIMIT}
+        result = await self.graph.ainvoke({"messages": [HumanMessage(question)]}, cfg)
+        answer, report = guards.output_check(turn_answer(result["messages"]))
+        tracer.add_step({"step": "output_check", **report})
+        return answer
+
 
 async def build_app() -> CoachApp:
     bank = await QuizBankClient().start()
     supervisor = create_supervisor(
-        [build_concept_tutor(), build_quiz_master(bank), build_general_agent()],
+        [build_concept_tutor(), build_quiz_master(bank), build_study_coach(bank), build_general_agent()],
         model=get_runtime_llm(),
         prompt=SUPERVISOR_PROMPT,
         state_schema=CoachState,
@@ -81,7 +100,7 @@ async def build_app() -> CoachApp:
 def turn_answer(messages: list) -> str:
     """이번 턴(마지막 사용자 메시지 이후)의 하위 에이전트 답변을 순서대로 이어 붙인다.
     - 하위 에이전트의 최종 텍스트(도구 호출 없는 AIMessage)
-    - quiz_master의 return_direct 도구 결과(출제 문항·채점 결과, 코드가 서식화)
+    - return_direct 도구 결과(출제 문항·채점 결과·학습 계획, 코드가 서식화)
     Supervisor의 마지막 메시지는 쓰지 않는다 (재작성 방지). 하위 답변이 없으면 마지막 메시지."""
     start = max((i for i, m in enumerate(messages) if isinstance(m, HumanMessage)), default=-1)
     parts = []

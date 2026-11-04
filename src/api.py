@@ -12,14 +12,12 @@ from typing import Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-from langchain_core.messages import HumanMessage
 from pydantic import BaseModel, Field
 
-from src.agent import build_app, turn_answer
+from src.agent import build_app
 from src.tracer import QueryTracer
 
 USER_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")     # Store namespace 규칙: 점 금지
-RECURSION_LIMIT = 30
 
 coach = None
 
@@ -45,11 +43,8 @@ class Query(BaseModel):
 
 async def run_query(question: str, user_id: str, thread_id: str) -> dict:
     tracer = QueryTracer()
-    cfg = {"configurable": {"thread_id": thread_id, "user_id": user_id},
-           "callbacks": [tracer], "recursion_limit": RECURSION_LIMIT}
-    result = await coach.graph.ainvoke({"messages": [HumanMessage(question)]}, cfg)
-    out = {"answer": turn_answer(result["messages"]), "contexts": tracer.contexts,
-           "trace": tracer.summary(), "thread_id": thread_id}
+    answer = await coach.run(question, user_id, thread_id, tracer)
+    out = {"answer": answer, "contexts": tracer.contexts, "trace": tracer.summary(), "thread_id": thread_id}
     tracer.write({"question": question, "user_id": user_id, **out})
     return out
 

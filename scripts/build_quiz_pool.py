@@ -36,6 +36,11 @@ MANIFEST_PATH = config.DATA_DIR / "quiz_pool_manifest.json"
 EXTRA_PER_DOMAIN = {1: 8, 2: 5, 3: 6, 4: 6, 5: 5}          # 추가 슬롯 30 (DESIGN §5-2 표)
 EXPECTED_TOTAL = {1: 56, 2: 48, 3: 55, 4: 53, 5: 58}         # 기본 + 추가
 TARGET_SEED = "ccaf-pool-v1"
+# 세부 항목 원문이 특정 시나리오를 전제하는 경우 순환 대신 고정 시작 시나리오 (DESIGN §5-2).
+# 순환 위치(cursor)는 그대로 진행하므로 다른 슬롯의 배정은 바뀌지 않는다.
+SCENARIO_OVERRIDES = {
+    "TS-1.4-S2": 1,     # "multi-concern customer requests" → SC-1 고객 지원
+}
 COVERAGE_TARGET = 228                                        # 240의 95%
 LONGEST_TARGET = 0.35                                        # 정답이 가장 긴 보기 비율 상한 (DESIGN §9-3)
 
@@ -69,9 +74,12 @@ def build_slots(corpus: Corpus) -> list[ManifestSlot]:
         cands = DOMAIN_SCENARIOS[domain]
         i = cursor.get(task_id, 0)
         cursor[task_id] = i + 1
+        scenario = cands[i % len(cands)]
+        if slot_type == "base" and focus[0] in SCENARIO_OVERRIDES:
+            scenario = SCENARIO_OVERRIDES[focus[0]]
         slots.append(ManifestSlot(
             quiz_id=qid(task_id, suffix), slot_type=slot_type, task_id=task_id, domain=domain,
-            focus_bullet_ids=focus, scenario_id=cands[i % len(cands)], scenario_candidates=cands,
+            focus_bullet_ids=focus, scenario_id=scenario, scenario_candidates=cands,
             target_answer="A", order=len(slots),
         ))
 

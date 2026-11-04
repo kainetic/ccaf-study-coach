@@ -45,51 +45,6 @@
     "created_at": "2026-11-04T04:36:06+00:00"
   },
   {
-    "quiz_id": "Q-1.4-S2",
-    "task_id": "TS-1.4",
-    "domain": 1,
-    "focus_bullet_ids": [
-      "TS-1.4-S2"
-    ],
-    "scenario_id": 4,
-    "stem": "A developer asks your productivity agent \"Why is the checkout flow failing in production and how do I fix the database migration issue?\" Logs show the agent first calls Grep to search for checkout-related errors, waits for results, then calls Grep again to search for migration errors, and finally synthesizes a response. The entire workflow takes 38 seconds. Profiling reveals the first search takes 14 seconds, the second search takes 16 seconds, and synthesis takes 8 seconds. What change would most effectively reduce total response time?",
-    "options": [
-      {
-        "label": "A",
-        "text": "Execute both Grep searches in parallel with shared codebase context, then synthesize findings from both investigations into a unified response.",
-        "rationale": "개발자 요청은 두 가지 독립적인 관심사(체크아웃 실패와 마이그레이션 문제)를 포함하므로, 두 조사를 병렬로 수행하고 공유 컨텍스트(코드베이스)를 사용한 뒤 통합 해결책을 합성할 수 있습니다. 14초와 16초가 겹치므로 총 응답 시간이 약 절반으로 줄어듭니다."
-      },
-      {
-        "label": "B",
-        "text": "Chain the searches by passing the first Grep result directly to the second Grep invocation, eliminating the coordinator round-trip overhead.",
-        "rationale": "직접 체이닝은 조정 오버헤드 몇 초를 절약할 수 있지만, 두 검색이 여전히 순차적으로 실행되므로(14초 + 16초) 병렬화의 이점을 얻지 못합니다. 또한 체크아웃 오류와 마이그레이션 문제는 독립적인 관심사이므로 순차 의존성이 필요하지 않습니다."
-      },
-      {
-        "label": "C",
-        "text": "Implement a combined search tool that accepts multiple patterns and returns all matching results in a single Grep invocation.",
-        "rationale": "단일 도구로 결합하면 도구 호출 오버헤드는 줄지만, 두 검색이 서로 다른 패턴과 컨텍스트(체크아웃 로직 vs. 마이그레이션 스크립트)를 대상으로 하므로 내부적으로 여전히 순차 실행될 가능성이 높습니다. 병렬 조사의 핵심 이점을 놓칩니다."
-      },
-      {
-        "label": "D",
-        "text": "Cache Grep results for common error patterns and reuse them when developers ask similar questions about production failures.",
-        "rationale": "캐싱은 반복되는 쿼리에 유용하지만, 현재 요청의 38초 응답 시간을 줄이지 못합니다. 이 문제는 순차 실행으로 인한 구조적 비효율성이므로, 미래 요청 최적화가 아니라 현재 워크플로우 재구성이 필요합니다."
-      }
-    ],
-    "answer": "A",
-    "source_excerpt": "Decomposing multi-concern customer requests into distinct items, then investigating each in parallel using shared context before synthesizing a unified resolution",
-    "status": "rejected",
-    "review_retries": 2,
-    "detected_patterns": [
-      "meta_reference",
-      "scenario_mismatch",
-      "scenario_mismatch"
-    ],
-    "human_checked": false,
-    "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
-    "guide_version": "0.2",
-    "created_at": "2026-11-04T04:35:57+00:00"
-  },
-  {
     "quiz_id": "Q-2.1-K1",
     "task_id": "TS-2.1",
     "domain": 2,

@@ -324,6 +324,7 @@ State 확장 (Supervisor 그래프 messages 외):
 
 - 풀 구성은 시험 비중과 일치하지 않음(D1 21%, D5 21%). 풀은 **빠짐없이 다루는 것**을 맡고, 실제 **출제 빈도는 `get_quiz`가 시험 비중 × 약점으로 조절** (§5-3).
 - 시나리오는 도메인의 primary 시나리오 목록에서 TS 안 순서대로 순환 배정. 검토에서 `scenario_mismatch`가 나오면 재시도 때 목록의 다음 시나리오로 바꿈.
+- 예외: 세부 항목 원문이 특정 시나리오를 전제하면 시작 시나리오를 고정 (`build_quiz_pool.SCENARIO_OVERRIDES`. 순환 위치는 그대로 진행해 다른 슬롯 배정은 불변). 현재 `TS-1.4-S2`("multi-concern customer requests") → SC-1. 파일럿에서 SC-3·SC-4로 두 번 `scenario_mismatch` 탈락한 사례
 
 **생성 절차**
 1. **매니페스트 작성**: 슬롯 270개(`quiz_id`, task_id, focus_bullet_ids, scenario_id)를 `data/quiz_pool_manifest.json`에 기록. 슬롯 상태(pending/approved/rejected)를 갱신하므로 중단돼도 `--resume`으로 미완료 슬롯만 이어서 생성 (TS 4.5 custom_id 재제출, TS 5.4 manifest 기반 복구)

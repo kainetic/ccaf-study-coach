@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from src import config  # noqa: E402
-from src.quiz_gen import correct_vs_longest, load_corpus, seeded_rng, short_model  # noqa: E402
+from src.quiz_gen import correct_vs_longest, seeded_rng, short_model  # noqa: E402
 from src.schemas import LABELS, QuizItem  # noqa: E402
 from build_quiz_pool import POOL_PATH  # noqa: E402
 
@@ -65,8 +65,7 @@ def main() -> int:
             print(f"[sample] {OUT_PATH.name}에 검토 입력이 있음 — 보호를 위해 중단 (--force로 덮어쓰기)", file=sys.stderr)
             return 1
 
-    corpus = load_corpus()
-    items = [QuizItem.model_validate(d) for d in json.loads(POOL_PATH.read_text(encoding="utf-8"))]
+    items =[QuizItem.model_validate(d) for d in json.loads(POOL_PATH.read_text(encoding="utf-8"))]
     approved = [i for i in items if i.status == "approved"]
 
     sample: list[tuple[str, QuizItem]] = []
@@ -80,7 +79,9 @@ def main() -> int:
             print(f"  {key:<10} {len(members):>4}  {len(picked):>4}  {n_rep}{'' if has_rep else ' (층에 repair 문항 없음)'}")
             sample += [(key, i) for i in picked]
 
-    fields = (["quiz_id", "stratum", "domain", "task_id", "focus_bullet_ids", "focus_text", "scenario_id",
+    # 가이드 원문(세부 항목 문장)은 공개 저장소에 넣지 않으므로 열로 두지 않는다 (DESIGN §2-4).
+    # 검토자는 focus_bullet_ids로 로컬 data/guide_bullets.jsonl 또는 가이드 PDF를 참조한다.
+    fields = (["quiz_id", "stratum", "domain", "task_id", "focus_bullet_ids", "scenario_id",
                "stem"] + [f"option_{l}" for l in LABELS] + ["answer"] + [f"rationale_{l}" for l in LABELS]
               + ["source_excerpt", "review_retries", "repaired", "rebalanced", "correct_vs_longest",
                  "generator_model"] + REVIEW_COLS)
@@ -92,7 +93,6 @@ def main() -> int:
             w.writerow({
                 "quiz_id": i.quiz_id, "stratum": key, "domain": i.domain, "task_id": i.task_id,
                 "focus_bullet_ids": " ".join(i.focus_bullet_ids),
-                "focus_text": " / ".join(corpus.bullet_by_id[b].text for b in i.focus_bullet_ids),
                 "scenario_id": f"SC-{i.scenario_id}", "stem": i.stem,
                 **{f"option_{l}": opts[l].text for l in LABELS}, "answer": i.answer,
                 **{f"rationale_{l}": opts[l].rationale for l in LABELS},

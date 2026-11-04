@@ -136,6 +136,12 @@ class ReviewVerdict(BaseModel):
         return v
 
 
+class ScenarioFit(BaseModel):
+    """--fill-gaps에서 시나리오 불일치로 탈락한 세부 항목의 시나리오 적합도 순위 (DESIGN §5-2)."""
+    ranking: list[int] = Field(description="Candidate scenario numbers ordered from best to worst fit.")
+    reason: str = Field(description="One sentence in Korean explaining why the first scenario fits best.")
+
+
 class GradeResult(BaseModel):
     quiz_id: str
     choice: str
@@ -166,6 +172,8 @@ class ManifestSlot(BaseModel):
     attempts: int = 0                   # 생성 호출 수 (0~3). review_retries = attempts - 1
     repairs: int = 0                    # 길이 repair 호출 수 (attempts에 포함하지 않음)
     repairs_ok: int = 0                 # repair 후 코드 검증을 통과한 수
+    generator_model: Optional[str] = None   # 최종 문항을 만든 생성 호출의 실제 모델 (모델 전환 시 기본과 다를 수 있음)
+    reviewer_model: Optional[str] = None    # 승인 또는 마지막 탈락 판정을 낸 검토 호출의 모델
     detected_patterns: list[str] = Field(default_factory=list)
     last_errors: list[str] = Field(default_factory=list)
     prompt_version: Optional[str] = None

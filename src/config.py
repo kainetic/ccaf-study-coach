@@ -18,6 +18,15 @@ load_dotenv(ENV_PATH)
 # ---- 모델 (CLAUDE.md 고정값) ----
 MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
 REGION = "us-east-1"
+
+# 문제 풀 생성(오프라인 quiz_gen) 전용: 쓰로틀링 시 이 순서로 전환 (DESIGN §5-2). 런타임은 MODEL_ID 고정.
+# Haiku는 문항·검토 품질 때문에 쓰지 않는다.
+QUIZ_GEN_MODEL_CHAIN = [
+    MODEL_ID,                                              # us  Sonnet 4.5 (기본)
+    "global.anthropic.claude-sonnet-4-5-20250929-v1:0",    # global Sonnet 4.5
+    "us.anthropic.claude-sonnet-4-6",                      # us  Sonnet 4.6
+    "global.anthropic.claude-sonnet-4-6",                  # global Sonnet 4.6
+]
 EMBED_MODEL_ID = "amazon.titan-embed-text-v2:0"
 
 # ---- 경로 ----
@@ -31,11 +40,16 @@ COLLECTION = "ccaf_guide"
 GUIDE_VERSION = "0.2"
 
 
-def get_llm():
-    """Bedrock Claude (temperature 0). 호출부에서 필요할 때만 생성."""
+def get_llm(model_id: str = MODEL_ID, max_retries: int | None = None):
+    """Bedrock Claude (temperature 0). 호출부에서 필요할 때만 생성. model_id는 문제 풀 생성 체인에서만 바꾼다.
+    max_retries: botocore 내부 재시도 횟수. 문제 풀 생성은 1로 줄여 쓰로틀 시 모델 전환(ModelPool)이 바로 일어나게 한다."""
     from langchain_aws import ChatBedrockConverse
 
-    return ChatBedrockConverse(model=MODEL_ID, region_name=REGION, temperature=0)
+    kwargs = {}
+    if max_retries is not None:
+        from botocore.config import Config
+        kwargs["config"] = Config(retries={"max_attempts": max_retries, "mode": "standard"})
+    return ChatBedrockConverse(model=model_id, region_name=REGION, temperature=0, **kwargs)
 
 
 def get_embeddings():

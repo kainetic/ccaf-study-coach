@@ -27,6 +27,8 @@ MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언�
 
 ## 고정값
 - LLM: ChatBedrockConverse, model "us.anthropic.claude-sonnet-4-5-20250929-v1:0", region "us-east-1", temperature 0
+  - 예외: 문제 풀 생성(오프라인 quiz_gen)만 쓰로틀링 시 config.QUIZ_GEN_MODEL_CHAIN 순서로 전환
+    (Sonnet 4.5/4.6 × us/global, Haiku 미사용). 런타임 에이전트는 위 고정 모델 (DESIGN §5-2)
 - 임베딩: BedrockEmbeddings "amazon.titan-embed-text-v2:0"
 - Chroma: persist ./chroma_db, collection "ccaf_guide"
 - 자격 증명: 상위 폴더의 ..\.env (sds-ax-practice\.env)를 사용. mini_pjt 안에 .env를 만들거나 복사하지 않음.

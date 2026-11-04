@@ -25,8 +25,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src import config  # noqa: E402  (.env 로드)
 from src.prompts import prompt_version  # noqa: E402
 from src.quiz_gen import (  # noqa: E402
-    DOMAIN_SCENARIOS, Corpus, CorpusError, QuizGenerator, TransientError, check_domain_scenarios,
-    dedupe, keywords, load_corpus, now_iso, pair_extra_bullets, pick_fewshot, seeded_rng,
+    DOMAIN_SCENARIOS, Corpus, CorpusError, ModelPool, QuizGenerator, TransientError, check_domain_scenarios,
+    short_model,
+    FORBIDDEN_SCENARIOS, ScenarioRanker, dedupe, keywords, load_corpus, mismatched_scenarios, now_iso,
+    order_scenarios, pair_extra_bullets, pick_fewshot, rejected_for_scenario, seeded_rng,
 )
 from src.schemas import LABELS, ManifestSlot, QuizItem, QuizManifest  # noqa: E402
 
@@ -121,6 +123,10 @@ def plan_errors(slots: list[ManifestSlot], corpus: Corpus) -> list[str]:
     ids = [s.quiz_id for s in slots]
     if len(set(ids)) != len(ids):
         errs.append("quiz_id 중복")
+    for s in slots:
+        bad = FORBIDDEN_SCENARIOS.get(s.task_id, set()) & ({s.scenario_id} | set(s.scenario_candidates))
+        if bad:
+            errs.append(f"{s.quiz_id}: 금지 조합 {s.task_id} × SC-{sorted(bad)}")
     for s in slots:
         if s.scenario_id not in DOMAIN_SCENARIOS[s.domain]:
             errs.append(f"{s.quiz_id}: SC-{s.scenario_id}는 D{s.domain} 배정 시나리오가 아님")
@@ -251,8 +257,11 @@ def stale_count(manifest: QuizManifest) -> int:
     return sum(1 for s in manifest.slots if s.status != "pending" and s.prompt_version != pv)
 
 
-def add_fill_slots(manifest: QuizManifest, pool: dict[str, QuizItem], corpus: Corpus) -> list[ManifestSlot]:
-    """공백 = 승인 문항의 focus에 없고 그 항목을 포함한 pending 슬롯도 없는 세부 항목. 항목당 base+fill 최대 2슬롯."""
+def add_fill_slots(manifest: QuizManifest, pool: dict[str, QuizItem], corpus: Corpus,
+                   ranker=None) -> list[ManifestSlot]:
+    """공백 = 승인 문항의 focus에 없고 그 항목을 포함한 pending 슬롯도 없는 세부 항목. 항목당 base+fill 최대 2슬롯.
+    직전 슬롯이 scenario_mismatch로 최종 탈락했으면 primary 시나리오 제한을 풀고, ranker(LLM)가 6개 중
+    세부 항목 내용에 가장 맞다고 고른 시나리오부터 쓴다 (금지 조합 제외, 이미 불일치한 시나리오는 맨 뒤)."""
     covered = {b for it in pool.values() if it.status == "approved" for b in it.focus_bullet_ids}
     pending = {b for s in manifest.slots if s.status == "pending" for b in s.focus_bullet_ids}
     existing = {s.quiz_id for s in manifest.slots}
@@ -266,7 +275,14 @@ def add_fill_slots(manifest: QuizManifest, pool: dict[str, QuizItem], corpus: Co
         if len(own) >= 2 or quiz_id in existing:
             continue
         cands = DOMAIN_SCENARIOS[b.domain]
-        if not own:
+        if own and rejected_for_scenario(own[-1]) and ranker is not None:
+            failed = mismatched_scenarios(own[-1])
+            ranking, reason = ranker.rank(b)
+            cands = order_scenarios(ranking, b.task_id, failed)
+            sc = cands[0]
+            print(f"[fill-gaps] {quiz_id}: 시나리오 불일치 탈락({', '.join(f'SC-{n}' for n in failed)}) "
+                  f"→ 순위 {['SC-%d' % n for n in cands]} — {reason}")
+        elif not own:
             sc = cands[0]
         else:
             # 직전 슬롯의 마지막 시나리오가 시나리오 문제로 실패했거나 중복이면 다음 후보, 아니면 그대로 재사용
@@ -330,6 +346,7 @@ def run_slots(gen: QuizGenerator, manifest: QuizManifest, pool: dict[str, QuizIt
             transient_streak = 0
             s.status, s.attempts, s.scenario_id = r.status, r.attempts, r.scenario_id
             s.repairs, s.repairs_ok = r.repairs, r.repairs_ok
+            s.generator_model, s.reviewer_model = r.generator_model, r.reviewer_model
             s.detected_patterns, s.last_errors = r.detected_patterns, r.last_errors
             s.prompt_version, s.updated_at = pv, now_iso()
             if r.item is not None:
@@ -415,7 +432,8 @@ def print_plan(slots: list[ManifestSlot], corpus: Corpus) -> None:
     print("[fewshot] 시나리오별 SQ: " + ", ".join(f"SC-{k}:{v}" for k, v in sorted(corpus.sq_by_scenario.items())))
 
 
-def print_summary(manifest: QuizManifest, pool: dict[str, QuizItem], corpus: Corpus, n_dups: int) -> None:
+def print_summary(manifest: QuizManifest, pool: dict[str, QuizItem], corpus: Corpus, n_dups: int,
+                  models: "ModelPool | None" = None) -> None:
     summ = summarize(manifest)
     approved = [i for i in pool.values() if i.status == "approved"]
     tried = sum(v for k, v in summ.items() if k != "pending")
@@ -445,10 +463,30 @@ def print_summary(manifest: QuizManifest, pool: dict[str, QuizItem], corpus: Cor
         print(f"[summary] 정답이 가장 긴 보기: {longest}/{len(approved)} ({longest / len(approved):.0%}, "
               f"목표 {LONGEST_TARGET:.0%} 이하, 우연 수준 25%)")
     print(f"[summary] 이번 실행 중복 판정: {n_dups}")
+    print_model_summary(manifest, pool, models)
     if n_stale := stale_count(manifest):
         print(f"[summary] 경고: 현재 프롬프트({prompt_version()})와 다른 버전으로 처리된 슬롯 {n_stale}개 "
               "— 필요하면 --reset-stale")
 
+
+def print_model_summary(manifest: QuizManifest, pool: dict[str, QuizItem], models: "ModelPool | None") -> None:
+    """생성·검토 모델별 승인 수와 승인율, 이번 실행의 모델별 호출·쓰로틀·전환 (DESIGN §9-3)."""
+    gen_c, gen_tot, rev_c = Counter(), Counter(), Counter()
+    for s in manifest.slots:
+        if s.status == "pending":
+            continue
+        # 모델 기록 도입 전 슬롯은 기본 모델(us Sonnet 4.5)로 처리됨
+        g = s.generator_model or (pool[s.quiz_id].generator_model if s.quiz_id in pool else config.MODEL_ID)
+        gen_tot[short_model(g)] += 1
+        if s.status == "approved":
+            gen_c[short_model(g)] += 1
+            rev_c[short_model(s.reviewer_model) if s.reviewer_model else "(기록 전)"] += 1
+    if gen_tot:
+        print("[summary] 생성 모델별 승인/처리: " + ", ".join(
+            f"{m} {gen_c[m]}/{n} ({gen_c[m] / n:.0%})" for m, n in gen_tot.most_common()))
+        print("[summary] 승인 문항 검토 모델: " + ", ".join(f"{m} {n}" for m, n in rev_c.most_common()))
+    if models is not None:
+        print(f"[summary] 이번 실행 모델 호출: {models.report()}")
 
 def longest_is_correct(item: QuizItem) -> bool:
     """정답 보기가 가장 긴 보기인지 (동률이면 가장 긴 것으로 침)."""
@@ -490,7 +528,7 @@ def main() -> int:
 
     if args.dry_run:
         print_plan(slots, corpus)
-        gen = QuizGenerator(corpus)              # 클라이언트만 만들고 호출하지 않음
+        gen = QuizGenerator(corpus)              # 클라이언트만 만들고 호출하지 않음 (체인 4개)
         for s in (slots[0], next(s for s in slots if s.slot_type == "extra")):
             msgs = gen.generation_messages(s, s.scenario_id, [], [])
             print(f"[dry-run] {s.quiz_id} 생성 프롬프트 {len(msgs[0].content) + len(msgs[1].content)}자, "
@@ -525,7 +563,9 @@ def main() -> int:
     if n_stale := stale_count(manifest):
         print(f"[build] 경고: 현재 프롬프트({prompt_version()})와 다른 버전으로 처리된 슬롯 {n_stale}개 "
               "— 새 프롬프트로 다시 만들려면 --reset-stale")
-    gen = QuizGenerator(corpus)
+    models = ModelPool()                         # 생성·검토·repair·시나리오 순위가 함께 쓰는 Sonnet 체인
+    print("[build] 모델 체인: " + " → ".join(short_model(m) for m in models.model_ids))
+    gen = QuizGenerator(corpus, models)
 
     if args.pilot is not None:
         by_id = {s.quiz_id: s for s in manifest.slots}
@@ -548,7 +588,7 @@ def main() -> int:
         save(manifest, pool)
         ok = run_slots(gen, manifest, pool, targets, args.concurrency, verbose=False)
     else:
-        new = add_fill_slots(manifest, pool, corpus)
+        new = add_fill_slots(manifest, pool, corpus, ranker=ScenarioRanker(corpus, models))
         targets = [s for s in manifest.slots if s.slot_type == "fill" and s.status == "pending"]
         print(f"[fill-gaps] 새 보충 슬롯 {len(new)}개, 처리 대상 {len(targets)}개")
         save(manifest, pool)
@@ -556,7 +596,7 @@ def main() -> int:
 
     # 쓰로틀링으로 멈췄으면 임베딩 호출(중복 제거)도 건너뛴다 — 다음 실행 끝에 수행됨
     n_dups = 0 if (args.no_dedupe or not ok) else apply_dedupe(manifest, pool)
-    print_summary(manifest, pool, corpus, n_dups)
+    print_summary(manifest, pool, corpus, n_dups, models)
     return 0 if ok else 2
 
 

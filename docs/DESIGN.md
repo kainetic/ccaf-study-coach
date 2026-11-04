@@ -275,6 +275,8 @@ class ManifestSlot(BaseModel):          # data/quiz_pool_manifest.json의 슬롯
     attempts: int = 0                   # 생성 호출 수 0~3 (QuizItem.review_retries = attempts - 1)
     repairs: int = 0                    # 길이 repair 호출 수 (attempts에 포함하지 않음)
     repairs_ok: int = 0                 # repair 후 코드 검증을 통과한 수
+    generator_model: Optional[str]      # 최종 문항을 만든 생성 호출의 실제 모델 (모델 전환, §5-2). 도입 전 슬롯은 None
+    reviewer_model: Optional[str]       # 승인 또는 마지막 탈락 판정을 낸 검토 호출의 모델
     detected_patterns: list[str] = []   # 시도별 실패 유형 (parse, code, 검토 패턴, duplicate_of:Q-…)
     last_errors: list[str] = []         # 마지막 실패의 구체적 오류
     prompt_version: Optional[str]       # src/prompts 파일들의 sha1 앞 8자리
@@ -360,7 +362,15 @@ State 확장 (Supervisor 그래프 messages 외):
 - **재시도 피드백**: 원래 생성 프롬프트 전체 + 실패 문항 JSON + 문제점 목록(`[parse]`/`[code:세부 패턴]`/`[review:패턴]`) + 패턴별 고정 지시문(`src/prompts/FIX_HINTS`, 코드 세부 패턴별로 분리) + 이전 시도 요약 한 줄씩. `scenario_mismatch`면 다음 후보 시나리오로 바꾸고 그 사실을 피드백에 명시 (마지막 시도 뒤에는 바꾸지 않음)
 - **프롬프트 변경 후 재생성** (`--reset-stale`, LLM 호출 없음): 현재 `prompt_version`과 다른 버전으로 처리된 슬롯을 되돌림. base/extra는 pending으로 초기화(attempts·repairs·detected_patterns·last_errors, 시나리오는 원래 배정값), fill 슬롯은 삭제, pool에서 해당 문항 제거. 자동 리셋은 하지 않고(전체 생성 도중 진행분 보호) 실행 시 오래된 버전 슬롯 수를 경고로 출력
 - **매니페스트 동기화**: 슬롯 배정 규칙이 바뀌면 pending 슬롯의 정의(focus_bullet_ids, scenario_candidates)는 자동 갱신, 처리된 슬롯의 정의가 바뀌었으면 오류(`--reset-stale` 후 재실행)
-- **Bedrock 일시 오류**(throttling 등)는 지수 백오프(최대 6회)로 처리하고 재시도 횟수에 넣지 않음. 그래도 실패하면 슬롯은 pending으로 남음
+- **Bedrock 일시 오류**(throttling 등)는 재시도 횟수(attempts)에 넣지 않음. 처리할 수 없으면 슬롯은 pending으로 남음
+- **모델 전환** (v0.4.4, 문제 풀 생성 전용 — 런타임은 `config.MODEL_ID` 고정): 생성·검토·repair·시나리오 순위 호출은 `quiz_gen.ModelPool`을 거침
+  - 체인 `config.QUIZ_GEN_MODEL_CHAIN`: us Sonnet 4.5(기본) → global Sonnet 4.5 → us Sonnet 4.6 → global Sonnet 4.6. **Haiku는 쓰지 않음**(문항·검토 품질, 검토자가 생성자보다 약하면 안 됨)
+  - 쓰로틀된 모델은 쿨다운(`min(60, 4·2^k)`초, 일일 토큰 할당량 소진 메시지면 60분)을 걸고 **기다리지 않고 다음 모델로 전환**. 기본 모델은 쿨다운이 끝나면 다시 우선 사용
+  - 체인 전체가 쿨다운이면 가장 빨리 풀리는 시각까지 대기, 한 호출의 대기가 180초를 넘으면 `TransientError` → 슬롯 pending, 연속 3개 슬롯이면 실행 중단(재실행은 `--resume`)
+  - 일시 오류가 아닌 오류(ValidationException 등)는 전환하지 않고 올림(모델 문제를 다른 모델로 감추지 않음). 권한 없음·모델 없음은 그 모델을 이번 실행에서 제외
+  - botocore 내부 재시도는 1회로 줄여(기본 4회) 전환이 바로 일어나게 함
+  - 생성 모델과 검토 모델이 달라질 수 있음(독립성에는 유리). 기록: `QuizItem.generator_model` = 최종 문항을 만든 실제 생성 모델(repair가 있었어도 원 생성 모델), `ManifestSlot.generator_model`·`reviewer_model`
+  - 접근 확인: `python scripts/check_bedrock.py --quiz-chain`
 - **저장**: 코드 검증을 통과한 문항만 `quiz_pool.json`에 저장(approved / 검토 탈락 rejected / duplicate). 코드 검증 단계에서 끝난 rejected는 매니페스트에만 기록
 - **파일럿**(`--pilot N`)은 실행할 때마다 해당 슬롯을 새로 생성(프롬프트 조정 반복용)
 
@@ -371,7 +381,13 @@ State 확장 (Supervisor 그래프 messages 외):
 **커버리지 보충 (`--fill-gaps`)**
 - **가드** (v0.4.2): pending인 base/extra 슬롯이 하나라도 남아 있으면 거부하고 종료 코드 1 (우회 옵션 없음). 기본 커버리지가 끝나기 전에 보충 슬롯이 생겨 한 항목에 문제가 2개 생기는 것을 막음
 - 승인 문제가 없는 세부 항목만 골라 새 슬롯(`Q-x.y-K2-F`)으로 1회 더 생성. 세부 항목당 최대 2슬롯(기본 + 보충). 보충 슬롯 프롬프트에는 같은 TS의 승인 문항 지문을 "반복 금지"로 넣음
-- 보충 슬롯 시나리오: 직전 슬롯이 마지막에 시도한 시나리오를 재사용. 단 마지막 실패가 `scenario_mismatch`이거나 중복이면 다음 후보
+- 보충 슬롯 시나리오: 직전 슬롯이 마지막에 시도한 시나리오를 재사용. 단 마지막 실패가 중복이면 다음 후보
+- **예외: 시나리오 불일치로 탈락한 세부 항목** (v0.4.3): 직전 슬롯의 최종 탈락 사유가 `scenario_mismatch`이면 보충 슬롯에서는 **도메인 primary 시나리오 제한을 풀고 6개 시나리오 전체**를 후보로 씀
+  - 순서: LLM이 세부 항목 내용과 시나리오 설명(“Primary domains” 줄 제외)의 적합도로 6개 순위를 매김 (`src/prompts/scenario_fit.md`, 출력 `ScenarioFit`, 슬롯당 1회). 코드가 허용 시나리오만 남기고, 직전 슬롯에서 이미 불일치가 난 시나리오는 맨 뒤로 보냄. 결과를 보충 슬롯의 `scenario_candidates`로 저장하므로 재시도 순환도 이 순서를 따름
+  - 예: `Q-5.4-S3`(탐색 단계 요약 후 sub-agent 생성), `Q-2.5-K1`(Grep 내용 검색) → SC-4 개발자 생산성
+  - **금지 조합은 유지**: `quiz_gen.FORBIDDEN_SCENARIOS = {"TS-1.7": {5}}`. TS-1.7 × SC-5는 `evaluation/test_queries.csv` 13번이 "풀에 없는 조합 → no_match + alternatives"로 전제하므로 어떤 경로로도 만들지 않음 (슬롯 검증 `plan_errors`에서도 확인)
+  - 시나리오 순위 프롬프트는 문항 생성 프롬프트가 아니므로 `prompt_version` 해시에 넣지 않음
+  - 이 예외로 생긴 문항은 §5-3의 "풀 배정 규칙상 없는 TS·시나리오 조합"에 해당하지 않음 (`quiz://catalog`가 실제 풀 기준으로 집계)
 - 커버리지 = 승인 문항의 focus_bullet_ids에 한 번이라도 들어간 세부 항목 (추가 슬롯 승인도 인정). 아직 pending 슬롯이 있는 항목은 보충 대상이 아님
 - 목표: 세부 항목 커버리지 95% 이상 (240개 중 228개 이상)
 
@@ -472,6 +488,7 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 - 승인 문제 수 (목표 270, 최소 250), 세부 항목 커버리지 (목표 95% 이상)
 - 승인율(승인 ÷ 생성 슬롯), 실패 유형 분포: 검토 패턴(`detected_pattern`) + 코드 검증 세부 패턴(`format`, `excerpt_not_verbatim`, `answer_too_long` 등, §5-2)을 함께 집계. `answer_too_long:repaired`(repair로 복구)는 따로 셈
 - 길이 repair 성공률 (`repairs_ok ÷ repairs`)
+- 생성 모델별 승인 수·승인율, 승인 문항의 검토 모델 분포 (모델 전환, §5-2). 사람 표본 검토에서는 Sonnet 4.6이 생성한 문항이 있으면 층마다 최소 1개 포함
 - 사람 표본 검토 오류율 (목표 0건, 최대 1건)
 - 정답 위치 분포 (A~D 각 20~30%), 중복 제거 수
 - **정답이 가장 긴 보기 비율** (승인 문항 기준, 동률은 가장 긴 것으로 침. 목표 35% 이하, 우연 수준 25%, 길이 규칙 도입 전 파일럿 80%)

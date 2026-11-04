@@ -3,7 +3,7 @@
   "guide_version": "0.2",
   "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
   "created_at": "2026-11-04T03:56:13+00:00",
-  "updated_at": "2026-11-04T05:18:04+00:00",
+  "updated_at": "2026-11-04T05:39:59+00:00",
   "summary": {
     "pending": 50,
     "approved": 210,
@@ -5845,10 +5845,10 @@
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [
-        "[error] TransientError: Bedrock transient error after 6 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
+        "[error] TransientError: Bedrock transient error after 8 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
       ],
       "prompt_version": null,
-      "updated_at": "2026-11-04T05:14:50+00:00"
+      "updated_at": "2026-11-04T05:33:16+00:00"
     },
     {
       "quiz_id": "Q-5.4-K4",
@@ -5903,10 +5903,10 @@
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [
-        "[error] TransientError: Bedrock transient error after 6 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
+        "[error] TransientError: Bedrock transient error after 8 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
       ],
       "prompt_version": null,
-      "updated_at": "2026-11-04T05:14:02+00:00"
+      "updated_at": "2026-11-04T05:33:29+00:00"
     },
     {
       "quiz_id": "Q-5.4-S2",
@@ -6023,10 +6023,10 @@
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [
-        "[error] TransientError: Bedrock transient error after 6 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
+        "[error] TransientError: Bedrock transient error after 8 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
       ],
       "prompt_version": null,
-      "updated_at": "2026-11-04T05:14:51+00:00"
+      "updated_at": "2026-11-04T05:36:58+00:00"
     },
     {
       "quiz_id": "Q-5.5-K1",
@@ -6052,10 +6052,10 @@
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [
-        "[error] TransientError: Bedrock transient error after 6 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
+        "[error] TransientError: Bedrock transient error after 8 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
       ],
       "prompt_version": null,
-      "updated_at": "2026-11-04T05:15:32+00:00"
+      "updated_at": "2026-11-04T05:36:43+00:00"
     },
     {
       "quiz_id": "Q-5.5-K2",
@@ -6081,10 +6081,10 @@
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [
-        "[error] TransientError: Bedrock transient error after 6 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
+        "[error] TransientError: Bedrock transient error after 8 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
       ],
       "prompt_version": null,
-      "updated_at": "2026-11-04T05:17:23+00:00"
+      "updated_at": "2026-11-04T05:39:59+00:00"
     },
     {
       "quiz_id": "Q-5.5-K3",

@@ -10,9 +10,10 @@ import json
 import math
 import random
 import re
+import threading
 import time
 import unicodedata
-from collections import defaultdict
+from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from string import Template
@@ -35,14 +36,28 @@ EXPECTED_BULLETS = 240
 DOMAIN_SCENARIOS: dict[int, list[int]] = {
     1: [1, 3, 4], 2: [1, 3, 4], 3: [2, 4, 5], 4: [5, 6], 5: [1, 2, 3, 6],
 }
+ALL_SCENARIOS = [1, 2, 3, 4, 5, 6]
+# 어떤 경우에도 만들지 않는 TS × 시나리오 조합. 보충 슬롯의 primary 제한 완화에서도 유지한다.
+# TS-1.7 × SC-5: evaluation/test_queries.csv 13번이 이 조합을 풀에 없는 조합(no_match → alternatives)으로 전제
+FORBIDDEN_SCENARIOS: dict[str, set[int]] = {"TS-1.7": {5}}
+
+
+def allowed_scenarios(task_id: str) -> list[int]:
+    return [n for n in ALL_SCENARIOS if n not in FORBIDDEN_SCENARIOS.get(task_id, set())]
 
 # 일시 오류: 지수 백오프 대상이며 재시도 횟수(attempts)에 넣지 않는다
 TRANSIENT_CODES = {
     "ThrottlingException", "TooManyRequestsException", "ServiceUnavailableException",
     "ModelNotReadyException", "InternalServerException", "ModelTimeoutException",
 }
-BACKOFF_TRIES = 8             # 대기 1+2+4+8+16+32+60 ≈ 2분 (호출 1건당 최대)
-BACKOFF_CAP = 60
+# 모델 전환 (ModelPool): 쓰로틀된 모델은 min(COOLDOWN_CAP, COOLDOWN_BASE·2^k)초 쉬고 다음 모델로 바로 넘어감.
+# 체인 전체가 막혀 한 호출에서 기다린 시간이 WAIT_BUDGET을 넘으면 TransientError (슬롯은 pending).
+# 일일 토큰 할당량 소진("Too many tokens per day")은 분 단위로 풀리지 않으므로 DAILY_COOLDOWN 동안 쉬게 한다.
+DAILY_COOLDOWN = 3600
+POOL_BOTOCORE_RETRIES = 1      # botocore 내부 재시도 (기본 4회 → 1회). 전환은 ModelPool이 맡는다
+COOLDOWN_BASE = 4
+COOLDOWN_CAP = 60
+WAIT_BUDGET = 180
 
 
 class CorpusError(Exception):
@@ -353,16 +368,116 @@ def _is_transient(e: BaseException, depth: int = 0) -> bool:
     return _is_transient(e.__cause__ or e.__context__, depth + 1)
 
 
-def invoke_with_backoff(runnable, messages):
-    for n in range(BACKOFF_TRIES):
-        try:
-            return runnable.invoke(messages)
-        except Exception as e:  # noqa: BLE001
-            if not _is_transient(e):
+def _is_unavailable(e: BaseException) -> bool:
+    """이 계정·리전에서 쓸 수 없는 모델 (권한 없음, 모델 id 없음). 체인에서 빼고 다음 모델로 간다."""
+    try:
+        from botocore.exceptions import ClientError
+        if isinstance(e, ClientError):
+            return e.response.get("Error", {}).get("Code") in ("AccessDeniedException", "ResourceNotFoundException")
+    except ImportError:
+        pass
+    return "AccessDeniedException" in str(e) or "ResourceNotFoundException" in str(e)
+
+
+class ModelPool:
+    """문제 풀 생성 전용 LLM 호출기 (DESIGN §5-2 모델 전환). 스레드 안전.
+
+    체인(config.QUIZ_GEN_MODEL_CHAIN) 순서대로 쿨다운이 끝난 첫 모델을 쓴다. 일시 오류(쓰로틀링 등)가 나면
+    그 모델에 쿨다운(min(60, 4·2^k)초)을 걸고 기다리지 않고 다음 모델로 넘어간다. 모두 쿨다운 중이면 가장 빨리
+    풀리는 시각까지 자고, 한 호출의 총 대기가 WAIT_BUDGET을 넘으면 TransientError (슬롯은 pending, attempts 미증가).
+    일시 오류가 아닌 오류는 전환하지 않고 그대로 올린다. 권한 없음·모델 없음은 그 모델을 이번 실행에서 뺀다."""
+
+    def __init__(self, model_ids: list[str] | None = None, factory=None, schemas: dict | None = None,
+                 clock=time.monotonic, sleep=time.sleep):
+        from src.schemas import ScenarioFit
+        self.model_ids = list(model_ids or config.QUIZ_GEN_MODEL_CHAIN)
+        factory = factory or (lambda mid: config.get_llm(mid, max_retries=POOL_BOTOCORE_RETRIES))
+        schemas = schemas or {"draft": QuizDraft, "review": ReviewVerdict,
+                              "repair": QuizOptionsRepair, "scenario": ScenarioFit}
+        self.runnables = {}
+        for mid in self.model_ids:
+            llm = factory(mid)
+            self.runnables[mid] = {k: llm.with_structured_output(s, include_raw=True) for k, s in schemas.items()}
+        self._clock, self._sleep = clock, sleep
+        self._lock = threading.Lock()
+        self._cool_until = {m: 0.0 for m in self.model_ids}
+        self._streak = {m: 0 for m in self.model_ids}
+        self._disabled: set[str] = set()
+        self.stats = {m: Counter() for m in self.model_ids}     # ok, throttled, unavailable
+        self.switches = 0                                       # 한 호출 안에서 다른 모델로 넘어간 횟수
+        self.wait_budget = WAIT_BUDGET
+
+    def _pick(self) -> tuple[Optional[str], float]:
+        with self._lock:
+            live = [m for m in self.model_ids if m not in self._disabled]
+            if not live:
+                return None, -1.0
+            now = self._clock()
+            for m in live:
+                if self._cool_until[m] <= now:
+                    return m, 0.0
+            return None, min(self._cool_until[m] for m in live) - now
+
+    def invoke(self, key: str, messages) -> tuple[dict, str]:
+        waited, prev, last_err = 0.0, None, None
+        while True:
+            m, wait = self._pick()
+            if m is None:
+                if wait < 0:
+                    raise TransientError(f"no usable model in chain (all unavailable): {last_err}")
+                if waited + wait > self.wait_budget:
+                    raise TransientError(f"all {len(self.model_ids)} models throttled; waited {waited:.0f}s: {last_err}")
+                t = wait + random.uniform(0, 1)
+                self._sleep(t)
+                waited += t
+                continue
+            if prev is not None and m != prev:
+                with self._lock:
+                    self.switches += 1
+            prev = m
+            try:
+                out = self.runnables[m][key].invoke(messages)
+            except Exception as e:  # noqa: BLE001
+                last_err = e
+                if _is_transient(e):
+                    daily = "per day" in str(e).lower()
+                    with self._lock:
+                        self._streak[m] += 1
+                        cool = DAILY_COOLDOWN if daily else min(COOLDOWN_CAP, COOLDOWN_BASE * 2 ** (self._streak[m] - 1))
+                        first_daily = daily and self.stats[m]["daily_quota"] == 0
+                        self._cool_until[m] = self._clock() + cool
+                        self.stats[m]["throttled"] += 1
+                        self.stats[m]["daily_quota"] += daily
+                    if first_daily:
+                        print(f"[model] {short_model(m)} 일일 토큰 할당량 소진 — {DAILY_COOLDOWN // 60}분간 다음 모델 사용",
+                              flush=True)
+                    continue
+                if _is_unavailable(e):
+                    with self._lock:
+                        self._disabled.add(m)
+                        self.stats[m]["unavailable"] += 1
+                    print(f"[model] {m} 사용 불가 — 이번 실행에서 제외 ({type(e).__name__})", flush=True)
+                    continue
                 raise
-            if n == BACKOFF_TRIES - 1:
-                raise TransientError(f"Bedrock transient error after {BACKOFF_TRIES} tries: {e}") from e
-            time.sleep(min(BACKOFF_CAP, 2 ** n) + random.uniform(0, 1))
+            with self._lock:
+                self._streak[m] = 0
+                self.stats[m]["ok"] += 1
+            return out, m
+
+    def report(self) -> str:
+        parts = [f"{short_model(m)} ok {c['ok']}/throttled {c['throttled']}"
+                 + (" (일일 할당량 소진)" if c["daily_quota"] else "")
+                 + (" (사용 불가)" if m in self._disabled else "") for m, c in self.stats.items()]
+        return "; ".join(parts) + f" | 전환 {self.switches}회"
+
+
+def short_model(model_id: Optional[str]) -> str:
+    """'global.anthropic.claude-sonnet-4-6' → 'global/sonnet-4-6' (요약 출력용)."""
+    if not model_id:
+        return "-"
+    prefix, _, rest = model_id.partition(".anthropic.claude-")
+    rest = re.sub(r"-\d{8}-v\d+:\d+$", "", rest)
+    return f"{prefix}/{rest}"
 
 
 def _raw_output(raw) -> str:
@@ -373,6 +488,75 @@ def _raw_output(raw) -> str:
     if calls:
         return json.dumps(calls[0].get("args", {}), ensure_ascii=False, indent=2)[:3000]
     return (config.get_text(raw) or "(empty)")[:3000]
+
+
+# ---------------------------------------------------------------- 보충 슬롯 시나리오 (시나리오 불일치 탈락)
+
+def failure_patterns(slot: ManifestSlot) -> list[str]:
+    """시도별 실패 패턴만 (repair 성공 표시·중복 표시 제외)."""
+    return [p for p in slot.detected_patterns if ":" not in p]
+
+
+def mismatched_scenarios(slot: ManifestSlot) -> list[int]:
+    """slot에서 scenario_mismatch가 난 시나리오들을 복원한다.
+    run_slot은 마지막 시도가 아닌 불일치마다 후보 목록의 다음 시나리오로 한 칸 이동하므로,
+    최종 시나리오에서 이동 횟수만큼 거꾸로 짚으면 불일치가 난 시나리오가 나온다."""
+    pats = failure_patterns(slot)
+    n = pats.count("scenario_mismatch")
+    if not n:
+        return []
+    last_attempt_mismatch = slot.status == "rejected" and pats and pats[-1] == "scenario_mismatch" \
+        and slot.attempts == MAX_ATTEMPTS
+    moves = n - (1 if last_attempt_mismatch else 0)
+    cands = slot.scenario_candidates
+    if slot.scenario_id not in cands:
+        return [slot.scenario_id] if last_attempt_mismatch else []
+    i = cands.index(slot.scenario_id)
+    out = [cands[(i - k) % len(cands)] for k in range(moves, 0, -1)]
+    if last_attempt_mismatch:
+        out.append(slot.scenario_id)
+    return list(dict.fromkeys(out))
+
+
+def rejected_for_scenario(slot: ManifestSlot) -> bool:
+    """최종 탈락 사유가 scenario_mismatch인 슬롯."""
+    pats = failure_patterns(slot)
+    return slot.status == "rejected" and bool(pats) and pats[-1] == "scenario_mismatch"
+
+
+def order_scenarios(ranking: list[int], task_id: str, failed: list[int]) -> list[int]:
+    """LLM 순위를 정리: 허용 시나리오만, 중복 제거, 빠진 것은 번호순으로 뒤에, 이미 불일치한 시나리오는 맨 뒤."""
+    allowed = allowed_scenarios(task_id)
+    ranked = [n for n in dict.fromkeys(ranking) if n in allowed]
+    ranked += [n for n in allowed if n not in ranked]
+    return [n for n in ranked if n not in failed] + [n for n in ranked if n in failed]
+
+
+class ScenarioRanker:
+    """세부 항목 내용에 가장 맞는 시나리오 순위 (보충 슬롯 전용, 오프라인). 시나리오 설명의
+    'Primary domains' 줄은 빼고 보여 준다 — 도메인 primary 제한을 푸는 것이 목적이므로."""
+
+    def __init__(self, corpus: Corpus, pool: "ModelPool | None" = None):
+        self.corpus = corpus
+        self.pool = pool or ModelPool()
+        self.system, self.user = load_pair("scenario_fit")
+
+    def messages(self, bullet: GuideBullet) -> list:
+        allowed = allowed_scenarios(bullet.task_id)
+        scen = "\n\n".join(
+            f"## SC-{n}\n" + self.corpus.chunks[f"SC-{n}"].text.split("Primary domains:")[0].strip()
+            for n in allowed
+        )
+        v = {"task_id": bullet.task_id, "ts_title": self.corpus.chunks[bullet.task_id].title,
+             "bullet_id": bullet.bullet_id, "bullet_text": bullet.text, "scenarios": scen}
+        return [SystemMessage(self.system), HumanMessage(self.user.substitute(v))]
+
+    def rank(self, bullet: GuideBullet) -> tuple[list[int], str]:
+        out, _ = self.pool.invoke("scenario", self.messages(bullet))
+        parsed = out.get("parsed")
+        if parsed is None:
+            raise RuntimeError(f"scenario ranking unparsable for {bullet.bullet_id}: {out.get('parsing_error')}")
+        return list(parsed.ranking), parsed.reason
 
 
 # ---------------------------------------------------------------- 추가 슬롯 쌍 선정
@@ -454,6 +638,8 @@ class SlotResult:
     repairs: int = 0
     repairs_ok: int = 0
     log: list[str] = field(default_factory=list)
+    generator_model: Optional[str] = None   # 최종 문항을 만든 생성 호출의 모델
+    reviewer_model: Optional[str] = None    # 승인 또는 마지막 탈락 판정을 낸 검토 호출의 모델
 
 
 def _problem_kind(problem: str, fallback: str) -> str:
@@ -464,12 +650,9 @@ def _problem_kind(problem: str, fallback: str) -> str:
 
 
 class QuizGenerator:
-    def __init__(self, corpus: Corpus, llm=None):
-        llm = llm or config.get_llm()
+    def __init__(self, corpus: Corpus, pool: "ModelPool | None" = None):
         self.corpus = corpus
-        self.gen = llm.with_structured_output(QuizDraft, include_raw=True)
-        self.rev = llm.with_structured_output(ReviewVerdict, include_raw=True)
-        self.rep = llm.with_structured_output(QuizOptionsRepair, include_raw=True)
+        self.pool = pool or ModelPool()          # 쓰로틀링 시 Sonnet 체인 전환 (config.QUIZ_GEN_MODEL_CHAIN)
         self.gen_system, self.gen_user = load_pair("quiz_generate")
         self.rev_system, self.rev_user = load_pair("quiz_review")
         rep_system, self.rep_user = load_pair("quiz_repair")
@@ -525,26 +708,26 @@ class QuizGenerator:
         return [SystemMessage(self.rep_system), HumanMessage(self.rep_user.substitute(v))]
 
     # -- 호출
-    def generate(self, messages) -> tuple[Optional[QuizDraft], Optional[str], str]:
-        out = invoke_with_backoff(self.gen, messages)
+    def generate(self, messages) -> tuple[Optional[QuizDraft], Optional[str], str, str]:
+        out, model = self.pool.invoke("draft", messages)
         parsed, err = out.get("parsed"), out.get("parsing_error")
         if parsed is None:
-            return None, str(err or "no structured output returned"), _raw_output(out.get("raw"))
-        return parsed, None, parsed.model_dump_json(indent=2)
+            return None, str(err or "no structured output returned"), _raw_output(out.get("raw")), model
+        return parsed, None, parsed.model_dump_json(indent=2), model
 
-    def review(self, messages) -> ReviewVerdict:
+    def review(self, messages) -> tuple[ReviewVerdict, str]:
         last_err = None
         for _ in range(2):          # 검토자 출력 형식 오류는 생성자 탓이 아니므로 검토만 다시 부른다
-            out = invoke_with_backoff(self.rev, messages)
+            out, model = self.pool.invoke("review", messages)
             if out.get("parsed") is not None:
-                return out["parsed"]
+                return out["parsed"], model
             last_err = out.get("parsing_error")
         raise RuntimeError(f"reviewer output unparsable: {last_err}")
 
     def repair(self, slot: ManifestSlot, scenario_id: int, draft: QuizDraft,
                issues: list[CodeIssue]) -> tuple[Optional[QuizDraft], str]:
         """길이 규칙만 실패한 문항의 보기만 고친다. stem·answer·source_excerpt는 원본 그대로 둔다."""
-        out = invoke_with_backoff(self.rep, self.repair_messages(slot, scenario_id, draft, issues))
+        out, _ = self.pool.invoke("repair", self.repair_messages(slot, scenario_id, draft, issues))
         parsed = out.get("parsed")
         if parsed is None:
             return None, f"repair output unparsable: {out.get('parsing_error')}"
@@ -560,10 +743,12 @@ class QuizGenerator:
         scenario_note = ""
         log: list[str] = []
         repairs = repairs_ok = 0
+        last_gen_model: Optional[str] = None     # last_item(검토 탈락 문항)을 만든 생성 모델
+        last_rev_model: Optional[str] = None
 
         for n in range(1, MAX_ATTEMPTS + 1):
             msgs = self.generation_messages(slot, scenario_id, avoid_stems, history, scenario_note)
-            draft, parse_err, item_json = self.generate(msgs)
+            draft, parse_err, item_json, gen_model = self.generate(msgs)
 
             if parse_err:
                 att = Attempt(n, scenario_id, "parse", [f"[parse] {parse_err}"], item_json)
@@ -593,18 +778,20 @@ class QuizGenerator:
                 elif notes:
                     att = Attempt(n, scenario_id, "answer_too_long", notes, item_json)
                 else:
-                    verdict = self.review(self.review_messages(slot, scenario_id, draft))
+                    verdict, rev_model = self.review(self.review_messages(slot, scenario_id, draft))
                     ok = verdict.valid and verdict.detected_pattern is None and not verdict.issues
                     if ok:
                         final = shuffle_options(draft, slot.quiz_id, slot.target_answer)
-                        item = self._item(slot, scenario_id, final, "approved", n, patterns)
-                        log.append(f"attempt {n}: approved (SC-{scenario_id})")
+                        item = self._item(slot, scenario_id, final, "approved", n, patterns, gen_model)
+                        log.append(f"attempt {n}: approved (SC-{scenario_id}, gen {short_model(gen_model)}, "
+                                   f"review {short_model(rev_model)})")
                         return SlotResult(slot.quiz_id, "approved", n, scenario_id, patterns, [], item,
-                                          repairs, repairs_ok, log)
+                                          repairs, repairs_ok, log, gen_model, rev_model)
                     pat = verdict.detected_pattern or "other"
                     issues_r = verdict.issues or ["(reviewer gave no detail)"]
                     att = Attempt(n, scenario_id, pat, [f"[review:{pat}] {i}" for i in issues_r], item_json)
-                    last_item = self._item(slot, scenario_id, draft, "rejected", n, patterns + [pat])
+                    last_item = self._item(slot, scenario_id, draft, "rejected", n, patterns + [pat], gen_model)
+                    last_gen_model, last_rev_model = gen_model, rev_model
 
             history.append(att)
             patterns.append(att.pattern)
@@ -621,15 +808,16 @@ class QuizGenerator:
         if last_item is not None:
             last_item = last_item.model_copy(update={"detected_patterns": patterns})
         return SlotResult(slot.quiz_id, "rejected", MAX_ATTEMPTS, scenario_id, patterns,
-                          history[-1].problems, last_item, repairs, repairs_ok, log)
+                          history[-1].problems, last_item, repairs, repairs_ok, log,
+                          last_gen_model, last_rev_model)
 
     def _item(self, slot: ManifestSlot, scenario_id: int, draft: QuizDraft, status: str,
-              attempts: int, patterns: list[str]) -> QuizItem:
+              attempts: int, patterns: list[str], generator_model: str) -> QuizItem:
         return QuizItem(
             quiz_id=slot.quiz_id, task_id=slot.task_id, domain=slot.domain,
             focus_bullet_ids=slot.focus_bullet_ids, scenario_id=scenario_id,
             stem=draft.stem, options=draft.options, answer=draft.answer,
             source_excerpt=draft.source_excerpt, status=status,
             review_retries=attempts - 1, detected_patterns=list(patterns),
-            generator_model=config.MODEL_ID, guide_version=config.GUIDE_VERSION, created_at=now_iso(),
+            generator_model=generator_model, guide_version=config.GUIDE_VERSION, created_at=now_iso(),
         )

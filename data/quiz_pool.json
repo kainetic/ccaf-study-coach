@@ -7,373 +7,42 @@
       "TS-1.1-K1"
     ],
     "scenario_id": 1,
-    "stem": "Your customer support agent is deployed in production and handles requests by calling MCP tools such as get_customer, lookup_order, and process_refund. During a code review, a teammate notices that your main loop checks whether the assistant's last message contains the phrase \"I've completed\" to decide when to stop calling Claude. Occasionally the agent halts mid-resolution when it uses that phrase while describing intermediate steps. What is the most reliable way to determine when the agentic loop should terminate?",
+    "stem": "Your customer support agent handles billing disputes by calling get_customer, then lookup_order, then process_refund. In production, 15% of conversations fail because after the agent calls get_customer and receives a valid customer record, the loop immediately terminates without calling lookup_order. You inspect the logs and find that Claude returns stop_reason \"end_turn\" after the first tool result is appended to the conversation. What is the most likely cause of this premature termination?",
     "options": [
       {
         "label": "A",
-        "text": "Check whether the assistant's last message contains non-empty text content; if present and no tool calls are included, treat the response as complete.",
-        "rationale": "어시스턴트 텍스트 콘텐츠의 존재 여부를 완료 지표로 사용하는 것은 신뢰할 수 없습니다. 모델은 도구 호출과 함께 텍스트를 출력할 수 있고, 도구 결과를 기다리는 중간 단계에서도 텍스트를 생성할 수 있습니다. 이 방식은 작업이 실제로 완료되지 않았을 때 조기 종료를 유발할 수 있습니다."
+        "text": "The loop appends the get_customer result to conversation history but does not send a new request to Claude for the next iteration, so the model never reasons about the next action.",
+        "rationale": "agentic loop lifecycle은 도구 결과를 대화 히스토리에 추가한 후 다음 iteration을 위해 Claude에 새 요청을 보내는 것을 포함합니다. 결과를 추가만 하고 요청을 보내지 않으면 모델이 다음 행동을 추론할 기회가 없으므로, 루프는 첫 도구 실행 후 멈춥니다. 이는 lifecycle의 핵심 단계가 누락된 구현 결함입니다."
       },
       {
         "label": "B",
-        "text": "Inspect the stop_reason field in Claude's response; continue the loop when it is \"tool_use\" and terminate when it is \"end_turn\".",
-        "rationale": "stop_reason 필드를 검사하는 것이 에이전트 루프 종료를 결정하는 표준 메커니즘입니다. stop_reason이 \"tool_use\"일 때는 도구를 실행하고 결과를 반환하여 다음 반복을 계속하고, \"end_turn\"일 때는 모델이 작업을 완료했다고 판단하여 루프를 종료합니다. 이 방식은 자연어 신호 파싱과 달리 결정론적이고 신뢰할 수 있습니다."
+        "text": "The loop inspects stop_reason correctly but uses a fixed iteration cap of one tool call per conversation as the primary stopping mechanism to control costs.",
+        "rationale": "임의의 반복 횟수 제한을 주요 종료 메커니즘으로 사용하는 것은 anti-pattern이지만, 이 경우 로그에서 stop_reason이 end_turn으로 나타난다고 명시되어 있습니다. 반복 제한이 원인이라면 stop_reason 값과 무관하게 종료되어야 하므로, 관찰된 증상과 일치하지 않습니다."
       },
       {
         "label": "C",
-        "text": "Add a system prompt instruction that the agent must output exactly \"DONE\" on its own line when finished, then parse the response text for that marker.",
-        "rationale": "자연어 신호를 파싱하여 루프 종료를 결정하는 것은 안티패턴입니다. 모델이 중간 단계 설명에서 해당 마커를 사용하거나 출력 형식을 준수하지 않을 수 있어 조기 종료나 무한 루프가 발생할 수 있습니다. 프롬프트 지시는 프로그램적 강제(programmatic enforcement)를 대체할 수 없습니다."
+        "text": "The loop parses the assistant message text content for natural language completion signals like 'done' or 'finished' and terminates when these phrases appear in responses.",
+        "rationale": "자연어 텍스트를 파싱하여 종료 신호로 사용하는 것은 권장되지 않는 패턴이지만, 문제 상황에서는 get_customer 호출 후 항상 조기 종료가 발생합니다. 텍스트 파싱 로직이라면 특정 문구가 나타날 때만 종료되어야 하므로, 일관된 15% 실패율을 설명하기 어렵습니다."
       },
       {
         "label": "D",
-        "text": "Set a maximum iteration count of 10 turns and terminate the loop when that limit is reached, logging cases that hit the cap for manual review.",
-        "rationale": "임의의 반복 횟수 제한을 주요 종료 메커니즘으로 사용하는 것은 안티패턴입니다. 이 방식은 복잡한 케이스에서 작업이 완료되기 전에 루프를 중단하거나, 간단한 케이스에서 불필요한 반복을 허용할 수 있습니다. 제한은 무한 루프 방지를 위한 안전장치로만 사용해야 하며, 정상적인 종료 로직을 대체해서는 안 됩니다."
+        "text": "The loop checks stop_reason and correctly terminates on end_turn, but the system prompt does not explicitly instruct Claude to continue calling tools until the refund is processed.",
+        "rationale": "stop_reason을 올바르게 검사하는 것은 정상적인 lifecycle 동작입니다. 문제는 Claude가 왜 end_turn을 조기에 반환했는지(프롬프트, 컨텍스트 부족 등)이지, loop 구현 자체의 결함이 아닙니다. 프롬프트 개선은 모델 행동을 바꿀 수 있지만, lifecycle 단계의 누락을 해결하지는 못합니다."
       }
     ],
-    "answer": "B",
-    "source_excerpt": "The agentic loop lifecycle: sending requests to Claude, inspecting stop_reason (\"tool_use\" vs \"end_turn\"), executing requested tools, and returning results for the next iteration",
-    "status": "approved",
-    "review_retries": 0,
-    "detected_patterns": [],
-    "human_checked": false,
-    "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
-    "guide_version": "0.2",
-    "created_at": "2026-11-04T04:06:11+00:00"
-  },
-  {
-    "quiz_id": "Q-1.1-K2",
-    "task_id": "TS-1.1",
-    "domain": 1,
-    "focus_bullet_ids": [
-      "TS-1.1-K2"
-    ],
-    "scenario_id": 4,
-    "stem": "Your developer productivity agent helps engineers explore a large legacy codebase. A developer asks \"Find all database connection configurations and check if they use connection pooling.\" The agent uses Grep to locate config files, then uses Read to examine each file. After reading the third file, the agent reports \"I found connection strings in app.config, db.config, and services.config, but none of them configure connection pooling.\" However, when the developer manually reviews the conversation log, they see only the agent's final summary—the actual file contents returned by the Read tool calls are missing from the history. What is the most likely cause of this issue?",
-    "options": [
-      {
-        "label": "A",
-        "text": "The orchestration loop should check if assistant message content contains file data and terminate with end_turn to preserve the information before the next iteration.",
-        "rationale": "assistant 메시지 내용을 확인하여 루프를 종료하는 것은 anti-pattern입니다. stop_reason이 tool_use일 때 루프를 계속하고 도구 결과를 대화에 추가하는 것이 올바른 제어 흐름이며, 조기 종료는 모델이 추가 추론을 수행하지 못하게 만듭니다."
-      },
-      {
-        "label": "B",
-        "text": "The Read tool implementation should store file contents in a shared cache that the model queries through a separate RetrieveContext tool in subsequent turns.",
-        "rationale": "외부 캐시와 별도의 검색 도구를 추가하는 것은 과도한 설계입니다. agentic loop는 대화 기록 자체를 상태 관리 메커니즘으로 사용하도록 설계되어 있으며, 도구 결과를 컨텍스트에 추가하는 표준 패턴만으로 충분합니다."
-      },
-      {
-        "label": "C",
-        "text": "The agent's system prompt should instruct it to echo file contents back to the user in natural language after each Read operation to maintain context.",
-        "rationale": "자연어로 내용을 반복하도록 프롬프트에 지시하는 것은 근본 원인을 해결하지 못합니다. 도구 결과가 대화 기록에 구조적으로 추가되지 않으면 모델은 여전히 이전 단계의 실제 데이터를 추론에 활용할 수 없으며, 사용자에게 보이는 출력과 모델의 내부 컨텍스트는 별개입니다."
-      },
-      {
-        "label": "D",
-        "text": "The orchestration code is not appending tool results to the conversation history between iterations, so the model cannot reference the file contents it previously read.",
-        "rationale": "도구 결과가 대화 기록에 추가되지 않으면 모델은 이전 도구 호출에서 얻은 정보를 다음 추론 단계에서 참조할 수 없습니다. 이 경우 Read 도구가 반환한 파일 내용이 컨텍스트에 포함되지 않아 모델이 실제 내용을 기반으로 분석하지 못하고 요약만 생성한 것입니다."
-      }
-    ],
-    "answer": "D",
-    "source_excerpt": "How tool results are appended to conversation history so the model can reason about the next action",
-    "status": "approved",
+    "answer": "A",
+    "source_excerpt": "sending requests to Claude, inspecting stop_reason (\"tool_use\" vs \"end_turn\"), executing requested tools, and returning results for the next iteration",
+    "status": "rejected",
     "review_retries": 2,
     "detected_patterns": [
-      "code",
-      "scenario_mismatch"
+      "meta_reference",
+      "answer_not_supported",
+      "answer_not_supported"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
-    "created_at": "2026-11-04T04:10:10+00:00"
-  },
-  {
-    "quiz_id": "Q-1.1-K3",
-    "task_id": "TS-1.1",
-    "domain": 1,
-    "focus_bullet_ids": [
-      "TS-1.1-K3"
-    ],
-    "scenario_id": 4,
-    "stem": "Your team is building a code refactoring assistant that helps engineers modernize legacy Python codebases. The assistant needs to analyze files, identify deprecated patterns, propose changes, and apply them. You initially implemented the workflow as a fixed sequence: first call grep_files to find deprecated imports, then read_file on each match, then write_file with updated code, and finally bash to run tests. During testing, you find that 30% of refactoring tasks fail because the sequence cannot adapt—for example, when a deprecated pattern appears in an unexpected file type, or when test failures reveal that additional related files also need updates. What is the most effective way to improve task completion rates?",
-    "options": [
-      {
-        "label": "A",
-        "text": "Replace the fixed sequence with a model-driven agentic loop where Claude decides which tool to call next based on the results of previous operations and the current state of the refactoring task.",
-        "rationale": "모델 주도 의사결정(model-driven decision-making)을 사용하면 Claude가 이전 작업의 결과와 현재 컨텍스트를 바탕으로 다음에 호출할 도구를 추론할 수 있습니다. 예상치 못한 파일 유형이나 테스트 실패 같은 상황에 동적으로 적응하여 추가 파일을 읽거나 수정 사항을 조정할 수 있으므로, 고정된 시퀀스가 처리하지 못하는 케이스를 해결할 수 있습니다."
-      },
-      {
-        "label": "B",
-        "text": "Keep the fixed sequence but add a retry mechanism that re-runs the entire workflow with expanded file patterns and additional test commands when the initial sequence fails.",
-        "rationale": "전체 워크플로우를 재시도하는 방식은 여전히 고정된 도구 시퀀스에 의존하며, 실패의 근본 원인(예: 특정 파일만 추가로 수정이 필요하거나 중간 단계에서 경로를 변경해야 하는 상황)을 해결하지 못합니다. 단순히 입력을 확장하여 재실행하는 것은 비효율적이고 많은 실패 케이스를 여전히 놓칠 수 있습니다."
-      },
-      {
-        "label": "C",
-        "text": "Analyze the 30% failure cases to identify all possible edge cases, then extend the sequence with additional steps that proactively handle each identified scenario before applying changes.",
-        "rationale": "모든 엣지 케이스를 미리 식별하여 시퀀스에 추가하는 접근은 사전 구성된 도구 시퀀스를 확장하는 것으로, 새로운 예외 상황이 발생하면 다시 수동으로 업데이트해야 합니다. 이는 유지보수 부담이 크고, 레거시 코드베이스의 다양성과 예측 불가능성을 고려할 때 모든 시나리오를 사전에 커버하기 어렵습니다."
-      },
-      {
-        "label": "D",
-        "text": "Add conditional branches to the sequence that check for common failure patterns after each step and route to alternative tool sequences when specific error conditions are detected.",
-        "rationale": "조건부 분기를 추가하는 것은 사전 구성된 결정 트리(pre-configured decision tree)의 한 형태로, 미리 예측한 실패 패턴만 처리할 수 있습니다. 새로운 유형의 예외 상황이나 복잡한 컨텍스트 의존적 결정에는 여전히 적응하지 못하므로, 모델이 상황을 추론하여 도구를 선택하는 방식보다 유연성이 떨어집니다."
-      }
-    ],
-    "answer": "A",
-    "source_excerpt": "The distinction between model-driven decision-making (Claude reasons about which tool to call next based on context) and pre-configured decision trees or tool sequences",
-    "status": "approved",
-    "review_retries": 0,
-    "detected_patterns": [],
-    "human_checked": false,
-    "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
-    "guide_version": "0.2",
-    "created_at": "2026-11-04T04:08:15+00:00"
-  },
-  {
-    "quiz_id": "Q-1.1-S1",
-    "task_id": "TS-1.1",
-    "domain": 1,
-    "focus_bullet_ids": [
-      "TS-1.1-S1"
-    ],
-    "scenario_id": 1,
-    "stem": "Your customer support agent handles billing disputes using get_customer, lookup_order, and process_refund tools. A developer implements the agentic loop by checking whether the assistant's last message contains the word \"resolved\" or similar completion phrases to decide when to stop iterating. In production, 15% of conversations terminate prematurely when the agent uses \"resolved\" in intermediate status updates like \"I've resolved the customer identity and will now check the order.\" What is the most reliable way to fix this termination logic?",
-    "options": [
-      {
-        "label": "A",
-        "text": "Improve the text pattern matching by checking for completion phrases only in the final sentence of the assistant's message, not in the middle of multi-sentence responses.",
-        "rationale": "자연어 신호를 파싱하여 루프 종료를 결정하는 것은 안티패턴입니다. 패턴 매칭 로직을 개선하더라도 근본적인 문제는 해결되지 않습니다. 모델은 다양한 방식으로 응답을 표현할 수 있으며, 어떤 휴리스틱도 모든 경우를 안정적으로 처리할 수 없습니다. stop_reason이 이 목적을 위해 설계된 신뢰할 수 있는 신호입니다."
-      },
-      {
-        "label": "B",
-        "text": "Replace the text parsing logic with stop_reason inspection: continue the loop when stop_reason is \"tool_use\" and terminate when stop_reason is \"end_turn\".",
-        "rationale": "이것이 올바른 해결책입니다. stop_reason 필드는 루프 제어를 위한 신뢰할 수 있는 구조화된 신호를 제공합니다. \"tool_use\"일 때 모델이 도구를 호출하려고 하므로 루프를 계속해야 하고, \"end_turn\"일 때 모델이 작업을 완료했다고 판단한 것이므로 종료해야 합니다. 자연어 텍스트 파싱은 불안정하며 이 문제에서 보듯이 오류가 발생하기 쉽습니다."
-      },
-      {
-        "label": "C",
-        "text": "Add a system prompt instruction telling Claude to avoid using the word \"resolved\" in intermediate updates and only use it in the final response when the dispute is fully handled.",
-        "rationale": "프롬프트로 특정 단어 사용을 제한하려는 것은 근본 문제를 해결하지 못합니다. 모델은 여전히 \"completed\", \"finished\", \"addressed\" 등 다른 유사한 표현을 사용할 수 있으며, 자연어 파싱 기반 종료 로직은 여전히 불안정합니다. 올바른 해결책은 구조화된 stop_reason 신호를 사용하여 루프를 제어하는 것입니다."
-      },
-      {
-        "label": "D",
-        "text": "Set a maximum iteration limit of 10 and terminate only when that limit is reached or when completion phrases are detected, whichever comes first.",
-        "rationale": "임의의 반복 횟수 제한을 주요 중단 메커니즘으로 추가하는 것은 안티패턴입니다. 이는 모델 주도 의사결정을 무시하고 사전 구성된 제약을 강제합니다. 또한 텍스트 파싱 문제를 해결하지 않으며, 단지 또 다른 불안정한 종료 조건을 추가할 뿐입니다. 올바른 접근법은 stop_reason을 사용하는 것입니다."
-      }
-    ],
-    "answer": "B",
-    "source_excerpt": "Implementing agentic loop control flow that continues when stop_reason is \"tool_use\" and terminates when stop_reason is \"end_turn\"",
-    "status": "approved",
-    "review_retries": 1,
-    "detected_patterns": [
-      "off_focus_bullet"
-    ],
-    "human_checked": false,
-    "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
-    "guide_version": "0.2",
-    "created_at": "2026-11-04T04:08:43+00:00"
-  },
-  {
-    "quiz_id": "Q-1.1-S2",
-    "task_id": "TS-1.1",
-    "domain": 1,
-    "focus_bullet_ids": [
-      "TS-1.1-S2"
-    ],
-    "scenario_id": 3,
-    "stem": "The document analysis subagent in your research system uses a parse_document tool to extract structured data from PDFs. During a research task on regulatory compliance, the coordinator invokes the analysis agent, which calls parse_document and receives extracted sections. However, when the analysis agent attempts to call a second tool (classify_sections) to categorize the extracted content, it produces classifications that ignore the previously extracted data, as if starting fresh. Investigation reveals that the agent's loop implementation discards tool results after processing each response. What is the most effective way to fix this issue?",
-    "options": [
-      {
-        "label": "A",
-        "text": "Add a system prompt instruction telling the analysis agent to remember all tool results from the current task and reference them in subsequent reasoning.",
-        "rationale": "프롬프트 지시만으로는 모델이 이전 도구 결과에 접근할 수 없습니다. 도구 출력이 대화 기록에 포함되지 않으면 모델은 해당 정보를 볼 수 없으므로, 프롬프트 지시는 효과가 없습니다. 프로그램적 강제(programmatic enforcement)가 필요한 상황입니다."
-      },
-      {
-        "label": "B",
-        "text": "Modify the parse_document tool to return both extracted sections and their classifications in a single call, eliminating the need for the classify_sections tool.",
-        "rationale": "단일 도구로 통합하는 것은 관심사의 분리를 해치고 도구의 재사용성을 낮춥니다. 문제는 도구 설계가 아니라 도구 결과가 후속 추론에 사용 가능하지 않다는 점이므로, 이 접근은 근본 원인을 해결하지 못합니다."
-      },
-      {
-        "label": "C",
-        "text": "Store tool results in a shared state object accessible to all subagents, and provide a get_previous_results tool that the analysis agent can call to retrieve earlier outputs.",
-        "rationale": "공유 상태와 별도의 조회 도구를 추가하는 것은 과도한 설계입니다. Claude는 대화 기록을 통해 이전 컨텍스트를 자연스럽게 참조할 수 있으므로, 추가 도구나 외부 상태 관리 없이도 도구 결과를 활용할 수 있습니다."
-      },
-      {
-        "label": "D",
-        "text": "Append each tool result to the conversation history as a tool_result message before sending the next request to Claude, preserving the full context of prior tool executions.",
-        "rationale": "도구 결과를 tool_result 메시지로 대화 기록에 추가하면 모델이 이전 도구 호출의 출력을 다음 추론 단계에서 활용할 수 있습니다. 이는 agentic loop의 핵심 패턴으로, 모델이 누적된 정보를 바탕으로 다음 행동을 결정할 수 있게 합니다."
-      }
-    ],
-    "answer": "D",
-    "source_excerpt": "Adding tool results to conversation context between iterations so the model can incorporate new information into its reasoning",
-    "status": "approved",
-    "review_retries": 1,
-    "detected_patterns": [
-      "other"
-    ],
-    "human_checked": false,
-    "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
-    "guide_version": "0.2",
-    "created_at": "2026-11-04T04:08:29+00:00"
-  },
-  {
-    "quiz_id": "Q-1.1-S3",
-    "task_id": "TS-1.1",
-    "domain": 1,
-    "focus_bullet_ids": [
-      "TS-1.1-S3"
-    ],
-    "scenario_id": 4,
-    "stem": "Your code exploration agent helps engineers understand legacy codebases by reading files, searching for patterns, and executing test commands. During production use, you notice that 12% of sessions time out after hitting a hard-coded 15-iteration limit, leaving engineers with incomplete analysis. Logs show these sessions involve large multi-module codebases where the agent legitimately needs more steps to trace dependencies. The team proposes raising the limit to 30 iterations. What is the most effective way to address the timeout issue?",
-    "options": [
-      {
-        "label": "A",
-        "text": "Have the agent output a progress percentage estimate after each iteration, and terminate the loop when the estimate reaches 100% or when 15 iterations are exceeded.",
-        "rationale": "이 접근법은 자연어 신호를 파싱하여 루프 종료를 결정하는 안티패턴입니다. 모델이 생성한 진행률 추정치는 신뢰할 수 없으며, stop_reason이라는 명확한 프로그램적 신호가 있을 때 이러한 휴리스틱에 의존하는 것은 불필요하게 복잡하고 오류가 발생하기 쉽습니다."
-      },
-      {
-        "label": "B",
-        "text": "Remove the iteration cap and rely on stop_reason to determine when the agent has completed its analysis, terminating the loop only when stop_reason is end_turn.",
-        "rationale": "이 접근법은 agentic loop의 올바른 종료 메커니즘을 사용합니다. stop_reason이 tool_use일 때 계속하고 end_turn일 때 종료하는 것이 모델 주도 의사결정(model-driven decision-making)의 핵심이며, Claude가 작업 완료 시점을 스스로 판단하도록 합니다. 임의의 반복 횟수 제한(arbitrary iteration cap)을 주요 종료 메커니즘으로 사용하는 것은 명시적으로 피해야 할 안티패턴입니다."
-      },
-      {
-        "label": "C",
-        "text": "Increase the limit to 30 iterations and add monitoring to track how many sessions approach the new threshold, adjusting the cap upward if timeouts continue.",
-        "rationale": "이 접근법은 여전히 임의의 반복 횟수 제한을 주요 종료 메커니즘으로 사용하는 안티패턴입니다. 제한을 높이는 것은 근본적인 문제를 해결하지 못하며, 복잡한 코드베이스에서는 어떤 고정된 숫자도 충분하지 않을 수 있습니다. 모델이 작업 완료를 판단하도록 하는 대신 개발자가 임의로 제한을 설정하는 것입니다."
-      },
-      {
-        "label": "D",
-        "text": "Keep the 15-iteration limit but have the agent include a completion status flag in its final response, and only count the session as timed out if the flag indicates incomplete work.",
-        "rationale": "이 접근법은 assistant의 텍스트 콘텐츠를 완료 지표로 확인하는 안티패턴입니다. 모델이 생성한 플래그나 상태 신호를 파싱하는 것은 자연어 신호(natural language signal)에 의존하는 것이며, stop_reason이라는 신뢰할 수 있는 프로그램적 메커니즘이 이미 존재할 때 불필요하고 불안정합니다."
-      }
-    ],
-    "answer": "B",
-    "source_excerpt": "Avoiding anti-patterns such as parsing natural language signals to determine loop termination, setting arbitrary iteration caps as the primary stopping mechanism, or checking for assistant text content as a completion indicator",
-    "status": "approved",
-    "review_retries": 0,
-    "detected_patterns": [],
-    "human_checked": false,
-    "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
-    "guide_version": "0.2",
-    "created_at": "2026-11-04T04:08:37+00:00"
-  },
-  {
-    "quiz_id": "Q-1.2-K1",
-    "task_id": "TS-1.2",
-    "domain": 1,
-    "focus_bullet_ids": [
-      "TS-1.2-K1"
-    ],
-    "scenario_id": 1,
-    "stem": "Your customer support agent is built as a multi-agent system with three specialized subagents: a billing specialist, a returns specialist, and an account security specialist. During production testing, you observe that the billing specialist sometimes directly calls the returns specialist when a customer mentions both a charge dispute and a return in the same message, bypassing the main coordinator. This occasionally leads to incomplete resolution because the account security specialist is never consulted even when password resets are mentioned. What architectural change would most effectively prevent this issue?",
-    "options": [
-      {
-        "label": "A",
-        "text": "Share the coordinator's full conversation history with all subagents so each specialist has complete context to decide which other specialists to invoke.",
-        "rationale": "Subagent에게 전체 대화 기록을 공유하더라도 각 specialist가 다른 specialist를 직접 호출하는 구조는 여전히 라우팅 결정이 분산되어 일관성이 떨어집니다. 또한 subagent는 isolated context로 동작하도록 설계되어야 coordinator가 정보 흐름을 제어할 수 있습니다."
-      },
-      {
-        "label": "B",
-        "text": "Update each specialist's system prompt to include instructions for identifying when other specialists should be involved and calling them directly.",
-        "rationale": "Subagent 간 직접 통신을 prompt로 개선하려는 접근은 각 specialist가 다른 specialist의 역할과 호출 시점을 모두 이해해야 하므로 복잡도가 높고, 여전히 누락 가능성이 있습니다. Coordinator를 통한 중앙 집중식 라우팅이 더 신뢰할 수 있습니다."
-      },
-      {
-        "label": "C",
-        "text": "Implement a shared state store that all specialists can read and write to, allowing them to coordinate their actions without direct communication.",
-        "rationale": "공유 상태 저장소는 subagent 간 정보 공유를 가능하게 하지만, 누가 어떤 specialist를 호출할지 결정하는 라우팅 로직은 여전히 분산되어 있습니다. Coordinator가 라우팅과 오류 처리를 중앙에서 관리하는 것이 observability와 제어 측면에서 더 효과적입니다."
-      },
-      {
-        "label": "D",
-        "text": "Enforce a hub-and-spoke architecture where all subagent communication flows through the coordinator, which analyzes the full request and invokes the necessary specialists.",
-        "rationale": "Hub-and-spoke 아키텍처에서 coordinator가 모든 subagent 간 통신(inter-subagent communication)을 관리하면 coordinator가 전체 요청을 분석하여 필요한 모든 specialist를 호출할 수 있습니다. 이는 subagent가 직접 통신하여 일부 specialist를 누락하는 문제를 방지합니다."
-      }
-    ],
-    "answer": "D",
-    "source_excerpt": "Hub-and-spoke architecture where a coordinator agent manages all inter-subagent communication, error handling, and information routing",
-    "status": "approved",
-    "review_retries": 0,
-    "detected_patterns": [],
-    "human_checked": false,
-    "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
-    "guide_version": "0.2",
-    "created_at": "2026-11-04T04:09:33+00:00"
-  },
-  {
-    "quiz_id": "Q-1.2-K2",
-    "task_id": "TS-1.2",
-    "domain": 1,
-    "focus_bullet_ids": [
-      "TS-1.2-K2"
-    ],
-    "scenario_id": 3,
-    "stem": "Your multi-agent research system is investigating \"quantum computing applications in drug discovery.\" The coordinator agent delegates to the web search subagent, which finds five relevant papers. The coordinator then invokes the document analysis subagent with the instruction \"Analyze these papers for key findings.\" The analysis subagent returns an error stating it cannot access any papers. When you review the coordinator's implementation, you see it maintains a conversation history containing the search results but passes only the instruction text when invoking the analysis subagent. What should you change to fix this issue?",
-    "options": [
-      {
-        "label": "A",
-        "text": "Explicitly include the paper references or content in the message sent to the document analysis subagent, since subagents operate with isolated context.",
-        "rationale": "서브에이전트는 격리된 컨텍스트(isolated context)에서 동작하며 코디네이터의 대화 기록을 자동으로 상속받지 않습니다. 코디네이터가 검색 결과를 자신의 히스토리에 보관하더라도, 분석 서브에이전트를 호출할 때 논문 참조나 내용을 명시적으로 메시지에 포함해야 서브에이전트가 작업을 수행할 수 있습니다."
-      },
-      {
-        "label": "B",
-        "text": "Modify the web search subagent to store its results in a shared state object that all subagents can access throughout the workflow.",
-        "rationale": "공유 상태 객체를 사용하는 접근은 hub-and-spoke 아키텍처의 원칙을 위반합니다. 모든 서브에이전트 간 통신은 코디네이터를 통해 라우팅되어야 관찰 가능성(observability)과 일관된 에러 처리를 보장할 수 있습니다. 직접 공유 상태는 정보 흐름을 제어하기 어렵게 만듭니다."
-      },
-      {
-        "label": "C",
-        "text": "Add a preprocessing step in the document analysis subagent that queries the coordinator's message history to retrieve the search results before analysis.",
-        "rationale": "서브에이전트가 코디네이터의 메시지 히스토리를 역으로 조회하는 것은 의존성 방향을 뒤집는 안티패턴입니다. 코디네이터가 정보 라우팅을 담당해야 하며, 서브에이전트는 자신에게 전달된 메시지만으로 작업을 수행할 수 있어야 합니다."
-      },
-      {
-        "label": "D",
-        "text": "Configure the document analysis subagent to inherit the coordinator's full conversation history by enabling context sharing in the agent initialization.",
-        "rationale": "서브에이전트는 코디네이터의 대화 기록을 자동으로 상속받지 않으며, 이는 설정으로 활성화할 수 있는 기능이 아닙니다. 각 서브에이전트는 격리된 컨텍스트에서 동작하므로 필요한 정보는 명시적으로 전달해야 합니다."
-      }
-    ],
-    "answer": "A",
-    "source_excerpt": "How subagents operate with isolated context—they do not inherit the coordinator's conversation history automatically",
-    "status": "approved",
-    "review_retries": 0,
-    "detected_patterns": [],
-    "human_checked": false,
-    "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
-    "guide_version": "0.2",
-    "created_at": "2026-11-04T04:08:55+00:00"
-  },
-  {
-    "quiz_id": "Q-1.2-K3",
-    "task_id": "TS-1.2",
-    "domain": 1,
-    "focus_bullet_ids": [
-      "TS-1.2-K3"
-    ],
-    "scenario_id": 4,
-    "stem": "Your team has built a codebase documentation agent with three subagents: a code-reader that extracts function signatures and comments, an architecture-analyzer that identifies design patterns, and a dependency-mapper that traces import relationships. Engineers report that simple queries like \"What does the authenticate() function do?\" trigger all three subagents sequentially, adding 40 seconds of latency, while complex queries like \"Explain the authentication flow across all services\" sometimes invoke only the code-reader, producing incomplete answers. What is the most effective way to improve response quality and latency?",
-    "options": [
-      {
-        "label": "A",
-        "text": "Implement a caching layer that stores subagent results by query pattern, so repeated or similar queries bypass subagent invocation and return cached documentation directly.",
-        "rationale": "캐싱은 반복 쿼리의 지연 시간을 줄이지만, 현재 문제의 근본 원인인 부적절한 subagent 선택을 해결하지 못합니다. 단순한 쿼리가 불필요한 subagent를 호출하고 복잡한 쿼리가 필요한 subagent를 누락하는 문제는 여전히 남아 있습니다."
-      },
-      {
-        "label": "B",
-        "text": "Add a routing classifier that categorizes incoming queries as simple, moderate, or complex, then map each category to a predefined subagent pipeline configuration before the coordinator processes the request.",
-        "rationale": "사전 정의된 파이프라인 매핑은 유연성이 부족하고 쿼리의 미묘한 차이를 처리하지 못합니다. Coordinator가 자연어 이해 능력을 활용하여 각 쿼리를 동적으로 분석하고 적절한 subagent를 선택하는 것이 더 효과적이며, 별도의 classifier 인프라를 추가할 필요가 없습니다."
-      },
-      {
-        "label": "C",
-        "text": "Configure the coordinator to always invoke all three subagents in parallel rather than sequentially, then filter and aggregate only the relevant portions of each subagent's output based on the query type.",
-        "rationale": "병렬 실행으로 지연 시간을 줄일 수 있지만, 단순한 쿼리에도 불필요한 subagent를 모두 호출하여 컴퓨팅 리소스를 낭비하고 여전히 과도한 지연이 발생합니다. Coordinator가 쿼리 복잡도를 분석하여 필요한 subagent만 선택하는 것이 더 효율적입니다."
-      },
-      {
-        "label": "D",
-        "text": "Have the coordinator analyze each query's complexity and scope to dynamically select which subagents to invoke, calling only code-reader for single-function queries and all three for cross-service architectural questions.",
-        "rationale": "쿼리 복잡도에 따라 필요한 subagent만 선택적으로 호출하는 것은 coordinator의 핵심 역할입니다. 단순한 함수 설명 요청에는 code-reader만 호출하여 지연 시간을 줄이고, 복잡한 아키텍처 질문에는 모든 subagent를 동원하여 완전한 답변을 제공할 수 있습니다. 이는 task decomposition과 delegation 결정을 쿼리 요구사항에 맞춰 동적으로 수행하는 접근입니다."
-      }
-    ],
-    "answer": "D",
-    "source_excerpt": "The role of the coordinator in task decomposition, delegation, result aggregation, and deciding which subagents to invoke based on query complexity",
-    "status": "approved",
-    "review_retries": 0,
-    "detected_patterns": [],
-    "human_checked": false,
-    "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
-    "guide_version": "0.2",
-    "created_at": "2026-11-04T04:09:36+00:00"
+    "created_at": "2026-11-04T04:36:06+00:00"
   },
   {
     "quiz_id": "Q-1.4-S2",
@@ -383,27 +52,27 @@
       "TS-1.4-S2"
     ],
     "scenario_id": 4,
-    "stem": "A developer asks your Claude-powered productivity agent: \"Help me understand why the authentication flow is failing and also refactor the error handling in the login module.\" The agent first uses Grep to locate authentication code, analyzes it, explains the failure cause, then searches for error handling patterns and suggests refactoring. The developer receives both answers after 4 minutes but notes that the authentication explanation would have been useful immediately since it unblocked urgent debugging work. What change would most effectively improve the workflow for this type of request?",
+    "stem": "A developer asks your productivity agent \"Why is the checkout flow failing in production and how do I fix the database migration issue?\" Logs show the agent first calls Grep to search for checkout-related errors, waits for results, then calls Grep again to search for migration errors, and finally synthesizes a response. The entire workflow takes 38 seconds. Profiling reveals the first search takes 14 seconds, the second search takes 16 seconds, and synthesis takes 8 seconds. What change would most effectively reduce total response time?",
     "options": [
       {
         "label": "A",
-        "text": "Decompose the request into two parallel investigations—one analyzing the authentication failure and one reviewing error handling patterns—then present both findings together with shared context about the login module structure.",
-        "rationale": "이 접근법은 다중 관심사 요청을 개별 항목으로 분해하고(decomposing multi-concern requests into distinct items), 로그인 모듈에 대한 공유 컨텍스트를 사용하여 각각을 병렬로 조사한 후(investigating each in parallel using shared context), 통합된 응답을 합성합니다(synthesizing a unified resolution). 병렬 실행으로 전체 지연 시간이 줄어들고, 두 조사 결과를 함께 제시하면 개발자가 인증 실패와 리팩토링 기회를 종합적으로 이해할 수 있습니다."
+        "text": "Execute both Grep searches in parallel with shared codebase context, then synthesize findings from both investigations into a unified response.",
+        "rationale": "개발자 요청은 두 가지 독립적인 관심사(체크아웃 실패와 마이그레이션 문제)를 포함하므로, 두 조사를 병렬로 수행하고 공유 컨텍스트(코드베이스)를 사용한 뒤 통합 해결책을 합성할 수 있습니다. 14초와 16초가 겹치므로 총 응답 시간이 약 절반으로 줄어듭니다."
       },
       {
         "label": "B",
-        "text": "Stream intermediate results by having the agent report authentication findings as soon as that analysis completes, then continue with the error handling refactoring investigation separately in sequence.",
-        "rationale": "중간 결과를 스트리밍하면 긴급한 디버깅 작업을 더 빨리 시작할 수 있지만, 여전히 순차 실행 패턴을 유지하므로 전체 워크플로우 시간은 줄어들지 않습니다. 또한 두 조사가 로그인 모듈 구조에 대한 컨텍스트를 공유하지 못하면 리팩토링 제안이 인증 실패의 근본 원인을 충분히 반영하지 못할 수 있습니다."
+        "text": "Chain the searches by passing the first Grep result directly to the second Grep invocation, eliminating the coordinator round-trip overhead.",
+        "rationale": "직접 체이닝은 조정 오버헤드 몇 초를 절약할 수 있지만, 두 검색이 여전히 순차적으로 실행되므로(14초 + 16초) 병렬화의 이점을 얻지 못합니다. 또한 체크아웃 오류와 마이그레이션 문제는 독립적인 관심사이므로 순차 의존성이 필요하지 않습니다."
       },
       {
         "label": "C",
-        "text": "Update the system prompt to instruct the agent to prioritize debugging requests over refactoring tasks, ensuring that urgent issues are always addressed before code improvement suggestions are generated.",
-        "rationale": "프롬프트 기반 우선순위 지침(prompt-based guidance)은 작업 순서를 제안할 수 있지만, 순차 실행으로 인한 지연 시간 문제를 해결하지 못합니다. 또한 개발자가 두 가지 관심사를 모두 요청했을 때 하나를 먼저 처리하고 다른 하나를 나중에 처리하면, 전체 응답 시간은 여전히 4분이 소요됩니다."
+        "text": "Implement a combined search tool that accepts multiple patterns and returns all matching results in a single Grep invocation.",
+        "rationale": "단일 도구로 결합하면 도구 호출 오버헤드는 줄지만, 두 검색이 서로 다른 패턴과 컨텍스트(체크아웃 로직 vs. 마이그레이션 스크립트)를 대상으로 하므로 내부적으로 여전히 순차 실행될 가능성이 높습니다. 병렬 조사의 핵심 이점을 놓칩니다."
       },
       {
         "label": "D",
-        "text": "Configure the agent to analyze authentication failures more thoroughly by examining related modules and dependencies before moving to the refactoring task, ensuring complete root cause analysis is delivered.",
-        "rationale": "인증 실패 분석을 더 철저하게 수행하면 근본 원인 파악에는 도움이 될 수 있지만, 순차 실행 패턴을 유지하고 첫 번째 작업의 범위를 확대하므로 전체 워크플로우 시간이 오히려 증가합니다. 이 접근법은 성능 문제를 악화시키며, 두 관심사를 병렬로 조사하여 얻을 수 있는 효율성 이점을 활용하지 못합니다."
+        "text": "Cache Grep results for common error patterns and reuse them when developers ask similar questions about production failures.",
+        "rationale": "캐싱은 반복되는 쿼리에 유용하지만, 현재 요청의 38초 응답 시간을 줄이지 못합니다. 이 문제는 순차 실행으로 인한 구조적 비효율성이므로, 미래 요청 최적화가 아니라 현재 워크플로우 재구성이 필요합니다."
       }
     ],
     "answer": "A",
@@ -411,58 +80,14 @@
     "status": "rejected",
     "review_retries": 2,
     "detected_patterns": [
+      "meta_reference",
       "scenario_mismatch",
-      "code",
-      "answer_not_supported"
+      "scenario_mismatch"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
-    "created_at": "2026-11-04T04:07:01+00:00"
-  },
-  {
-    "quiz_id": "Q-1.4-S3",
-    "task_id": "TS-1.4",
-    "domain": 1,
-    "focus_bullet_ids": [
-      "TS-1.4-S3"
-    ],
-    "scenario_id": 1,
-    "stem": "Your customer support resolution agent handles account issues and billing disputes. When the agent determines a case requires manual review—such as a disputed charge that conflicts with transaction logs—it calls the escalate_to_human tool to transfer the case to your operations team. Operations staff report that they must spend 10-15 minutes per escalated case re-running get_customer and lookup_order to understand the situation before they can make a decision, because they work in a separate system without access to the agent's conversation history. What is the most effective way to reduce this re-investigation time?",
-    "options": [
-      {
-        "label": "A",
-        "text": "Add detailed instructions to the system prompt telling the agent to provide thorough context when escalating, with few-shot examples showing comprehensive explanations of customer issues.",
-        "rationale": "프롬프트 기반 지침은 에이전트가 더 나은 컨텍스트를 제공하도록 유도할 수 있지만, 필수 필드의 존재와 형식을 보장하지 않습니다. 프로그램적으로 구조화된 handoff가 일관성과 완전성을 보장합니다."
-      },
-      {
-        "label": "B",
-        "text": "Implement a prerequisite gate that blocks escalate_to_human until the agent has successfully called get_customer and lookup_order to ensure complete investigation before handoff.",
-        "rationale": "사전 조건 게이트는 에이전트가 escalation 전에 충분히 조사하도록 보장하지만, 운영 팀에게 전달되는 정보의 구조나 접근성을 개선하지 않습니다. 운영 팀은 여전히 도구를 다시 실행해야 하므로 재조사 시간이 줄어들지 않습니다."
-      },
-      {
-        "label": "C",
-        "text": "Store the complete conversation transcript in a shared database and include a link to the transcript when calling escalate_to_human so operations staff can review the full dialogue.",
-        "rationale": "전체 대화 기록을 제공하는 것은 정보를 보존하지만, 운영 팀이 여전히 긴 대화를 읽고 관련 세부사항을 추출해야 하므로 재조사 시간을 효과적으로 줄이지 못합니다. 구조화된 요약이 원시 기록보다 훨씬 빠릅니다."
-      },
-      {
-        "label": "D",
-        "text": "Have the agent compile a structured summary containing the customer ID, root cause of the dispute, the disputed amount, and the recommended action, then pass this summary to escalate_to_human.",
-        "rationale": "구조화된 요약은 대화 기록에 접근할 수 없는 운영 팀에게 결정에 필요한 핵심 정보(고객 ID, 근본 원인, 금액, 권장 조치)를 직접 제공하여 재조사 시간을 제거합니다. 이 접근 방식은 handoff 프로토콜의 핵심 요소를 구현합니다."
-      }
-    ],
-    "answer": "D",
-    "source_excerpt": "Compiling structured handoff summaries (customer ID, root cause, refund amount, recommended action) when escalating to human agents who lack access to the conversation transcript",
-    "status": "approved",
-    "review_retries": 2,
-    "detected_patterns": [
-      "scenario_mismatch",
-      "code"
-    ],
-    "human_checked": false,
-    "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
-    "guide_version": "0.2",
-    "created_at": "2026-11-04T04:01:08+00:00"
+    "created_at": "2026-11-04T04:35:57+00:00"
   },
   {
     "quiz_id": "Q-2.1-K1",
@@ -472,38 +97,40 @@
       "TS-2.1-K1"
     ],
     "scenario_id": 1,
-    "stem": "Your customer support agent has access to three refund-related tools: process_refund, cancel_order_and_refund, and issue_store_credit. Production logs reveal that when customers request refunds for orders that have already shipped, the agent frequently calls process_refund (which fails because shipped orders require cancellation first) instead of cancel_order_and_refund. All three tools currently have one-line descriptions: \"Processes a refund\", \"Cancels order and refunds\", and \"Issues store credit\". What should you do first to improve tool selection accuracy?",
+    "stem": "Your customer support agent has three refund-related tools: issue_refund, process_return, and cancel_order_refund. Production logs reveal that when customers ask \"I want my money back for order #4521,\" the agent inconsistently selects among all three tools, sometimes choosing cancel_order_refund (which reverses a prior refund) instead of issue_refund. All three tools currently have one-sentence descriptions like \"Handles refunds\" or \"Processes returns and refunds.\" What is the most effective way to improve tool selection consistency?",
     "options": [
       {
         "label": "A",
-        "text": "Consolidate process_refund and cancel_order_and_refund into a single unified_refund tool that internally checks order status and routes to the appropriate backend operation.",
-        "rationale": "도구 통합은 유효한 아키텍처 선택이지만, 현재 문제가 단순히 불충분한 설명에서 비롯된 경우 백엔드 로직 변경이 필요한 과도한 설계입니다. 도구 설명을 개선하는 것이 더 적은 노력으로 문제를 해결할 수 있는 첫 번째 단계입니다."
+        "text": "Consolidate the three tools into a single unified_refund_handler that accepts the customer request and internally routes to the appropriate backend operation.",
+        "rationale": "Tool 통합은 유효한 아키텍처 선택일 수 있지만, 현재 문제는 minimal description으로 인한 선택 불일치입니다. Description을 개선하는 것보다 훨씬 많은 노력이 필요하며, 각 tool의 명확한 경계를 정의하는 것이 먼저 시도해야 할 비례적 해결책입니다."
       },
       {
         "label": "B",
-        "text": "Include few-shot examples in the system prompt showing correct tool selection for shipped versus unshipped orders, with 6-8 examples covering common refund scenarios.",
-        "rationale": "Few-shot 예시는 토큰 오버헤드를 추가하지만 근본 문제인 불충분한 도구 설명을 해결하지 못합니다. 도구 설명 자체가 최소한일 때 예시만으로는 LLM이 새로운 상황에서 올바른 도구를 일관되게 선택하도록 보장할 수 없으며, 설명 개선이라는 더 직접적이고 효율적인 해결책이 있습니다."
+        "text": "Implement few-shot examples in the system prompt showing five to eight sample customer requests paired with the correct tool call for each scenario.",
+        "rationale": "Few-shot example은 token overhead를 추가하지만 근본 원인인 불충분한 tool description을 해결하지 않습니다. Tool description이 minimal한 상태에서는 모델이 여전히 유사한 tool들을 구분할 맥락이 부족하며, example만으로는 새로운 variation에 일반화하기 어렵습니다."
       },
       {
         "label": "C",
-        "text": "Add a validation layer that checks order status before allowing process_refund calls, returning an error message that prompts the agent to retry with the correct tool.",
-        "rationale": "검증 레이어를 추가하는 것은 증상을 사후에 처리하지만 근본 원인인 불충분한 도구 설명(tool description)을 해결하지 못합니다. LLM은 여전히 잘못된 도구를 선택하려고 시도하고, 오류 후 재시도 과정에서 추가 지연과 토큰 비용이 발생합니다."
+        "text": "Add a system prompt instruction that lists keywords for each tool, directing the agent to call issue_refund when it detects words like 'money back' or 'refund'.",
+        "rationale": "Keyword 기반 instruction은 자연어 이해를 우회하며, 실제로는 keyword-sensitive instruction이 잘 작성된 tool description을 override하여 의도하지 않은 tool 연관을 만들 수 있습니다. 근본 원인인 불충분한 tool description을 해결하지 않고 우회하는 과도한 설계입니다."
       },
       {
         "label": "D",
-        "text": "Rewrite each tool description to specify the order states it handles, required preconditions, example use cases, and explicit guidance on when to use each tool versus the alternatives.",
-        "rationale": "도구 설명(tool description)은 LLM이 도구를 선택하는 주요 메커니즘입니다. 최소한의 설명만 있으면 유사한 도구들 사이에서 신뢰할 수 없는 선택이 발생합니다. 각 도구가 처리하는 주문 상태, 전제 조건, 사용 사례를 명시하면 LLM이 상황에 맞는 올바른 도구를 선택할 수 있는 컨텍스트를 제공합니다."
+        "text": "Rewrite each tool description to specify its purpose, expected inputs, example queries, and boundaries explaining when to use it versus the other refund tools.",
+        "rationale": "Tool description은 LLM이 tool을 선택하는 주요 메커니즘입니다. 현재 minimal description(\"Handles refunds\")으로는 모델이 유사한 tool들을 구분할 맥락이 부족합니다. 각 tool의 purpose, input format, example query, boundary를 명시하면 모델이 상황에 맞는 tool을 신뢰성 있게 선택할 수 있습니다."
       }
     ],
     "answer": "D",
     "source_excerpt": "Tool descriptions as the primary mechanism LLMs use for tool selection; minimal descriptions lead to unreliable selection among similar tools",
     "status": "approved",
-    "review_retries": 0,
-    "detected_patterns": [],
+    "review_retries": 1,
+    "detected_patterns": [
+      "parse"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
-    "created_at": "2026-11-04T04:06:09+00:00"
+    "created_at": "2026-11-04T04:35:24+00:00"
   },
   {
     "quiz_id": "Q-2.3-S1",
@@ -513,27 +140,27 @@
       "TS-2.3-S1"
     ],
     "scenario_id": 3,
-    "stem": "Your multi-agent research system has four specialized subagents: a web search agent, a document analysis agent, a synthesis agent, and a report generation agent. During production use, you notice that the synthesis agent occasionally attempts to call web_search and fetch_url tools when it encounters gaps in the findings it receives, leading to poorly formed queries and irrelevant results that degrade report quality. The synthesis agent's primary role is to combine and interpret findings from other agents, not to gather new data. What is the most effective way to prevent this behavior?",
+    "stem": "Your multi-agent research system has been running in production for two months. The synthesis agent is responsible for combining findings from the web search and document analysis agents into coherent narratives. Recently, users have complained that reports contain irrelevant web search results inserted mid-synthesis, and logs show the synthesis agent is directly calling the search_web tool during its work. The search_web tool was originally given to all agents \"for convenience.\" Which change will most effectively prevent this cross-specialization misuse?",
     "options": [
       {
         "label": "A",
-        "text": "Remove web_search and fetch_url from the synthesis agent's available tools, giving it only tools needed for combining and interpreting findings.",
-        "rationale": "각 서브에이전트의 도구 세트를 역할에 필요한 것으로만 제한하면 전문 분야를 벗어난 오용을 방지할 수 있습니다(preventing cross-specialization misuse). 합성 에이전트는 데이터 수집이 아닌 결과 해석에 집중해야 하므로 웹 검색 도구를 제거하는 것이 적절합니다."
+        "text": "Remove search_web from the synthesis agent's tool set and ensure only the web search agent has access to it.",
+        "rationale": "synthesis agent가 자신의 역할(findings를 narrative로 결합)과 무관한 search_web tool에 접근할 수 없도록 tool set을 제한하면 cross-specialization misuse를 프로그램적으로 방지할 수 있습니다. 각 subagent는 자신의 역할에 필요한 tool만 가져야 합니다."
       },
       {
         "label": "B",
-        "text": "Add detailed instructions to the synthesis agent's system prompt explaining when web searches are appropriate and how to formulate effective queries.",
-        "rationale": "프롬프트 지침만으로는 에이전트가 역할 범위를 벗어난 도구를 사용하는 것을 신뢰성 있게 막을 수 없습니다. 도구 접근 자체를 제한하는 프로그램적 강제(programmatic enforcement)가 더 효과적입니다."
+        "text": "Add prompt instructions to the synthesis agent emphasizing that it should never call search_web and must only synthesize existing findings.",
+        "rationale": "prompt instruction만으로는 tool misuse를 신뢰성 있게 방지할 수 없습니다. agent가 여전히 tool에 접근할 수 있다면 특정 상황에서 instruction을 무시하고 tool을 호출할 수 있으며, 이는 프로그램적 강제(programmatic enforcement)가 아닌 불안정한 접근입니다."
       },
       {
         "label": "C",
-        "text": "Configure tool_choice to 'auto' for the synthesis agent so the model can intelligently decide when web searches are necessary to fill gaps.",
-        "rationale": "tool_choice 설정은 도구 호출 여부나 방식을 제어하지만, 합성 에이전트가 데이터 수집 도구에 접근하는 근본 문제를 해결하지 못합니다. 역할에 맞지 않는 도구는 제거해야 합니다."
+        "text": "Configure tool_choice to force the synthesis agent to call combine_findings first before allowing access to any other tools.",
+        "rationale": "tool_choice forced selection은 특정 tool을 먼저 호출하도록 보장하지만, 이후 turn에서 synthesis agent가 여전히 search_web에 접근할 수 있습니다. 이 접근은 tool 실행 순서를 제어하지만 role에 맞지 않는 tool에 대한 접근 자체를 제한하지 않습니다."
       },
       {
         "label": "D",
-        "text": "Implement error handling in the synthesis agent to catch failed web searches and route those requests back to the coordinator for proper delegation.",
-        "rationale": "실패 후 라우팅은 이미 잘못된 도구 사용이 발생한 뒤의 복구 메커니즘입니다. 합성 에이전트가 애초에 웹 검색 도구를 호출하지 못하도록 접근을 제한하는 것이 더 근본적인 해결책입니다."
+        "text": "Implement validation logic in the coordinator that detects when the synthesis agent calls search_web and redirects the request to the web search agent.",
+        "rationale": "coordinator에서 misuse를 감지하고 redirect하는 것은 이미 발생한 cross-specialization을 사후에 처리하는 복잡한 방식입니다. synthesis agent가 애초에 search_web tool에 접근할 수 없도록 tool set을 제한하는 것이 더 직접적이고 신뢰성 있는 예방책입니다."
       }
     ],
     "answer": "A",
@@ -544,7 +171,7 @@
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
-    "created_at": "2026-11-04T04:06:07+00:00"
+    "created_at": "2026-11-04T04:35:14+00:00"
   },
   {
     "quiz_id": "Q-3.1-K1",
@@ -554,38 +181,38 @@
       "TS-3.1-K1"
     ],
     "scenario_id": 2,
-    "stem": "Your team has been experiencing inconsistent Claude Code behavior: some developers receive project-specific coding standards about error handling and logging, while others do not. After investigation, you discover that the senior engineer who set up the project initially placed these instructions in ~/.claude/CLAUDE.md on their own machine and assumed they would propagate to the team. The standards need to be consistently applied by all developers. Where should these instructions be moved to ensure every team member receives them?",
+    "stem": "Your team is building a multi-package monorepo where each package has different coding standards. A senior developer has been adding detailed style guidelines to ~/.claude/CLAUDE.md on their machine, and Claude Code follows them perfectly during their sessions. However, other team members report that Claude Code does not apply these standards when they work on the same packages. What is the most likely cause of this inconsistency?",
     "options": [
       {
         "label": "A",
-        "text": "Use the @import syntax in each developer's ~/.claude/CLAUDE.md to reference a shared standards file in the repository",
-        "rationale": "사용자 레벨 파일에서 @import를 사용하더라도 각 개발자가 여전히 자신의 ~/.claude/CLAUDE.md 파일을 수동으로 설정해야 하므로, 신규 팀원이나 설정을 놓친 개발자는 표준을 받지 못하는 문제가 해결되지 않습니다. 프로젝트 레벨에서 직접 설정하는 것이 더 신뢰할 수 있습니다."
+        "text": "The CLAUDE.md file lacks @import statements to reference the style guidelines from the .claude/rules/ directory for each package.",
+        "rationale": "@import 구문은 외부 파일을 참조하여 모듈화하는 메커니즘이지만, 이 상황에서는 가이드라인 자체가 저장소에 존재하지 않는 것이 문제입니다. 파일이 user-level에만 있다면 @import로도 팀원들이 접근할 수 없습니다."
       },
       {
         "label": "B",
-        "text": "Move the instructions to .claude/CLAUDE.md or a root CLAUDE.md file in the project repository",
-        "rationale": "프로젝트 레벨 설정 파일(.claude/CLAUDE.md 또는 루트 CLAUDE.md)은 버전 관리 시스템에 포함되어 모든 팀원이 저장소를 클론하거나 풀할 때 자동으로 받게 됩니다. 사용자 레벨 설정(~/.claude/CLAUDE.md)은 해당 사용자에게만 적용되며 팀원과 공유되지 않으므로, 팀 전체에 일관되게 적용해야 하는 코딩 표준은 프로젝트 레벨에 위치해야 합니다."
+        "text": "The guidelines are in user-level configuration at ~/.claude/CLAUDE.md and are not shared through version control with the team.",
+        "rationale": "user-level 설정(~/.claude/CLAUDE.md)은 해당 사용자의 머신에만 적용되며 버전 관리 시스템을 통해 팀원들과 공유되지 않습니다. 팀 전체가 동일한 가이드라인을 따르려면 프로젝트 레벨 설정(.claude/CLAUDE.md 또는 루트 CLAUDE.md)으로 옮겨서 저장소에 커밋해야 합니다."
       },
       {
         "label": "C",
-        "text": "Create subdirectory CLAUDE.md files in each package directory with the error handling and logging standards",
-        "rationale": "디렉토리 레벨 설정은 특정 하위 디렉토리에만 적용되는 컨텍스트나 규칙을 제공하는 데 유용하지만, 전체 프로젝트에 일관되게 적용해야 하는 코딩 표준을 여러 디렉토리에 중복 배치하면 유지보수가 어렵고 불일치가 발생할 수 있습니다."
+        "text": "Directory-level CLAUDE.md files in each package subdirectory are overriding the root configuration and ignoring the style guidelines.",
+        "rationale": "디렉터리 레벨 설정이 루트 설정을 오버라이드할 수는 있지만, 이 시나리오에서는 다른 팀원들이 가이드라인을 전혀 받지 못하고 있습니다. 이는 설정이 애초에 공유되지 않았음을 나타내며, 계층 구조 충돌 문제가 아닙니다."
       },
       {
         "label": "D",
-        "text": "Keep the instructions in ~/.claude/CLAUDE.md and document the setup steps in the team onboarding guide",
-        "rationale": "사용자 레벨 설정은 버전 관리를 통해 공유되지 않으므로, 각 개발자가 수동으로 파일을 복사하거나 설정해야 합니다. 이는 오류가 발생하기 쉽고 유지보수가 어려우며, 표준이 업데이트될 때마다 모든 팀원이 개별적으로 파일을 동기화해야 하는 문제가 있습니다."
+        "text": "The /memory command has not been run by other team members to load the shared configuration files into their sessions.",
+        "rationale": "/memory 명령은 어떤 메모리 파일이 로드되었는지 확인하고 세션 간 불일치를 진단하는 도구이지만, user-level 설정 파일을 다른 사용자의 세션으로 가져오는 기능은 없습니다. 설정이 공유 저장소에 없다면 /memory로도 해결할 수 없습니다."
       }
     ],
     "answer": "B",
-    "source_excerpt": "user-level settings apply only to that user—instructions in ~/.claude/CLAUDE.md are not shared with teammates via version control",
+    "source_excerpt": "That user-level settings apply only to that user—instructions in ~/.claude/CLAUDE.md are not shared with teammates via version control",
     "status": "approved",
     "review_retries": 0,
     "detected_patterns": [],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
-    "created_at": "2026-11-04T04:06:26+00:00"
+    "created_at": "2026-11-04T04:35:32+00:00"
   },
   {
     "quiz_id": "Q-3.4-S1",
@@ -595,41 +222,38 @@
       "TS-3.4-S1"
     ],
     "scenario_id": 4,
-    "stem": "Your team is building a developer productivity agent to help migrate a legacy Python application from SQLAlchemy 1.3 to SQLAlchemy 2.0. The migration affects 52 model files, requires choosing between async and sync database drivers based on existing application patterns, and involves updating query syntax that varies across different modules. A developer asks the agent to \"upgrade the application to SQLAlchemy 2.0 with the appropriate driver configuration.\" Which execution mode should the agent use for this request?",
+    "stem": "Your team is building a developer productivity agent to help migrate a monolithic application to microservices. The task involves analyzing 60+ service files to identify shared dependencies, proposing service boundaries based on domain logic, evaluating two competing API gateway patterns with different infrastructure costs, and generating the initial service scaffolding. A senior engineer suggests using direct execution to \"get started quickly\" by immediately generating service templates based on existing module names. What is the most effective way to approach this task?",
     "options": [
       {
         "label": "A",
-        "text": "Use direct execution to apply automated migration scripts provided by SQLAlchemy documentation, then fix remaining compatibility issues identified by test suite runs.",
-        "rationale": "자동화된 스크립트는 일부 구문 변경을 처리할 수 있지만, 기존 애플리케이션 패턴에 기반한 드라이버 선택과 모듈 간 쿼리 구문 변형 처리와 같은 아키텍처 결정은 사전 계획이 필요합니다. Direct execution은 이러한 복잡한 의사결정을 포함하는 작업에 적합하지 않습니다."
+        "text": "Use direct execution to generate service templates immediately, then use plan mode to refactor boundaries if issues emerge.",
+        "rationale": "잘못된 경계로 서비스를 먼저 생성하면 비용이 큰 재작업이 발생합니다. 아키텍처 결정(서비스 경계, 게이트웨이 패턴)이 필요한 작업에서는 구현 전에 plan mode로 설계해야 합니다."
       },
       {
         "label": "B",
-        "text": "Use direct execution with the Explore subagent to discover query patterns while simultaneously updating model definitions and driver configurations across the codebase.",
-        "rationale": "Explore subagent는 상세한 탐색 출력을 격리하는 데 유용하지만, 52개 파일에 영향을 미치고 여러 유효한 드라이버 선택이 존재하는 라이브러리 마이그레이션에는 direct execution이 아닌 plan mode가 필요합니다. 탐색과 즉각적인 구현을 결합하면 비용이 큰 재작업이 발생할 수 있습니다."
+        "text": "Use the Explore subagent to analyze dependencies and return summaries, then use direct execution for service generation.",
+        "rationale": "Explore subagent는 상세한 탐색 출력을 격리하여 컨텍스트를 보존하지만, 서비스 경계와 게이트웨이 패턴 같은 아키텍처 결정에는 plan mode가 필요합니다. Direct execution은 명확한 범위의 단순 변경에 적합합니다."
       },
       {
         "label": "C",
-        "text": "Use plan mode to analyze existing database access patterns, evaluate async versus sync driver trade-offs, and design a migration strategy before implementing changes.",
-        "rationale": "라이브러리 마이그레이션이 45개 이상의 파일에 영향을 미치고, async와 sync 드라이버 중 선택과 같은 인프라 요구사항이 다른 통합 방식 결정을 포함하는 경우 아키텍처적 의미를 가진 작업입니다. Plan mode는 변경을 커밋하기 전에 안전한 코드베이스 탐색과 설계를 가능하게 하여 비용이 큰 재작업을 방지합니다."
+        "text": "Use plan mode to explore dependencies, evaluate gateway patterns, and design service boundaries before generating any code.",
+        "rationale": "마이크로서비스 재구조화는 아키텍처 결정(서비스 경계, 게이트웨이 패턴 선택)과 대규모 변경(60개 이상 파일)을 포함하므로 plan mode가 적합합니다. Plan mode는 코드 생성 전에 안전한 탐색과 설계를 가능하게 하여 비용이 큰 재작업을 방지합니다."
       },
       {
         "label": "D",
-        "text": "Use direct execution to update model files incrementally, validating each change with unit tests and fixing compatibility issues before proceeding to the next file.",
-        "rationale": "점진적 접근은 합리적으로 보이지만, 52개 파일에 영향을 미치고 드라이버 선택과 같은 아키텍처 결정을 포함하는 라이브러리 마이그레이션은 개별 파일을 변경하기 전에 전체적인 계획이 필요합니다. Direct execution은 이러한 대규모 아키텍처 작업에 적합하지 않습니다."
+        "text": "Use direct execution with incremental commits for each service, allowing rollback if the chosen boundaries prove incorrect.",
+        "rationale": "증분 커밋은 롤백을 가능하게 하지만 잘못된 아키텍처 결정의 근본 문제를 해결하지 못합니다. 여러 접근 방식과 인프라 요구사항을 평가해야 하는 작업에는 구현 전에 plan mode로 설계해야 합니다."
       }
     ],
     "answer": "C",
     "source_excerpt": "Selecting plan mode for tasks with architectural implications (e.g., microservice restructuring, library migrations affecting 45+ files, choosing between integration approaches with different infrastructure requirements)",
     "status": "approved",
-    "review_retries": 2,
-    "detected_patterns": [
-      "code",
-      "code"
-    ],
+    "review_retries": 0,
+    "detected_patterns": [],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
-    "created_at": "2026-11-04T04:06:52+00:00"
+    "created_at": "2026-11-04T04:35:41+00:00"
   },
   {
     "quiz_id": "Q-4.1-K1",
@@ -639,38 +263,40 @@
       "TS-4.1-K1"
     ],
     "scenario_id": 5,
-    "stem": "Your CI/CD pipeline uses Claude Code to review pull requests for documentation accuracy. The current prompt instructs Claude to \"check that all function comments are accurate and up-to-date.\" Developers complain that 60% of the flagged comments are false positives—Claude reports issues for comments that use slightly different wording than the implementation but correctly describe the function's behavior. Which change will most effectively reduce false positives?",
+    "stem": "Your CI pipeline uses Claude Code to review pull requests for API documentation accuracy. The current prompt instructs Claude to \"verify that endpoint documentation is correct.\" Developers report that 65% of flagged issues are false positives—Claude flags documentation that uses synonyms or reordered explanations but describes the correct behavior. The team now ignores documentation warnings entirely. You need to reduce false positives without adding a severity classification system, since your pipeline already routes all findings to a single Slack channel. What change will most effectively reduce false positives?",
     "options": [
       {
         "label": "A",
-        "text": "Add severity levels to the prompt: Classify comment issues as critical, moderate, or minor, and report only critical findings.",
-        "rationale": "심각도 분류(severity classification)는 이미 탐지된 문제를 분류하는 방법이지만, 근본 원인인 모호한 탐지 기준 자체를 해결하지 못합니다. 무엇을 문제로 볼지에 대한 명시적 정의 없이 심각도만 추가하면 여전히 오탐이 '중대한' 범주로 분류될 수 있습니다."
+        "text": "Add a confidence threshold instruction: only report documentation issues when you are highly confident the documentation is incorrect or would mislead API consumers.",
+        "rationale": "\"높은 확신도\"나 \"오해를 일으킬\" 같은 일반적 지시는 구체적인 범주 기준에 비해 정밀도 개선에 실패합니다. 이런 모호한 필터는 Claude가 무엇을 플래그해야 하는지 명확히 정의하지 못하며, 표현 차이와 실제 오류를 구분하는 기준을 제공하지 않습니다."
       },
       {
         "label": "B",
-        "text": "Modify the prompt to: Be conservative when flagging comments—avoid reporting issues unless the documentation is clearly wrong.",
-        "rationale": "'보수적으로(conservative)' 판단하라는 일반적 지시는 모델에게 명확한 결정 기준을 제공하지 않습니다. '명백히 틀렸을 때'라는 표현 역시 모호하여, 구체적인 범주 기준 없이는 오탐률 개선 효과가 거의 없습니다."
+        "text": "Modify the prompt to request conservative analysis: be conservative and only flag documentation problems that would cause significant confusion for developers integrating with these endpoints.",
+        "rationale": "\"보수적으로\" 또는 \"중요한 혼란\"처럼 일반적인 지시는 명시적 기준 없이는 정밀도를 개선하지 못합니다. 이런 모호한 표현은 Claude가 표현 차이를 실제 모순과 구분할 구체적 규칙을 제공하지 않아, 거짓 양성 문제가 계속됩니다."
       },
       {
         "label": "C",
-        "text": "Add the instruction: Only report high-confidence findings where you are certain the comment is inaccurate.",
-        "rationale": "신뢰도 기반 필터링(confidence-based filtering)은 모호한 지시로, 모델이 '높은 확신'을 주관적으로 해석하게 되어 실제로는 정밀도를 개선하지 못합니다. 구체적인 범주 기준(categorical criteria) 없이 '확실할 때만'이라는 표현은 오탐률을 일관되게 낮추지 못합니다."
+        "text": "Enhance the instruction with severity guidance: classify documentation issues by severity level and report all findings with severity labels so developers can prioritize which warnings to address first.",
+        "rationale": "심각도 분류(severity classification)는 일관된 분류를 위해 유용하지만, 모든 발견 사항을 보고하면 거짓 양성 문제가 해결되지 않습니다. 현재 문제는 무엇을 플래그할지 정의하는 것이며, 심각도 레이블을 추가해도 표현 차이를 실제 모순과 구분하는 명시적 기준이 없으면 개발자는 여전히 경고를 무시하게 됩니다."
       },
       {
         "label": "D",
-        "text": "Replace the instruction with: Flag comments only when the claimed behavior (inputs, outputs, side effects) contradicts the actual code behavior.",
-        "rationale": "명시적 기준(explicit criteria)을 제공하여 정확히 어떤 불일치를 보고해야 하는지 정의합니다. 단순한 표현 차이가 아니라 실제 동작(behavior)의 모순만 플래그하도록 구체적으로 지시하므로, 모델이 일관되게 판단할 수 있고 오탐(false positive)이 크게 줄어듭니다."
+        "text": "Replace the instruction with explicit criteria: flag documentation only when claimed endpoint behavior contradicts actual request handling, such as documented parameters the code does not accept.",
+        "rationale": "명시적 기준(explicit criteria)을 사용하면 모호한 지시보다 정밀도가 크게 향상됩니다. \"동작이 실제 요청 처리와 모순될 때만\"이라는 구체적 조건은 Claude가 단순한 표현 차이(동의어, 순서 변경)와 실제 불일치를 구분할 수 있게 하여, 기술적으로 정확한 문서를 잘못 플래그하는 문제를 해결합니다."
       }
     ],
     "answer": "D",
     "source_excerpt": "The importance of explicit criteria over vague instructions (e.g., \"flag comments only when claimed behavior contradicts actual code behavior\" vs \"check that comments are accurate\")",
     "status": "approved",
-    "review_retries": 0,
-    "detected_patterns": [],
+    "review_retries": 1,
+    "detected_patterns": [
+      "multiple_correct"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
-    "created_at": "2026-11-04T04:06:33+00:00"
+    "created_at": "2026-11-04T04:36:16+00:00"
   },
   {
     "quiz_id": "Q-4.4-S2",
@@ -680,27 +306,27 @@
       "TS-4.4-S2"
     ],
     "scenario_id": 6,
-    "stem": "Your extraction system processes insurance claim forms to populate a structured database. During testing, you observe two types of failures: (1) claims where the model outputs \"2023-15-08\" instead of \"2023-08-15\" for dates, and (2) claims where the model returns null for \"policy_holder_spouse_name\" because that information appears only in a separate enrollment document that is not included in the claim form. Your current implementation retries any extraction that fails validation. What should you change?",
+    "stem": "Your extraction system processes insurance claim forms to populate a structured database. During testing, you observe two types of failures: (1) claims with missing \"date of incident\" fields fail validation, and the system retries three times before giving up, and (2) claims that reference \"see attached police report for vehicle damage details\" fail to extract damage descriptions, also triggering three retries. Both failure types consume significant API costs from repeated attempts. Which change will most effectively reduce unnecessary retry costs?",
     "options": [
       {
         "label": "A",
-        "text": "Implement retry-with-error-feedback for both failure types, appending the validation error message to guide the model toward correction.",
-        "rationale": "Retry-with-error-feedback은 형식 오류에는 유용하지만, 외부 문서에만 존재하는 정보(information exists only in an external document not provided)에는 효과가 없습니다. 두 실패 유형을 동일하게 처리하는 것은 비효율적입니다."
+        "text": "Append specific validation errors to retry prompts for both failure types to guide the model toward finding the missing information.",
+        "rationale": "retry-with-error-feedback는 모델이 수정할 수 있는 오류(형식, 구조)에는 효과적이지만, 원본 문서에 정보가 없거나 외부 문서에만 존재하는 경우에는 아무리 구체적인 오류 메시지를 제공해도 모델이 정보를 생성할 수 없습니다. 두 실패 유형 모두에 재시도를 적용하면 비용 낭비가 계속됩니다."
       },
       {
         "label": "B",
-        "text": "Add the enrollment document to the context for all claims so that retries can successfully extract the spouse name field.",
-        "rationale": "이 방법은 배우자 이름 문제를 해결하지만 재시도 로직 자체를 개선하는 것이 아니라 입력 데이터를 변경하는 것입니다. 등록 문서가 항상 사용 가능하지 않을 수 있으며, 모든 청구에 추가 문서를 포함하면 불필요한 컨텍스트 비용이 발생합니다."
+        "text": "Add detected_pattern fields to validation errors to track which missing fields trigger retries most frequently across claim types.",
+        "rationale": "detected_pattern 필드는 기각 패턴을 체계적으로 분석하기 위한 피드백 루프 설계 기법이지만, 이 상황에서는 재시도 자체가 효과 없는 경우를 식별하는 것이 우선입니다. 패턴 추적만으로는 불필요한 재시도 비용을 직접 줄이지 못합니다."
       },
       {
         "label": "C",
-        "text": "Retry only the date format errors; skip retries for missing spouse name fields and mark them as unavailable in the output schema.",
-        "rationale": "날짜 형식 오류는 재시도(retry)로 해결할 수 있는 구조적 출력 오류(structural output error)입니다. 반면 배우자 이름은 제공된 문서에 정보가 없으므로 재시도는 효과가 없습니다(ineffective). 이 접근법은 재시도가 성공할 상황과 실패할 상황을 올바르게 구분합니다."
+        "text": "Skip retries when validation errors indicate missing source data; continue retries for format mismatches and structural output errors.",
+        "rationale": "필수 정보가 원본 문서에 없을 때(예: 날짜 필드 누락, 외부 문서 참조)는 재시도가 효과가 없지만, 형식 불일치나 구조적 출력 오류는 재시도로 수정될 수 있습니다. 검증 오류의 유형을 구분하여 재시도 여부를 결정하면 불필요한 API 비용을 줄이면서도 수정 가능한 오류는 복구할 수 있습니다."
       },
       {
         "label": "D",
-        "text": "Increase the maximum retry count from 2 to 5 attempts to give the model more opportunities to locate the spouse name in the claim form.",
-        "rationale": "재시도 횟수를 늘려도 원본 문서에 정보가 없으면(information is simply absent from the source document) 효과가 없습니다. 이는 재시도가 비효과적인 상황을 잘못 이해한 접근법입니다."
+        "text": "Extract calculated_total alongside stated_total fields to flag discrepancies and reduce validation failures that trigger unnecessary retries.",
+        "rationale": "calculated_total과 stated_total 비교는 숫자 불일치를 감지하는 자기 수정 검증 흐름 설계 기법이지만, 이 시나리오의 문제는 누락된 날짜와 외부 참조 문서입니다. 합계 검증은 이 상황의 재시도 비용 문제를 해결하지 못합니다."
       }
     ],
     "answer": "C",
@@ -711,7 +337,7 @@
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
-    "created_at": "2026-11-04T04:06:46+00:00"
+    "created_at": "2026-11-04T04:36:00+00:00"
   },
   {
     "quiz_id": "Q-5.1-K1",
@@ -721,27 +347,27 @@
       "TS-5.1-K1"
     ],
     "scenario_id": 1,
-    "stem": "Your customer support agent handles multi-turn conversations where customers often provide key details early in the interaction. After implementing conversation summarization to manage token costs, you notice that 18% of refund cases now fail validation because the agent submits incorrect refund amounts or references the wrong order date. Logs show the agent is using summarized history that describes \"customer reported a billing issue last month\" instead of preserving the exact date and amount the customer stated. Which approach most effectively prevents this data loss?",
+    "stem": "Your customer support agent handles multi-turn conversations where customers often provide key details early (\"I need a refund for my $247.50 order from March 15th\") and then discuss the issue over several exchanges. After implementing conversation summarization to manage token costs, you notice that 18% of refund requests processed by the agent show incorrect amounts or dates in the refund records. Logs reveal that the summarization step is converting specific details into general statements like \"customer requested refund for recent order.\" What is the most effective way to preserve accuracy while managing context length?",
     "options": [
       {
         "label": "A",
-        "text": "Place key customer-stated details at the beginning of the summarized conversation history and use explicit section headers to ensure the model reliably processes critical information.",
-        "rationale": "이 접근법은 \"lost in the middle\" 효과를 완화하지만, progressive summarization 위험은 해결하지 못합니다. 중요한 정보를 앞쪽에 배치하더라도 요약 과정에서 정확한 숫자와 날짜가 여전히 모호한 표현으로 압축될 수 있습니다. 위치 최적화는 정보 접근성을 개선하지만 데이터 정밀도 손실은 방지하지 못합니다."
+        "text": "Place key transactional details at the beginning of each summarized conversation history to ensure the model reliably processes critical numerical information.",
+        "rationale": "이 접근법은 \"lost in the middle\" 효과를 완화하는 위치 전략이지만, 문제의 근본 원인인 progressive summarization 위험을 해결하지 못합니다. 요약 과정에서 이미 $247.50이 \"약 $250\"으로 변환되었다면, 그것을 앞에 배치해도 부정확한 값은 그대로 남습니다."
       },
       {
         "label": "B",
-        "text": "Instruct the summarization process to preserve all numerical values, percentages, dates, and customer expectations with high fidelity, and include examples of good versus poor summaries in the summarization prompt.",
-        "rationale": "요약 프롬프트에 지침과 예시를 추가하는 것은 확률적 접근이며, 긴 대화에서 중요한 숫자와 날짜를 일관되게 보존한다는 보장이 없습니다. 요약 모델이 여전히 \"약 $50\" 또는 \"지난달\"처럼 근사치나 모호한 표현을 생성할 수 있어, 환불 검증 같은 정확성이 필수적인 작업에는 부적합합니다."
+        "text": "Instruct the summarization process to preserve all numerical values, percentages, dates, and customer expectations verbatim without condensing them into general statements.",
+        "rationale": "프롬프트 기반 지시만으로는 요약 과정에서 특정 값들을 일관되게 보존하기 어렵습니다. LLM은 여전히 \"최근 주문\"이나 \"약 $250\" 같은 근사치로 변환할 수 있으며, 이는 환불 처리에서 오류를 유발합니다. 프로그램적 강제(programmatic enforcement) 없이는 신뢰성을 보장할 수 없습니다."
       },
       {
         "label": "C",
-        "text": "Extract transactional facts such as order numbers, amounts, and dates into a persistent case facts block that is included verbatim in each prompt, separate from the summarized conversation history.",
-        "rationale": "이 접근법은 progressive summarization의 핵심 위험을 직접 해결합니다. 숫자 값, 날짜, 금액 같은 트랜잭션 사실을 요약 대상에서 제외하고 별도의 구조화된 블록에 보존함으로써, 요약 과정에서 정확한 값이 모호한 표현(\"last month\", \"billing issue\")으로 변질되는 것을 방지합니다."
+        "text": "Extract transactional facts like amounts, dates, and order numbers into a persistent case facts block that bypasses summarization and appears in every prompt.",
+        "rationale": "이 접근법은 progressive summarization의 핵심 위험을 직접 해결합니다. 숫자 값, 날짜, 고객이 명시한 기대사항을 요약 프로세스 밖으로 분리하여 별도의 구조화된 블록에 보관함으로써 정확성을 보장하면서도 대화 내러티브는 요약할 수 있습니다. 이는 트랜잭션 정확성이 중요한 상황에서 적절한 해결책입니다."
       },
       {
         "label": "D",
-        "text": "Trim the conversation history to retain only the most recent three turns in full detail, ensuring that critical information stated by the customer remains available without summarization.",
-        "rationale": "최근 턴만 유지하는 것은 고객이 초반에 제공한 중요한 세부사항(주문 번호, 금액, 날짜)을 완전히 제거할 수 있습니다. 다중 턴 대화에서 초기 컨텍스트는 종종 문제 해결에 필수적이므로, 이 접근법은 토큰을 절약하지만 대화 일관성과 정확성을 희생합니다."
+        "text": "Trim the summarized conversation history to only the most recent three exchanges while keeping complete tool results to preserve all factual details.",
+        "rationale": "최근 교환만 유지하면 고객이 초반에 제공한 중요한 세부사항($247.50, March 15th)을 잃게 됩니다. 또한 tool 결과를 완전히 보관하는 것은 토큰을 과도하게 소비하며, 이는 애초에 요약을 도입한 이유와 모순됩니다. 이 접근법은 문제를 악화시킵니다."
       }
     ],
     "answer": "C",
@@ -752,7 +378,7 @@
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
-    "created_at": "2026-11-04T04:06:55+00:00"
+    "created_at": "2026-11-04T04:36:20+00:00"
   },
   {
     "quiz_id": "Q-5.4-S2",
@@ -762,84 +388,37 @@
       "TS-5.4-S2"
     ],
     "scenario_id": 2,
-    "stem": "You are using Claude Code to explore a large legacy inventory management system to understand how stock reconciliation works. During a two-hour session, you ask Claude to identify database tables, trace update flows, and locate batch job entry points. After 75 minutes, Claude begins giving generic answers like \"reconciliation typically involves comparing expected versus actual inventory\" instead of referencing the StockReconciler class and reconcile_batches table it found earlier. What is the most effective way to prevent this context degradation?",
+    "stem": "You are using Claude Code to explore a large legacy e-commerce codebase to understand how the order fulfillment pipeline works. Over a 90-minute session, you ask Claude to trace dependencies, identify database schemas, and locate integration points. After about an hour, you notice Claude starts giving vague answers like \"typically in systems like this, orders are processed through a queue\" instead of referencing the specific OrderProcessor class and RabbitMQ configuration it identified earlier. What is the most effective way to prevent this context degradation in future exploration sessions?",
     "options": [
       {
         "label": "A",
-        "text": "Summarize key findings after each exploration phase and inject these summaries into the initial context of the next set of questions",
-        "rationale": "단계별 요약과 주입은 유용한 기법이지만, 2시간 세션 동안 지속적으로 누적되는 발견사항을 관리하기에는 수동적이고 번거롭습니다. 각 질문마다 이전 요약을 다시 주입해야 하며, 파일 기반 지속성만큼 체계적이지 않습니다."
+        "text": "Spawn subagents to investigate each component separately and have the main agent coordinate by reading their final summaries.",
+        "rationale": "서브에이전트 위임(subagent delegation)은 상세한 탐색 출력을 격리하고 메인 에이전트가 고수준 조정을 유지하는 데 유용하지만, 이 시나리오는 단일 세션에서 발생하는 컨텍스트 저하 문제입니다. 서브에이전트는 주로 병렬 탐색이나 출력 격리에 적합하며, 긴 세션 동안 발견한 구체적 정보를 지속적으로 참조하는 문제에는 스크래치패드가 더 직접적인 해결책입니다."
       },
       {
         "label": "B",
-        "text": "Instruct Claude to maintain a findings.md scratchpad file recording discovered classes, tables, and file paths, then reference this file when answering later questions",
-        "rationale": "스크래치패드 파일을 유지하고 참조하도록 하는 것은 컨텍스트 경계를 넘어 주요 발견사항을 지속시키는 효과적인 방법입니다. Claude가 구체적인 클래스명과 테이블명을 파일에 기록하면, 나중에 그 파일을 참조하여 일반적인 설명 대신 실제 코드베이스의 구체적인 내용을 답변할 수 있습니다."
+        "text": "Instruct Claude to maintain a scratchpad.md file recording key findings and reference it when answering subsequent questions about the codebase.",
+        "rationale": "스크래치패드 파일(scratchpad file)에 주요 발견 사항을 기록하고 후속 질문에서 이를 참조하도록 하면 컨텍스트 경계를 넘어 구체적인 정보(예: OrderProcessor 클래스, RabbitMQ 설정)를 유지할 수 있습니다. 이 방법은 모델이 초반에 발견한 구체적인 클래스와 설정을 나중에도 계속 참조할 수 있게 하여 컨텍스트 저하(context degradation)를 직접적으로 방지합니다."
       },
       {
         "label": "C",
-        "text": "Use /compact every 20 minutes during the session to reduce context usage and remove verbose discovery output from the context window",
-        "rationale": "/compact은 컨텍스트 사용량을 줄이는 데 도움이 되지만, 이미 발견한 구체적인 정보를 보존하거나 참조 가능하게 만들지는 않습니다. 컨텍스트를 압축해도 이전 발견사항을 명시적으로 기록하지 않으면 여전히 손실될 수 있습니다."
+        "text": "Use /compact periodically during the session to reduce context usage and remove verbose discovery output from earlier exploration.",
+        "rationale": "/compact은 컨텍스트 사용량을 줄이는 데 도움이 되지만, 압축 과정에서 초반에 발견한 구체적인 정보(클래스명, 설정 등)가 손실될 수 있습니다. 이 방법은 컨텍스트 공간을 확보하지만 주요 발견 사항을 명시적으로 보존하지 않아 모델이 일반적인 패턴으로 회귀하는 문제를 해결하지 못합니다."
       },
       {
         "label": "D",
-        "text": "Spawn subagents to investigate database schema and batch jobs separately, keeping the main agent's context focused on coordination and integration",
-        "rationale": "서브에이전트 위임은 상세한 탐색 출력을 격리하는 데 유용하지만, 이 시나리오의 문제는 단일 세션 내에서 이전에 발견한 구체적인 정보를 잃어버리는 것입니다. 서브에이전트만으로는 주요 발견사항을 지속적으로 참조 가능하게 만들지 못합니다."
+        "text": "Design structured state exports with manifests that the coordinator loads on resume to recover key findings after context limits.",
+        "rationale": "구조화된 상태 지속성(structured state persistence)과 매니페스트는 크래시 복구(crash recovery)나 세션 재개 시 상태를 복원하는 데 사용됩니다. 이 시나리오는 단일 연속 세션 내에서 발생하는 컨텍스트 저하 문제이므로, 세션 중단이나 재시작이 아닌 실시간 참조를 위한 스크래치패드가 더 적합한 해결책입니다."
       }
     ],
     "answer": "B",
     "source_excerpt": "Having agents maintain scratchpad files recording key findings, referencing them for subsequent questions to counteract context degradation",
     "status": "approved",
-    "review_retries": 1,
-    "detected_patterns": [
-      "code"
-    ],
+    "review_retries": 0,
+    "detected_patterns": [],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
-    "created_at": "2026-11-04T04:07:20+00:00"
-  },
-  {
-    "quiz_id": "Q-1.4-S2-F",
-    "task_id": "TS-1.4",
-    "domain": 1,
-    "focus_bullet_ids": [
-      "TS-1.4-S2"
-    ],
-    "scenario_id": 4,
-    "stem": "Your codebase exploration agent helps engineers understand unfamiliar repositories. A developer submits the request: \"I need to understand how authentication works in this service, and also find where we're logging sensitive data that shouldn't be logged.\" The agent currently processes such requests sequentially—first completing all authentication investigation, then starting the logging audit—which takes 4-5 minutes total. Engineers report frustration with the wait time when they have multiple independent concerns. What is the most effective way to reduce response latency for these multi-concern requests?",
-    "options": [
-      {
-        "label": "A",
-        "text": "Decompose the request into distinct items (authentication flow, sensitive logging), investigate both in parallel using shared context, then synthesize a unified response.",
-        "rationale": "여러 독립적인 관심사를 포함한 요청을 별개의 항목으로 분해하고, 공유된 컨텍스트(codebase)를 사용하여 각각을 병렬로 조사한 후 통합된 해결책을 합성하는 것은 대기 시간을 크게 줄이면서도 완전한 답변을 제공합니다. 인증과 로깅 감사는 서로 의존하지 않으므로 동시에 진행할 수 있습니다."
-      },
-      {
-        "label": "B",
-        "text": "Add a routing classifier that detects multi-part requests and automatically splits them into separate agent sessions, each returning an independent response.",
-        "rationale": "별도의 세션으로 분리하면 개발자가 두 응답을 수동으로 연결해야 하며, 공유된 컨텍스트의 이점을 잃고 통합된 인사이트를 제공할 기회를 놓칩니다. 이는 대기 시간 문제를 해결하지만 사용자 경험을 저하시킵니다."
-      },
-      {
-        "label": "C",
-        "text": "Enhance the system prompt with examples showing the agent prioritizing the most critical concern first, then briefly summarizing the second concern.",
-        "rationale": "한 가지 관심사를 우선시하고 다른 것을 간략하게 처리하는 것은 불완전한 답변을 제공하며, 개발자가 요청한 두 가지 조사를 모두 완전히 수행하지 않습니다. 이는 대기 시간을 줄일 수 있지만 품질을 희생합니다."
-      },
-      {
-        "label": "D",
-        "text": "Implement programmatic prerequisites that ensure authentication analysis completes and is validated before any logging audit operations can begin.",
-        "rationale": "프로그램적 선행 조건(programmatic prerequisites)은 한 단계가 다른 단계에 의존할 때 순서를 강제하는 데 유용하지만, 이 경우 인증 조사와 로깅 감사는 독립적이므로 순차 실행을 강제하면 오히려 대기 시간이 증가합니다."
-      }
-    ],
-    "answer": "A",
-    "source_excerpt": "Decomposing multi-concern customer requests into distinct items, then investigating each in parallel using shared context before synthesizing a unified resolution",
-    "status": "rejected",
-    "review_retries": 2,
-    "detected_patterns": [
-      "code",
-      "code",
-      "scenario_mismatch"
-    ],
-    "human_checked": false,
-    "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
-    "guide_version": "0.2",
-    "created_at": "2026-11-04T04:11:05+00:00"
+    "created_at": "2026-11-04T04:36:22+00:00"
   }
 ]

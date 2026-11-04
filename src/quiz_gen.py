@@ -15,6 +15,7 @@ import unicodedata
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from string import Template
 from typing import Callable, Optional
 
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -22,7 +23,8 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from src import config
 from src.prompts import FIX_HINTS, load, load_pair
 from src.schemas import (
-    LABELS, GuideBullet, GuideChunk, ManifestSlot, QuizDraft, QuizItem, QuizOption, ReviewVerdict,
+    LABELS, GuideBullet, GuideChunk, ManifestSlot, QuizDraft, QuizItem, QuizOption, QuizOptionsRepair,
+    ReviewVerdict,
 )
 
 MAX_ATTEMPTS = 3            # 최초 1회 + 재시도 2회 (TS 4.4)
@@ -175,86 +177,118 @@ def find_label_refs(text: str) -> list[str]:
     return [m.group(0) for r in LABEL_REF_RES for m in r.finditer(text)]
 
 
-def validate_draft(draft: QuizDraft, slot: ManifestSlot, scenario_id: int, corpus: Corpus) -> list[str]:
-    """DESIGN §5-2 5단계 + 보기 섞기·언어 규칙. 오류는 재시도 피드백에 그대로 들어가므로 영어로 구체적으로 쓴다."""
-    errs: list[str] = []
+# 코드 검증 세부 패턴. 앞쪽이 더 심각 — 시도 하나의 대표 패턴은 이 순서로 고른다 (DESIGN §5-2)
+CODE_PATTERNS = (
+    "format", "unknown_ref", "excerpt_not_verbatim", "language",
+    "label_reference", "meta_reference", "forbidden_phrase", "answer_too_long",
+)
+CodeIssue = tuple[str, str]       # (pattern, message)
+
+
+def primary_pattern(issues: list[CodeIssue]) -> str:
+    return min((p for p, _ in issues), key=CODE_PATTERNS.index)
+
+
+def length_stats(draft: QuizDraft) -> Optional[dict]:
+    """정답·오답 길이(문자 수). 보기 구조가 깨졌으면 None."""
+    labels = [o.label for o in draft.options]
+    if len(draft.options) != 4 or draft.answer not in labels:
+        return None
+    correct = next(len(o.text) for o in draft.options if o.label == draft.answer)
+    wrong = [len(o.text) for o in draft.options if o.label != draft.answer]
+    avg = sum(wrong) / len(wrong)
+    return {"correct": correct, "avg_wrong": avg, "max_wrong": max(wrong),
+            "ratio_avg": correct / avg if avg else 99.0,
+            "ratio_max": correct / max(wrong) if max(wrong) else 99.0}
+
+
+def merge_repair(draft: QuizDraft, repaired: "QuizOptionsRepair") -> tuple[Optional[QuizDraft], str]:
+    """repair 결과에서 options만 받아 원본 draft에 끼운다. 라벨 집합이 바뀌면 거부."""
+    if sorted(o.label for o in repaired.options) != sorted(o.label for o in draft.options):
+        return None, f"repair changed option labels to {[o.label for o in repaired.options]}"
+    options = sorted(repaired.options, key=lambda o: o.label)
+    return draft.model_copy(update={"options": options}), ""
+
+
+def validate_draft(draft: QuizDraft, slot: ManifestSlot, scenario_id: int, corpus: Corpus) -> list[CodeIssue]:
+    """DESIGN §5-2 코드 검증. 메시지는 재시도·repair 피드백에 그대로 들어가므로 영어로 구체적으로 쓴다."""
+    errs: list[CodeIssue] = []
 
     # 슬롯 참조 실재
     if slot.task_id not in corpus.chunks:
-        errs.append(f"unknown task_id {slot.task_id}")
+        errs.append(("unknown_ref", f"unknown task_id {slot.task_id}"))
     for bid in slot.focus_bullet_ids:
         b = corpus.bullet_by_id.get(bid)
         if b is None or b.task_id != slot.task_id:
-            errs.append(f"focus bullet {bid} does not belong to {slot.task_id}")
+            errs.append(("unknown_ref", f"focus bullet {bid} does not belong to {slot.task_id}"))
     if f"SC-{scenario_id}" not in corpus.chunks:
-        errs.append(f"unknown scenario SC-{scenario_id}")
+        errs.append(("unknown_ref", f"unknown scenario SC-{scenario_id}"))
 
-    # 보기 구조
+    # 보기 구조·빈 값
     labels = [o.label for o in draft.options]
     if len(draft.options) != 4:
-        errs.append(f"options: expected exactly 4, got {len(draft.options)}")
+        errs.append(("format", f"options: expected exactly 4, got {len(draft.options)}"))
     if sorted(labels) != list(LABELS):
-        errs.append(f"option labels must be A, B, C, D once each, got {labels}")
+        errs.append(("format", f"option labels must be A, B, C, D once each, got {labels}"))
     if draft.answer not in labels:
-        errs.append(f"answer {draft.answer} is not one of the option labels {labels}")
+        errs.append(("format", f"answer {draft.answer} is not one of the option labels {labels}"))
     texts = [norm_text(o.text) for o in draft.options]
     if len(set(texts)) != len(texts):
-        errs.append("two options have the same text")
-
-    # 빈 값
+        errs.append(("format", "two options have the same text"))
     if len(draft.stem.strip()) < 40:
-        errs.append("stem is missing or too short (describe a concrete situation in 2-5 sentences)")
+        errs.append(("format", "stem is missing or too short (describe a concrete situation in 2-5 sentences)"))
     for o in draft.options:
         if not o.text.strip():
-            errs.append(f"option {o.label} text is empty")
+            errs.append(("format", f"option {o.label} text is empty"))
         if not o.rationale.strip():
-            errs.append(f"option {o.label} rationale is empty")
+            errs.append(("format", f"option {o.label} rationale is empty"))
 
     # 언어: stem·options 영어, rationale 한국어
     if HANGUL_RE.search(draft.stem) or any(HANGUL_RE.search(o.text) for o in draft.options):
-        errs.append("stem and option texts must be in English (Korean characters found)")
+        errs.append(("language", "stem and option texts must be in English (Korean characters found)"))
     for o in draft.options:
         if o.rationale.strip() and not HANGUL_RE.search(o.rationale):
-            errs.append(f"option {o.label} rationale must be written in Korean")
+            errs.append(("language", f"option {o.label} rationale must be written in Korean"))
 
-    # 라벨 참조·금지 표현
+    # 라벨 참조·내부 용어·금지 표현
     for where, text in [("stem", draft.stem)] + [(f"option {o.label} text", o.text) for o in draft.options] \
             + [(f"option {o.label} rationale", o.rationale) for o in draft.options]:
         refs = find_label_refs(text)
         if refs:
-            errs.append(f"{where} refers to options by letter {refs}; options are shuffled later, "
-                        "so describe the other approach by its content instead")
+            errs.append(("label_reference", f"{where} refers to options by letter {refs}; options are shuffled "
+                         "later, so describe the other approach by its content instead"))
     for o in draft.options:
         if META_REF_RE.search(o.rationale):
-            errs.append(f"option {o.label} rationale mentions internal terms ('focus item', 'task statement', "
-                        "source_excerpt); learners read rationales, so explain the idea itself")
+            errs.append(("meta_reference", f"option {o.label} rationale mentions internal terms ('focus item', "
+                         "'task statement', source_excerpt); learners read rationales, so explain the idea itself"))
+    visible = draft.stem + " " + " ".join(o.text for o in draft.options)
+    if ABOVE_RE.search(visible):
+        errs.append(("forbidden_phrase", "'all/none/both of the above' style options are not allowed"))
+    if GUIDE_REF_RE.search(visible):
+        errs.append(("forbidden_phrase", "stem/options must not mention the exam guide, task statements, or TS ids"))
 
     # 정답이 길이로 드러나지 않게
-    if len(draft.options) == 4 and draft.answer in labels:
-        correct_len = next(len(o.text) for o in draft.options if o.label == draft.answer)
-        wrong = [len(o.text) for o in draft.options if o.label != draft.answer]
-        ratio = correct_len / (sum(wrong) / len(wrong)) if sum(wrong) else 99.0
-        if ratio > MAX_CORRECT_LEN_RATIO:
-            errs.append(f"correct option is {ratio:.2f}x the average distractor length (max {MAX_CORRECT_LEN_RATIO}); "
-                        "shorten the correct option or make the distractors equally specific so length is not a cue")
-        elif max(wrong) and correct_len > MAX_CORRECT_VS_LONGEST * max(wrong):
-            errs.append(f"correct option is {correct_len / max(wrong):.2f}x the longest distractor "
-                        f"(max {MAX_CORRECT_VS_LONGEST}); make at least one distractor as long and detailed as the correct option")
+    st = length_stats(draft)
+    if st is not None:
+        if st["ratio_avg"] > MAX_CORRECT_LEN_RATIO:
+            errs.append(("answer_too_long", f"correct option is {st['ratio_avg']:.2f}x the average distractor length "
+                         f"(max {MAX_CORRECT_LEN_RATIO}); shorten the correct option or make the distractors "
+                         "equally specific so length is not a cue"))
+        elif st["ratio_max"] > MAX_CORRECT_VS_LONGEST:
+            errs.append(("answer_too_long", f"correct option is {st['ratio_max']:.2f}x the longest distractor "
+                         f"(max {MAX_CORRECT_VS_LONGEST}); make at least one distractor as long and detailed "
+                         "as the correct option"))
 
-    if ABOVE_RE.search(draft.stem + " " + " ".join(o.text for o in draft.options)):
-        errs.append("'all/none/both of the above' style options are not allowed")
-    if GUIDE_REF_RE.search(draft.stem + " " + " ".join(o.text for o in draft.options)):
-        errs.append("stem/options must not mention the exam guide, task statements, or TS ids")
-
-    # 근거 발췌: TS 원문의 연속 구간 (초점 항목에 맞는지는 검토자가 off_focus_bullet으로 판정)
+    # 근거 발췌: TS 원문 한 줄의 연속 구간 (초점 항목에 맞는지는 검토자가 off_focus_bullet으로 판정)
     ex = norm_text(draft.source_excerpt)
     ts_chunk = corpus.chunks.get(slot.task_id)
     ts_lines = [norm_text(l.removeprefix("- ")) for l in ts_chunk.text.splitlines()] if ts_chunk else []
     if len(ex) < 15:
-        errs.append("source_excerpt is missing or too short")
+        errs.append(("excerpt_not_verbatim", "source_excerpt is missing or too short"))
     elif not any(ex in t for t in ts_lines):
-        errs.append(f"source_excerpt is not a verbatim span of a single line of the {slot.task_id} text; "
-                    "copy it character for character from one item without paraphrasing, joining items, or ellipses")
+        errs.append(("excerpt_not_verbatim", f"source_excerpt is not a verbatim span of a single line of the "
+                     f"{slot.task_id} text; copy it character for character from one item without paraphrasing, "
+                     "joining items, or ellipses"))
     return errs
 
 
@@ -340,14 +374,70 @@ def _raw_output(raw) -> str:
     return (config.get_text(raw) or "(empty)")[:3000]
 
 
+# ---------------------------------------------------------------- 추가 슬롯 쌍 선정
+
+STOPWORDS = set("""
+the a an and or of to in for with on by as at from into that this these those is are be been being when which
+while than via using use used their its it not only each other such eg e g vs between before after through
+including include across both all any more most how what where who whether can could should would may might must
+rather additional multiple specific appropriate based within without per like also them they you your one two
+about then well need
+""".split())
+
+
+def keywords(text: str) -> set[str]:
+    """소문자 토큰 → 불용어 제거 → 간이 어간(-ing/-es/-s/-ed, 남는 길이 4자 이상)."""
+    out = set()
+    for w in re.findall(r"[a-z][a-z0-9_]+", text.lower()):
+        if len(w) < 3 or w in STOPWORDS:
+            continue
+        for suf in ("ing", "es", "s", "ed"):
+            if w.endswith(suf) and len(w) - len(suf) >= 4:
+                w = w[: -len(suf)]
+                break
+        out.add(w)
+    return out
+
+
+def pair_extra_bullets(bullets: list[GuideBullet], n: int) -> list[tuple[str, str, list[str]]]:
+    """같은 TS 안 K×S 쌍 중 키워드 겹침이 큰 순으로 n개 (이미 고른 쌍 제외). 반환: [(K id, S id, 겹친 키워드)].
+    점수: 겹친 수 → Jaccard → 아직 안 쓴 불릿 수 → (K 번호, S 번호) 오름차순."""
+    def num(bid: str) -> int:
+        return int(bid.rsplit("-", 1)[1][1:])
+
+    ks = sorted((b for b in bullets if b.kind == "knowledge"), key=lambda b: num(b.bullet_id))
+    ss = sorted((b for b in bullets if b.kind == "skill"), key=lambda b: num(b.bullet_id))
+    kw = {b.bullet_id: keywords(b.text) for b in ks + ss}
+    chosen: list[tuple[str, str, list[str]]] = []
+    used_bullets: set[str] = set()
+    for _ in range(n):
+        best = None
+        for k in ks:
+            for s in ss:
+                if any(k.bullet_id == c[0] and s.bullet_id == c[1] for c in chosen):
+                    continue
+                shared = kw[k.bullet_id] & kw[s.bullet_id]
+                union = kw[k.bullet_id] | kw[s.bullet_id]
+                score = (len(shared), len(shared) / len(union) if union else 0.0,
+                         (k.bullet_id not in used_bullets) + (s.bullet_id not in used_bullets),
+                         -num(k.bullet_id), -num(s.bullet_id))
+                if best is None or score > best[0]:
+                    best = (score, k.bullet_id, s.bullet_id, sorted(shared))
+        if best is None:
+            break
+        chosen.append((best[1], best[2], best[3]))
+        used_bullets.update((best[1], best[2]))
+    return chosen
+
+
 # ---------------------------------------------------------------- 슬롯 실행
 
 @dataclass
 class Attempt:
     n: int
     scenario_id: int
-    pattern: str                     # parse | code | review 패턴
-    problems: list[str]
+    pattern: str                     # parse | 코드 세부 패턴 | 검토 패턴
+    problems: list[str]              # "[parse] …", "[code:answer_too_long] …", "[review:multiple_correct] …"
     item_json: str
 
 
@@ -360,7 +450,16 @@ class SlotResult:
     detected_patterns: list[str]
     last_errors: list[str]
     item: Optional[QuizItem]         # 코드 검증을 통과한 마지막 문항 (없으면 None)
+    repairs: int = 0
+    repairs_ok: int = 0
     log: list[str] = field(default_factory=list)
+
+
+def _problem_kind(problem: str, fallback: str) -> str:
+    if problem.startswith("[parse]"):
+        return "parse"
+    m = re.match(r"\[code:([a-z_]+)\]", problem)
+    return m.group(1) if m else fallback
 
 
 class QuizGenerator:
@@ -369,8 +468,12 @@ class QuizGenerator:
         self.corpus = corpus
         self.gen = llm.with_structured_output(QuizDraft, include_raw=True)
         self.rev = llm.with_structured_output(ReviewVerdict, include_raw=True)
+        self.rep = llm.with_structured_output(QuizOptionsRepair, include_raw=True)
         self.gen_system, self.gen_user = load_pair("quiz_generate")
         self.rev_system, self.rev_user = load_pair("quiz_review")
+        rep_system, self.rep_user = load_pair("quiz_repair")
+        self.rep_system = Template(rep_system).substitute(
+            max_avg_ratio=MAX_CORRECT_LEN_RATIO, max_longest_ratio=MAX_CORRECT_VS_LONGEST)
         self.retry_tpl = load("quiz_retry")
 
     # -- 프롬프트 조립
@@ -389,9 +492,9 @@ class QuizGenerator:
     def retry_block(self, history: list[Attempt], scenario_note: str = "") -> str:
         """재시도 피드백: 직전 실패 문항 전체 + 구체적 오류 + 패턴별 지시 + 이전 시도 요약 (DESIGN §5-2 7단계)."""
         last = history[-1]
-        kinds = []
+        kinds: list[str] = []
         for p in last.problems:
-            k = "code" if p.startswith("[code]") else "parse" if p.startswith("[parse]") else last.pattern
+            k = _problem_kind(p, last.pattern)
             if k not in kinds:
                 kinds.append(k)
         hints = "\n".join(f"- {FIX_HINTS.get(k, FIX_HINTS['other'])}" for k in kinds)
@@ -411,6 +514,15 @@ class QuizGenerator:
         v["item_json"] = draft.model_dump_json(indent=2)
         return [SystemMessage(self.rev_system), HumanMessage(self.rev_user.substitute(v))]
 
+    def repair_messages(self, slot: ManifestSlot, scenario_id: int, draft: QuizDraft,
+                        issues: list[CodeIssue]) -> list:
+        st = length_stats(draft)
+        v = build_vars(slot, scenario_id, self.corpus)
+        v.update(item_json=draft.model_dump_json(indent=2), answer=draft.answer,
+                 correct_len=str(st["correct"]), avg_wrong_len=f"{st['avg_wrong']:.0f}",
+                 max_wrong_len=str(st["max_wrong"]), problems="; ".join(m for _, m in issues))
+        return [SystemMessage(self.rep_system), HumanMessage(self.rep_user.substitute(v))]
+
     # -- 호출
     def generate(self, messages) -> tuple[Optional[QuizDraft], Optional[str], str]:
         out = invoke_with_backoff(self.gen, messages)
@@ -428,6 +540,15 @@ class QuizGenerator:
             last_err = out.get("parsing_error")
         raise RuntimeError(f"reviewer output unparsable: {last_err}")
 
+    def repair(self, slot: ManifestSlot, scenario_id: int, draft: QuizDraft,
+               issues: list[CodeIssue]) -> tuple[Optional[QuizDraft], str]:
+        """길이 규칙만 실패한 문항의 보기만 고친다. stem·answer·source_excerpt는 원본 그대로 둔다."""
+        out = invoke_with_backoff(self.rep, self.repair_messages(slot, scenario_id, draft, issues))
+        parsed = out.get("parsed")
+        if parsed is None:
+            return None, f"repair output unparsable: {out.get('parsing_error')}"
+        return merge_repair(draft, parsed)
+
     # -- 한 슬롯
     def run_slot(self, slot: ManifestSlot, avoid_stems: list[str] | None = None) -> SlotResult:
         avoid_stems = avoid_stems or []
@@ -437,6 +558,7 @@ class QuizGenerator:
         last_item: Optional[QuizItem] = None
         scenario_note = ""
         log: list[str] = []
+        repairs = repairs_ok = 0
 
         for n in range(1, MAX_ATTEMPTS + 1):
             msgs = self.generation_messages(slot, scenario_id, avoid_stems, history, scenario_note)
@@ -444,20 +566,44 @@ class QuizGenerator:
 
             if parse_err:
                 att = Attempt(n, scenario_id, "parse", [f"[parse] {parse_err}"], item_json)
-            elif errs := validate_draft(draft, slot, scenario_id, self.corpus):
-                att = Attempt(n, scenario_id, "code", [f"[code] {e}" for e in errs], item_json)
             else:
-                verdict = self.review(self.review_messages(slot, scenario_id, draft))
-                ok = verdict.valid and verdict.detected_pattern is None and not verdict.issues
-                if ok:
-                    final = shuffle_options(draft, slot.quiz_id, slot.target_answer)
-                    item = self._item(slot, scenario_id, final, "approved", n, patterns)
-                    log.append(f"attempt {n}: approved (SC-{scenario_id})")
-                    return SlotResult(slot.quiz_id, "approved", n, scenario_id, patterns, [], item, log)
-                pat = verdict.detected_pattern or "other"
-                issues = verdict.issues or ["(reviewer gave no detail)"]
-                att = Attempt(n, scenario_id, pat, [f"[review:{pat}] {i}" for i in issues], item_json)
-                last_item = self._item(slot, scenario_id, draft, "rejected", n, patterns + [pat])
+                issues = validate_draft(draft, slot, scenario_id, self.corpus)
+                notes: list[str] = []
+                # 길이 규칙만 실패 → 보기만 고치는 repair 1회 (attempts에 넣지 않음)
+                if issues and all(p == "answer_too_long" for p, _ in issues):
+                    repairs += 1
+                    fixed, why = self.repair(slot, scenario_id, draft, issues)
+                    if fixed is None:
+                        notes.append(f"[code:answer_too_long] a length repair was attempted but failed ({why})")
+                    else:
+                        issues2 = validate_draft(fixed, slot, scenario_id, self.corpus)
+                        if not issues2:
+                            repairs_ok += 1
+                            patterns.append("answer_too_long:repaired")
+                            log.append(f"attempt {n}: answer_too_long → repaired")
+                            draft, item_json, issues = fixed, fixed.model_dump_json(indent=2), []
+                        else:
+                            issues, item_json = issues2, fixed.model_dump_json(indent=2)
+                            notes.append("[code:answer_too_long] this is the version after a length repair, "
+                                         "which still failed the checks above")
+                if issues:
+                    probs = [f"[code:{p}] {m}" for p, m in issues] + notes
+                    att = Attempt(n, scenario_id, primary_pattern(issues), probs, item_json)
+                elif notes:
+                    att = Attempt(n, scenario_id, "answer_too_long", notes, item_json)
+                else:
+                    verdict = self.review(self.review_messages(slot, scenario_id, draft))
+                    ok = verdict.valid and verdict.detected_pattern is None and not verdict.issues
+                    if ok:
+                        final = shuffle_options(draft, slot.quiz_id, slot.target_answer)
+                        item = self._item(slot, scenario_id, final, "approved", n, patterns)
+                        log.append(f"attempt {n}: approved (SC-{scenario_id})")
+                        return SlotResult(slot.quiz_id, "approved", n, scenario_id, patterns, [], item,
+                                          repairs, repairs_ok, log)
+                    pat = verdict.detected_pattern or "other"
+                    issues_r = verdict.issues or ["(reviewer gave no detail)"]
+                    att = Attempt(n, scenario_id, pat, [f"[review:{pat}] {i}" for i in issues_r], item_json)
+                    last_item = self._item(slot, scenario_id, draft, "rejected", n, patterns + [pat])
 
             history.append(att)
             patterns.append(att.pattern)
@@ -474,7 +620,7 @@ class QuizGenerator:
         if last_item is not None:
             last_item = last_item.model_copy(update={"detected_patterns": patterns})
         return SlotResult(slot.quiz_id, "rejected", MAX_ATTEMPTS, scenario_id, patterns,
-                          history[-1].problems, last_item, log)
+                          history[-1].problems, last_item, repairs, repairs_ok, log)
 
     def _item(self, slot: ManifestSlot, scenario_id: int, draft: QuizDraft, status: str,
               attempts: int, patterns: list[str]) -> QuizItem:

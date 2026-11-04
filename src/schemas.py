@@ -74,6 +74,12 @@ class QuizDraft(BaseModel):
         description="Verbatim span copied from the focus item text that supports the correct answer.")
 
 
+class QuizOptionsRepair(BaseModel):
+    """길이 규칙만 실패한 문항의 보기 수정 결과 (DESIGN §5-2 repair). stem·answer·source_excerpt는 원본을 유지한다."""
+    options: list[QuizOption] = Field(
+        description="All 4 options with the same labels; the option with the correct label stays correct.")
+
+
 class QuizItem(BaseModel):
     """문제 은행 저장 형식 (정답 포함). 런타임에는 get_quiz가 QuizPublic으로 바꿔 내보낸다."""
     quiz_id: str                        # "Q-1.4-K2" / "Q-1.4-X1" / "Q-1.4-K2-F"
@@ -158,6 +164,8 @@ class ManifestSlot(BaseModel):
     pilot: bool = False
     status: SlotStatus = "pending"
     attempts: int = 0                   # 생성 호출 수 (0~3). review_retries = attempts - 1
+    repairs: int = 0                    # 길이 repair 호출 수 (attempts에 포함하지 않음)
+    repairs_ok: int = 0                 # repair 후 코드 검증을 통과한 수
     detected_patterns: list[str] = Field(default_factory=list)
     last_errors: list[str] = Field(default_factory=list)
     prompt_version: Optional[str] = None

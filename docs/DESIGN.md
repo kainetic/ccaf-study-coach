@@ -257,6 +257,9 @@ class QuizDraft(BaseModel):             # 생성 LLM 출력. validator 없음 �
     answer: Literal["A","B","C","D"]
     source_excerpt: str                 # 초점 세부 항목 원문의 연속 구간 (코드로 확인)
 
+class QuizOptionsRepair(BaseModel):     # 길이 repair 출력. options만 받아 원본 draft에 끼움 (stem·answer·source_excerpt 유지)
+    options: list[QuizOption]
+
 class ManifestSlot(BaseModel):          # data/quiz_pool_manifest.json의 슬롯 하나
     quiz_id: str
     slot_type: Literal["base", "extra", "fill"]
@@ -270,6 +273,8 @@ class ManifestSlot(BaseModel):          # data/quiz_pool_manifest.json의 슬롯
     pilot: bool = False
     status: Literal["pending", "approved", "rejected", "duplicate"] = "pending"
     attempts: int = 0                   # 생성 호출 수 0~3 (QuizItem.review_retries = attempts - 1)
+    repairs: int = 0                    # 길이 repair 호출 수 (attempts에 포함하지 않음)
+    repairs_ok: int = 0                 # repair 후 코드 검증을 통과한 수
     detected_patterns: list[str] = []   # 시도별 실패 유형 (parse, code, 검토 패턴, duplicate_of:Q-…)
     last_errors: list[str] = []         # 마지막 실패의 구체적 오류
     prompt_version: Optional[str]       # src/prompts 파일들의 sha1 앞 8자리
@@ -332,10 +337,28 @@ State 확장 (Supervisor 그래프 messages 외):
 
 **구현 세부 규칙 (v0.4.1, 구현 시 합의)**
 - **문항 언어**: stem·options는 영어(실제 시험·few-shot과 동일), rationale은 한국어 + 영어 용어 병기, source_excerpt는 가이드 영문 원문 그대로
-- **추가 슬롯 쌍**: TS의 j번째 추가 슬롯 = `K_j + S_j` (quiz_id `Q-x.y-Xj`). 시나리오는 그 TS의 순환을 이어서 배정
+- **추가 슬롯 쌍** (v0.4.2): 같은 TS의 K×S 쌍 중 **키워드 겹침이 가장 큰 쌍**을 고르고, 같은 TS에 2개를 배정하면 이미 쓴 쌍은 피함 (`quiz_gen.pair_extra_bullets`). 키워드 = 소문자 토큰 3자 이상 − 불용어, 간이 어간(-ing/-es/-s/-ed). 점수: 겹친 수 → Jaccard → 아직 안 쓴 불릿 수 → (K, S 번호) 오름차순. quiz_id `Q-x.y-Xj`, 시나리오는 그 TS의 순환을 이어서 배정. `--dry-run`이 쌍별 겹친 키워드를 출력 (현재 30쌍 모두 4~11개 겹침). v0.4.1의 `K_j + S_j` 고정 규칙은 관련 없는 쌍이 나와 폐기
 - **few-shot**: 슬롯 시나리오의 SQ 2개(quiz_id 시드). SQ가 없는 SC-4·SC-6은 도메인 시나리오 목록 순서로 채움
-- **코드 검증 추가 항목**: 보기 텍스트 중복 없음, stem·options에 한글 없음, rationale은 한국어, "all/none of the above" 금지, stem에 가이드·TS 번호 언급 금지, source_excerpt가 TS 원문 한 줄의 부분 문자열인지(초점 적합성은 검토자 `off_focus_bullet`이 판정), **보기를 라벨로 가리키는 표현 금지**(보기를 섞으면 라벨이 바뀌므로 해설은 자기 내용만 설명), 해설에 내부 용어("focus item", "task statement") 금지, **정답 길이 단서 방지**: 정답 보기 길이 ≤ 오답 평균 × 1.25 그리고 ≤ 가장 긴 오답 × 1.15 (파일럿에서 정답이 가장 긴 보기인 비율 8/10 → 조정 후 약 4/9)
-- **재시도 피드백**: 원래 생성 프롬프트 전체 + 실패 문항 JSON + 문제점 목록(`[parse]`/`[code]`/`[review:패턴]`) + 패턴별 고정 지시문(`src/prompts/FIX_HINTS`) + 이전 시도 요약 한 줄씩. `scenario_mismatch`면 다음 후보 시나리오로 바꾸고 그 사실을 피드백에 명시
+- **코드 검증 세부 패턴** (v0.4.2, `detected_patterns`에 `code` 대신 기록. 위가 더 심각하며, 시도 하나의 대표 패턴은 이 순서로 고름):
+
+  | 패턴 | 조건 |
+  |---|---|
+  | `format` | 보기 4개·라벨 A~D 각 1회·정답 라벨 존재·보기 텍스트 중복 없음·빈 값 없음·stem 길이 |
+  | `unknown_ref` | task_id·bullet_id·scenario_id 실재 |
+  | `excerpt_not_verbatim` | source_excerpt가 TS 원문 한 줄의 부분 문자열인지 (초점 적합성은 검토자 `off_focus_bullet`이 판정) |
+  | `language` | stem·options에 한글 없음, rationale은 한국어 |
+  | `label_reference` | 보기를 라벨로 가리키는 표현 금지 (보기를 섞으면 라벨이 바뀌므로 해설은 자기 내용만 설명) |
+  | `meta_reference` | 해설에 내부 용어("focus item", "task statement", source_excerpt) 금지 |
+  | `forbidden_phrase` | "all/none of the above", stem·보기에 가이드·TS 번호 언급 금지 |
+  | `answer_too_long` | **정답 길이 단서 방지**: 정답 보기 길이 ≤ 오답 평균 × 1.25 그리고 ≤ 가장 긴 오답 × 1.15 (파일럿에서 정답이 가장 긴 보기인 비율 8/10 → 규칙 도입 후 약 4/9) |
+- **길이 repair** (v0.4.2): 한 생성 시도의 코드 검증 오류가 **전부 `answer_too_long`**이면 재생성 대신 보기만 고치는 repair를 **시도마다 1회** 호출 (`src/prompts/quiz_repair.md`, 출력 `QuizOptionsRepair`)
+  - 입력: TS 원문 + 초점 항목 + 문항 + 길이 수치(정답·오답 평균·가장 긴 오답). 지시: 지문과 정답 보기는 유지, 정답은 의미를 유지한 채 "왜 좋은지" 설명구를 rationale로 옮기고, 오답은 같은 구조·구체성으로 맞춤
+  - 코드로 options만 원본 draft에 끼움(stem·answer·source_excerpt 불변, 라벨 집합이 바뀌면 거부) → 코드 검증 다시 → 통과하면 **반드시 독립 검토**로 진행 (정답 의미가 바뀌었으면 검토에서 걸림)
+  - repair는 attempts(생성 호출 수)에 넣지 않음. 매니페스트 `repairs`·`repairs_ok`, 성공 시 detected_patterns에 `answer_too_long:repaired` 기록. repair 후에도 실패하면 그 시도는 실패로 처리하고 피드백에 "repair 후에도 실패"를 명시
+- **생성 프롬프트 길이 균형 지침** (v0.4.2): 정답을 먼저 쓰고 오답 3개를 같은 문장 구조(행동 + 수단 + 범위)·같은 수준의 세부로 작성, 보기당 약 15~30단어, 정답에만 "왜 좋은지" 설명구를 붙이지 않음(해설로), 반환 전 길이 비교
+- **재시도 피드백**: 원래 생성 프롬프트 전체 + 실패 문항 JSON + 문제점 목록(`[parse]`/`[code:세부 패턴]`/`[review:패턴]`) + 패턴별 고정 지시문(`src/prompts/FIX_HINTS`, 코드 세부 패턴별로 분리) + 이전 시도 요약 한 줄씩. `scenario_mismatch`면 다음 후보 시나리오로 바꾸고 그 사실을 피드백에 명시 (마지막 시도 뒤에는 바꾸지 않음)
+- **프롬프트 변경 후 재생성** (`--reset-stale`, LLM 호출 없음): 현재 `prompt_version`과 다른 버전으로 처리된 슬롯을 되돌림. base/extra는 pending으로 초기화(attempts·repairs·detected_patterns·last_errors, 시나리오는 원래 배정값), fill 슬롯은 삭제, pool에서 해당 문항 제거. 자동 리셋은 하지 않고(전체 생성 도중 진행분 보호) 실행 시 오래된 버전 슬롯 수를 경고로 출력
+- **매니페스트 동기화**: 슬롯 배정 규칙이 바뀌면 pending 슬롯의 정의(focus_bullet_ids, scenario_candidates)는 자동 갱신, 처리된 슬롯의 정의가 바뀌었으면 오류(`--reset-stale` 후 재실행)
 - **Bedrock 일시 오류**(throttling 등)는 지수 백오프(최대 6회)로 처리하고 재시도 횟수에 넣지 않음. 그래도 실패하면 슬롯은 pending으로 남음
 - **저장**: 코드 검증을 통과한 문항만 `quiz_pool.json`에 저장(approved / 검토 탈락 rejected / duplicate). 코드 검증 단계에서 끝난 rejected는 매니페스트에만 기록
 - **파일럿**(`--pilot N`)은 실행할 때마다 해당 슬롯을 새로 생성(프롬프트 조정 반복용)
@@ -345,6 +368,7 @@ State 확장 (Supervisor 그래프 messages 외):
 - **중복 제거**: 같은 TS 안에서 지문 임베딩 코사인 유사도 0.92 이상이면 뒤 문제(order 기준: 기본 → 추가 → 보충)를 `duplicate` 처리. 매 실행 끝에 수행
 
 **커버리지 보충 (`--fill-gaps`)**
+- **가드** (v0.4.2): pending인 base/extra 슬롯이 하나라도 남아 있으면 거부하고 종료 코드 1 (우회 옵션 없음). 기본 커버리지가 끝나기 전에 보충 슬롯이 생겨 한 항목에 문제가 2개 생기는 것을 막음
 - 승인 문제가 없는 세부 항목만 골라 새 슬롯(`Q-x.y-K2-F`)으로 1회 더 생성. 세부 항목당 최대 2슬롯(기본 + 보충). 보충 슬롯 프롬프트에는 같은 TS의 승인 문항 지문을 "반복 금지"로 넣음
 - 보충 슬롯 시나리오: 직전 슬롯이 마지막에 시도한 시나리오를 재사용. 단 마지막 실패가 `scenario_mismatch`이거나 중복이면 다음 후보
 - 커버리지 = 승인 문항의 focus_bullet_ids에 한 번이라도 들어간 세부 항목 (추가 슬롯 승인도 인정). 아직 pending 슬롯이 있는 항목은 보충 대상이 아님
@@ -445,9 +469,11 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 
 ### 9-3. 문제 풀 품질 지표 (round 리포트에 함께 기재)
 - 승인 문제 수 (목표 270, 최소 250), 세부 항목 커버리지 (목표 95% 이상)
-- 승인율(승인 ÷ 생성 슬롯), 실패 유형(`detected_pattern`) 분포
+- 승인율(승인 ÷ 생성 슬롯), 실패 유형 분포: 검토 패턴(`detected_pattern`) + 코드 검증 세부 패턴(`format`, `excerpt_not_verbatim`, `answer_too_long` 등, §5-2)을 함께 집계. `answer_too_long:repaired`(repair로 복구)는 따로 셈
+- 길이 repair 성공률 (`repairs_ok ÷ repairs`)
 - 사람 표본 검토 오류율 (목표 0건, 최대 1건)
 - 정답 위치 분포 (A~D 각 20~30%), 중복 제거 수
+- **정답이 가장 긴 보기 비율** (승인 문항 기준, 동률은 가장 긴 것으로 침. 목표 35% 이하, 우연 수준 25%, 길이 규칙 도입 전 파일럿 80%)
 - 런타임 `no_match` 비율 (평가·시연 중 출제 요청 대비)
 
 ### 9-4. round2 개선 후보 (round1 결과 보고 2~3개 선택)

@@ -19,7 +19,11 @@ Write ONE question that tests the FOCUS ITEM(S) of the given task statement, set
    - Exactly 4 options labeled A, B, C, D, written in English, with exactly one correct option.
    - Each distractor is a realistic but inferior approach that a practitioner might actually choose: a common anti-pattern (for example relying on prompt instructions where programmatic enforcement is needed), a nearby concept from the same task statement applied in the wrong place, or an approach that fixes a different problem than the one described.
    - No distractor may be absurd, irrelevant, or partially correct in a way that makes it defensible.
-   - Keep all options similar in length, structure and specificity. The correct option must not stand out by being the longest or most detailed: it must be at most 1.25 times the average length of the distractors and at most 1.15 times the longest distractor (checked automatically). Write distractors with the same level of concrete detail as the correct option rather than padding the correct one.
+   - Balance length and specificity (checked automatically): the correct option must be at most 1.25 times the average distractor length and at most 1.15 times the longest distractor. To get there:
+     - Write the correct option first, then write each distractor with the same sentence structure (action + mechanism + scope) and the same level of concrete detail (specific mechanisms, tool names, where it applies).
+     - Aim for about 15 to 30 words per option, all four within a few words of each other.
+     - Do not add "why this works" clauses to the correct option only; that explanation belongs in its rationale.
+     - Before returning, compare lengths: if the correct option is the longest, it should be longer than the longest distractor by only a few words.
    - Never use "all of the above", "none of the above", or combinations of options.
 
 4. Rationale (one per option)

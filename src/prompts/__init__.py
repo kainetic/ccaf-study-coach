@@ -8,7 +8,7 @@ from pathlib import Path
 from string import Template
 
 PROMPT_DIR = Path(__file__).resolve().parent
-PROMPT_FILES = ("quiz_generate.md", "quiz_review.md", "quiz_retry.md")
+PROMPT_FILES = ("quiz_generate.md", "quiz_review.md", "quiz_retry.md", "quiz_repair.md")
 
 SYSTEM_MARK = "<<<SYSTEM>>>"
 USER_MARK = "<<<USER>>>"
@@ -44,11 +44,23 @@ def prompt_version() -> str:
 FIX_HINTS: dict[str, str] = {
     "parse": "Return the result only through the structured output, with every field filled: "
              "stem, exactly 4 options (label, text, rationale), answer, source_excerpt.",
-    "code": "Fix each [code] problem exactly as stated. In particular: exactly 4 options labeled A-D once each; "
-            "stem and options in English with no Korean; every rationale in Korean; no option letters or "
-            "'option X' references anywhere; source_excerpt copied character-for-character from one line of the "
-            "task statement; correct option no longer than 1.25x the average distractor and 1.15x the longest "
-            "distractor; no internal terms in rationales.",
+    # 코드 검증 세부 패턴 (quiz_gen.CODE_PATTERNS 순서와 같음)
+    "format": "Return exactly 4 options labeled A, B, C, D once each, with distinct texts, a non-empty rationale "
+              "for every option, a stem of 2-5 sentences, and an answer that is one of the labels.",
+    "unknown_ref": "Keep to the given task statement, focus item(s) and scenario.",
+    "excerpt_not_verbatim": "Copy source_excerpt character for character from ONE line of the task statement "
+                            "(preferably the focus item). Do not paraphrase, join items, or add ellipses.",
+    "language": "Write the stem and all option texts in English with no Korean characters, and every rationale "
+                "in Korean (key technical terms may stay in English).",
+    "label_reference": "Never refer to options by letter or position anywhere (no 'option B', 'A와', '(C)'); "
+                       "options are shuffled later, so describe the other approach by its content.",
+    "meta_reference": "Do not mention 'focus item', 'task statement', source_excerpt or how the question was built "
+                      "in rationales; explain the idea itself.",
+    "forbidden_phrase": "Remove 'all/none/both of the above' options and any mention of the exam guide, task "
+                        "statements or TS ids from the stem and options.",
+    "answer_too_long": "Balance option lengths: the correct option must be at most 1.25x the average distractor "
+                       "and at most 1.15x the longest distractor. Move 'why it works' wording into the rationale "
+                       "and give distractors the same structure and concrete detail as the correct option.",
     "answer_not_supported": "Make the correct option follow directly from the focus item(s). Quote the supporting "
                             "words verbatim in source_excerpt and make the correct option apply exactly that idea.",
     "multiple_correct": "Add one concrete constraint to the stem (a requirement, failure symptom, or business rule) "

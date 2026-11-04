@@ -43,6 +43,8 @@ SCENARIO_OVERRIDES = {
 }
 COVERAGE_TARGET = 228                                        # 240의 95%
 LONGEST_TARGET = 0.35                                        # 정답이 가장 긴 보기 비율 상한 (DESIGN §9-3)
+TRANSIENT_STOP = 3                                           # 일시 오류로 연속 실패한 슬롯이 이 수가 되면 실행 중단
+DEFAULT_CONCURRENCY = 2                                      # 과정 공용 Bedrock 할당량 기준 (쓰로틀링으로 4 → 2)
 
 
 # ---------------------------------------------------------------- 슬롯 배정
@@ -286,10 +288,12 @@ def add_fill_slots(manifest: QuizManifest, pool: dict[str, QuizItem], corpus: Co
 # ---------------------------------------------------------------- 실행
 
 def run_slots(gen: QuizGenerator, manifest: QuizManifest, pool: dict[str, QuizItem],
-              targets: list[ManifestSlot], concurrency: int, verbose: bool) -> None:
+              targets: list[ManifestSlot], concurrency: int, verbose: bool) -> bool:
+    """슬롯들을 실행한다. 일시 오류(쓰로틀링 등)로 연속 TRANSIENT_STOP개 슬롯이 실패하면
+    새 슬롯 제출을 멈추고 진행 중인 것만 마무리한 뒤 False를 반환한다 (나머지는 pending 유지)."""
     if not targets:
         print("[run] 처리할 슬롯 없음")
-        return
+        return True
     pv = prompt_version()
     print(f"[run] 슬롯 {len(targets)}개, 동시 {concurrency}, prompt_version {pv}")
 
@@ -301,18 +305,29 @@ def run_slots(gen: QuizGenerator, manifest: QuizManifest, pool: dict[str, QuizIt
     ex = ThreadPoolExecutor(max_workers=concurrency)
     futs = {ex.submit(gen.run_slot, s, avoid_for(s)): s for s in targets}
     done = 0
+    transient_streak = 0
+    stopped = False
     try:
         for fut in as_completed(futs):
             s = futs[fut]
+            if fut.cancelled():                     # 중단 후 시작 전에 취소된 슬롯: pending 그대로
+                continue
             done += 1
             try:
                 r = fut.result()
-            except (TransientError, Exception) as e:  # noqa: BLE001 — 슬롯은 pending으로 남김
+            except Exception as e:  # noqa: BLE001 — 슬롯은 pending으로 남김 (attempts 증가 없음)
                 s.last_errors = [f"[error] {type(e).__name__}: {str(e)[:300]}"]
                 s.updated_at = now_iso()
                 save(manifest, pool)
                 print(f"  [{done}/{len(targets)}] {s.quiz_id}: 오류 → pending 유지 ({type(e).__name__}: {str(e)[:120]})")
+                transient_streak = transient_streak + 1 if isinstance(e, TransientError) else 0
+                if transient_streak >= TRANSIENT_STOP and not stopped:
+                    stopped = True
+                    n_cancel = sum(f.cancel() for f in futs)
+                    print(f"[run] 일시 오류로 연속 {transient_streak}개 슬롯 실패 — 새 슬롯 제출 중단 "
+                          f"(취소 {n_cancel}개, 진행 중인 슬롯만 마무리)", flush=True)
                 continue
+            transient_streak = 0
             s.status, s.attempts, s.scenario_id = r.status, r.attempts, r.scenario_id
             s.repairs, s.repairs_ok = r.repairs, r.repairs_ok
             s.detected_patterns, s.last_errors = r.detected_patterns, r.last_errors
@@ -332,6 +347,10 @@ def run_slots(gen: QuizGenerator, manifest: QuizManifest, pool: dict[str, QuizIt
         print("\n[run] 중단 — 완료된 슬롯은 저장됨, 진행 중이던 슬롯은 pending. --resume으로 이어서 실행", flush=True)
         os._exit(130)
     ex.shutdown(wait=True)
+    if stopped:
+        print("[run] 쓰로틀링으로 중단됨 — 할당량이 회복된 뒤(수 분 후) --resume으로 이어서 실행. "
+              "필요하면 --concurrency 1", flush=True)
+    return not stopped
 
 
 def print_item(r, item: QuizItem | None) -> None:
@@ -451,7 +470,8 @@ def main() -> int:
     mode.add_argument("--reset-stale", action="store_true",
                       help="현재 prompt_version과 다른 버전으로 처리된 슬롯을 pending으로 되돌림 (fill 슬롯은 삭제)")
     ap.add_argument("--limit", type=int, help="--resume에서 처리할 최대 슬롯 수")
-    ap.add_argument("--concurrency", type=int, default=4)
+    ap.add_argument("--concurrency", type=int, default=DEFAULT_CONCURRENCY,
+                    help=f"동시 실행 슬롯 수 (기본 {DEFAULT_CONCURRENCY})")
     ap.add_argument("--no-dedupe", action="store_true", help="실행 후 중복 제거 생략")
     args = ap.parse_args()
 
@@ -518,7 +538,7 @@ def main() -> int:
             s.detected_patterns, s.last_errors = [], []
             pool.pop(s.quiz_id, None)
         save(manifest, pool)
-        run_slots(gen, manifest, pool, targets, args.concurrency, verbose=True)
+        ok = run_slots(gen, manifest, pool, targets, args.concurrency, verbose=True)
     elif args.resume:
         rank = {"base": 0, "extra": 1, "fill": 2}
         targets = sorted((s for s in manifest.slots if s.status == "pending"),
@@ -526,17 +546,18 @@ def main() -> int:
         if args.limit is not None:
             targets = targets[:args.limit]
         save(manifest, pool)
-        run_slots(gen, manifest, pool, targets, args.concurrency, verbose=False)
+        ok = run_slots(gen, manifest, pool, targets, args.concurrency, verbose=False)
     else:
         new = add_fill_slots(manifest, pool, corpus)
         targets = [s for s in manifest.slots if s.slot_type == "fill" and s.status == "pending"]
         print(f"[fill-gaps] 새 보충 슬롯 {len(new)}개, 처리 대상 {len(targets)}개")
         save(manifest, pool)
-        run_slots(gen, manifest, pool, targets, args.concurrency, verbose=False)
+        ok = run_slots(gen, manifest, pool, targets, args.concurrency, verbose=False)
 
-    n_dups = 0 if args.no_dedupe else apply_dedupe(manifest, pool)
+    # 쓰로틀링으로 멈췄으면 임베딩 호출(중복 제거)도 건너뛴다 — 다음 실행 끝에 수행됨
+    n_dups = 0 if (args.no_dedupe or not ok) else apply_dedupe(manifest, pool)
     print_summary(manifest, pool, corpus, n_dups)
-    return 0
+    return 0 if ok else 2
 
 
 if __name__ == "__main__":

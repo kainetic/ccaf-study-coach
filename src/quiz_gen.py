@@ -41,7 +41,8 @@ TRANSIENT_CODES = {
     "ThrottlingException", "TooManyRequestsException", "ServiceUnavailableException",
     "ModelNotReadyException", "InternalServerException", "ModelTimeoutException",
 }
-BACKOFF_TRIES = 6
+BACKOFF_TRIES = 8             # 대기 1+2+4+8+16+32+60 ≈ 2분 (호출 1건당 최대)
+BACKOFF_CAP = 60
 
 
 class CorpusError(Exception):
@@ -361,7 +362,7 @@ def invoke_with_backoff(runnable, messages):
                 raise
             if n == BACKOFF_TRIES - 1:
                 raise TransientError(f"Bedrock transient error after {BACKOFF_TRIES} tries: {e}") from e
-            time.sleep(min(60, 2 ** n) + random.uniform(0, 1))
+            time.sleep(min(BACKOFF_CAP, 2 ** n) + random.uniform(0, 1))
 
 
 def _raw_output(raw) -> str:

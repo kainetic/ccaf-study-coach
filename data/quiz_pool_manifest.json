@@ -3,11 +3,11 @@
   "guide_version": "0.2",
   "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
   "created_at": "2026-11-04T03:56:13+00:00",
-  "updated_at": "2026-11-04T04:42:39+00:00",
+  "updated_at": "2026-11-04T05:18:04+00:00",
   "summary": {
-    "pending": 261,
-    "approved": 8,
-    "rejected": 1,
+    "pending": 50,
+    "approved": 210,
+    "rejected": 10,
     "duplicate": 0
   },
   "slots": [
@@ -53,7 +53,7 @@
       "focus_bullet_ids": [
         "TS-1.1-K2"
       ],
-      "scenario_id": 3,
+      "scenario_id": 4,
       "scenario_candidates": [
         1,
         3,
@@ -62,14 +62,16 @@
       "target_answer": "D",
       "order": 1,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": "2026-11-04T04:34:44+00:00"
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:47:31+00:00"
     },
     {
       "quiz_id": "Q-1.1-K3",
@@ -88,14 +90,14 @@
       "target_answer": "A",
       "order": 2,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": "2026-11-04T04:34:44+00:00"
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:47:07+00:00"
     },
     {
       "quiz_id": "Q-1.1-S1",
@@ -114,14 +116,14 @@
       "target_answer": "B",
       "order": 3,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": "2026-11-04T04:34:44+00:00"
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:47:05+00:00"
     },
     {
       "quiz_id": "Q-1.1-S2",
@@ -140,14 +142,14 @@
       "target_answer": "D",
       "order": 4,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": "2026-11-04T04:34:44+00:00"
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:47:04+00:00"
     },
     {
       "quiz_id": "Q-1.1-S3",
@@ -166,14 +168,14 @@
       "target_answer": "B",
       "order": 5,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": "2026-11-04T04:34:44+00:00"
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:47:25+00:00"
     },
     {
       "quiz_id": "Q-1.2-K1",
@@ -192,14 +194,14 @@
       "target_answer": "D",
       "order": 6,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": "2026-11-04T04:34:44+00:00"
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:47:25+00:00"
     },
     {
       "quiz_id": "Q-1.2-K2",
@@ -218,14 +220,14 @@
       "target_answer": "A",
       "order": 7,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": "2026-11-04T04:34:44+00:00"
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:47:27+00:00"
     },
     {
       "quiz_id": "Q-1.2-K3",
@@ -244,14 +246,14 @@
       "target_answer": "D",
       "order": 8,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": "2026-11-04T04:34:44+00:00"
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:47:47+00:00"
     },
     {
       "quiz_id": "Q-1.2-K4",
@@ -261,7 +263,7 @@
       "focus_bullet_ids": [
         "TS-1.2-K4"
       ],
-      "scenario_id": 1,
+      "scenario_id": 3,
       "scenario_candidates": [
         1,
         3,
@@ -270,14 +272,17 @@
       "target_answer": "B",
       "order": 9,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
-      "repairs_ok": 0,
-      "detected_patterns": [],
+      "status": "approved",
+      "attempts": 2,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "detected_patterns": [
+        "answer_too_long:repaired",
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:48:26+00:00"
     },
     {
       "quiz_id": "Q-1.2-S1",
@@ -296,14 +301,14 @@
       "target_answer": "C",
       "order": 10,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:47:46+00:00"
     },
     {
       "quiz_id": "Q-1.2-S2",
@@ -322,14 +327,22 @@
       "target_answer": "D",
       "order": 11,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
-      "repairs_ok": 0,
-      "detected_patterns": [],
-      "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "status": "rejected",
+      "attempts": 3,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "detected_patterns": [
+        "meta_reference",
+        "answer_too_long:repaired",
+        "answer_not_supported",
+        "scenario_mismatch"
+      ],
+      "last_errors": [
+        "[review:scenario_mismatch] 시나리오 불일치: SC-4는 '개발자 생산성 도구'로서 엔지니어가 낯선 코드베이스를 탐색하고 레거시 시스템을 이해하며 보일러플레이트 코드를 생성하고 반복 작업을 자동화하는 것을 다룹니다. 그러나 문항의 상황은 '엔지니어가 낯선 서비스에 대해 질문할 때 코디네이터가 세 개의 서브에이전트(security agent, API agent, data agent)에 위임하는 멀티에이전트 코드베이스 분석 시스템'으로, 이는 질의응답(Q&A) 또는 분석 서비스에 가깝습니다. 시나리오가 요구하는 '도구 구축(building tools)'이 아니라 '분석 시스템 운영'에 초점이 맞춰져 있어 시나리오의 목표 및 사용 맥락과 맞지 않습니다.",
+        "[review:scenario_mismatch] TS-1.2-S2는 '연구 범위(research scope) 분할'을 언급하지만, 문항은 코드베이스 파일 분석 범위 분할을 다루고 있습니다. 'research'는 일반적으로 정보 검색 및 종합을 의미하는데, 코드 파일 분석은 연구(research)보다는 코드 이해(code comprehension) 작업에 가깝습니다. 초점 항목의 예시 '서로 다른 하위 주제 또는 소스 타입 할당'이 코드 파일 타입에도 적용 가능하다고 볼 수 있으나, 시나리오 맥락과의 불일치가 더 심각한 문제입니다."
+      ],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:48:50+00:00"
     },
     {
       "quiz_id": "Q-1.2-S3",
@@ -339,7 +352,7 @@
       "focus_bullet_ids": [
         "TS-1.2-S3"
       ],
-      "scenario_id": 1,
+      "scenario_id": 3,
       "scenario_candidates": [
         1,
         3,
@@ -348,14 +361,18 @@
       "target_answer": "D",
       "order": 12,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
-      "repairs_ok": 0,
-      "detected_patterns": [],
+      "status": "approved",
+      "attempts": 3,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "detected_patterns": [
+        "answer_too_long:repaired",
+        "scenario_mismatch",
+        "meta_reference"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:48:53+00:00"
     },
     {
       "quiz_id": "Q-1.2-S4",
@@ -374,14 +391,14 @@
       "target_answer": "C",
       "order": 13,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:48:06+00:00"
     },
     {
       "quiz_id": "Q-1.3-K1",
@@ -400,14 +417,14 @@
       "target_answer": "B",
       "order": 14,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:48:24+00:00"
     },
     {
       "quiz_id": "Q-1.3-K2",
@@ -426,14 +443,14 @@
       "target_answer": "B",
       "order": 15,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:48:44+00:00"
     },
     {
       "quiz_id": "Q-1.3-K3",
@@ -452,14 +469,14 @@
       "target_answer": "C",
       "order": 16,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:48:47+00:00"
     },
     {
       "quiz_id": "Q-1.3-K4",
@@ -469,7 +486,7 @@
       "focus_bullet_ids": [
         "TS-1.3-K4"
       ],
-      "scenario_id": 1,
+      "scenario_id": 3,
       "scenario_candidates": [
         1,
         3,
@@ -478,14 +495,16 @@
       "target_answer": "A",
       "order": 17,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:49:26+00:00"
     },
     {
       "quiz_id": "Q-1.3-S1",
@@ -504,14 +523,14 @@
       "target_answer": "D",
       "order": 18,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:49:08+00:00"
     },
     {
       "quiz_id": "Q-1.3-S2",
@@ -530,14 +549,14 @@
       "target_answer": "B",
       "order": 19,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:49:09+00:00"
     },
     {
       "quiz_id": "Q-1.3-S3",
@@ -556,14 +575,14 @@
       "target_answer": "A",
       "order": 20,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:49:11+00:00"
     },
     {
       "quiz_id": "Q-1.3-S4",
@@ -582,14 +601,14 @@
       "target_answer": "A",
       "order": 21,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:49:29+00:00"
     },
     {
       "quiz_id": "Q-1.4-K1",
@@ -608,14 +627,14 @@
       "target_answer": "A",
       "order": 22,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:49:26+00:00"
     },
     {
       "quiz_id": "Q-1.4-K2",
@@ -634,14 +653,14 @@
       "target_answer": "D",
       "order": 23,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:49:31+00:00"
     },
     {
       "quiz_id": "Q-1.4-K3",
@@ -651,7 +670,7 @@
       "focus_bullet_ids": [
         "TS-1.4-K3"
       ],
-      "scenario_id": 4,
+      "scenario_id": 1,
       "scenario_candidates": [
         1,
         3,
@@ -660,14 +679,16 @@
       "target_answer": "C",
       "order": 24,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:50:07+00:00"
     },
     {
       "quiz_id": "Q-1.4-S1",
@@ -686,14 +707,14 @@
       "target_answer": "D",
       "order": 25,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:49:45+00:00"
     },
     {
       "quiz_id": "Q-1.4-S2",
@@ -712,14 +733,14 @@
       "target_answer": "D",
       "order": 26,
       "pilot": true,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": "2026-11-04T04:42:39+00:00"
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:49:47+00:00"
     },
     {
       "quiz_id": "Q-1.4-S3",
@@ -729,7 +750,7 @@
       "focus_bullet_ids": [
         "TS-1.4-S3"
       ],
-      "scenario_id": 4,
+      "scenario_id": 1,
       "scenario_candidates": [
         1,
         3,
@@ -738,14 +759,16 @@
       "target_answer": "D",
       "order": 27,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": "2026-11-04T04:34:44+00:00"
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:50:17+00:00"
     },
     {
       "quiz_id": "Q-1.5-K1",
@@ -764,14 +787,14 @@
       "target_answer": "C",
       "order": 28,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:50:05+00:00"
     },
     {
       "quiz_id": "Q-1.5-K2",
@@ -790,14 +813,14 @@
       "target_answer": "C",
       "order": 29,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:50:09+00:00"
     },
     {
       "quiz_id": "Q-1.5-K3",
@@ -816,14 +839,14 @@
       "target_answer": "B",
       "order": 30,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:50:27+00:00"
     },
     {
       "quiz_id": "Q-1.5-S1",
@@ -842,14 +865,14 @@
       "target_answer": "C",
       "order": 31,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:50:25+00:00"
     },
     {
       "quiz_id": "Q-1.5-S2",
@@ -859,7 +882,7 @@
       "focus_bullet_ids": [
         "TS-1.5-S2"
       ],
-      "scenario_id": 3,
+      "scenario_id": 4,
       "scenario_candidates": [
         1,
         3,
@@ -868,14 +891,16 @@
       "target_answer": "B",
       "order": 32,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:50:52+00:00"
     },
     {
       "quiz_id": "Q-1.5-S3",
@@ -894,14 +919,14 @@
       "target_answer": "D",
       "order": 33,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:50:37+00:00"
     },
     {
       "quiz_id": "Q-1.6-K1",
@@ -920,14 +945,14 @@
       "target_answer": "B",
       "order": 34,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:50:47+00:00"
     },
     {
       "quiz_id": "Q-1.6-K2",
@@ -946,14 +971,14 @@
       "target_answer": "B",
       "order": 35,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:50:47+00:00"
     },
     {
       "quiz_id": "Q-1.6-K3",
@@ -972,14 +997,14 @@
       "target_answer": "C",
       "order": 36,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:50:57+00:00"
     },
     {
       "quiz_id": "Q-1.6-S1",
@@ -998,14 +1023,16 @@
       "target_answer": "B",
       "order": 37,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "meta_reference"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:51:21+00:00"
     },
     {
       "quiz_id": "Q-1.6-S2",
@@ -1024,14 +1051,14 @@
       "target_answer": "B",
       "order": 38,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:51:09+00:00"
     },
     {
       "quiz_id": "Q-1.6-S3",
@@ -1050,14 +1077,14 @@
       "target_answer": "C",
       "order": 39,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:51:14+00:00"
     },
     {
       "quiz_id": "Q-1.7-K1",
@@ -1076,14 +1103,14 @@
       "target_answer": "C",
       "order": 40,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:51:16+00:00"
     },
     {
       "quiz_id": "Q-1.7-K2",
@@ -1093,7 +1120,7 @@
       "focus_bullet_ids": [
         "TS-1.7-K2"
       ],
-      "scenario_id": 3,
+      "scenario_id": 4,
       "scenario_candidates": [
         1,
         3,
@@ -1102,14 +1129,16 @@
       "target_answer": "B",
       "order": 41,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:51:49+00:00"
     },
     {
       "quiz_id": "Q-1.7-K3",
@@ -1128,14 +1157,14 @@
       "target_answer": "B",
       "order": 42,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:51:33+00:00"
     },
     {
       "quiz_id": "Q-1.7-K4",
@@ -1154,14 +1183,14 @@
       "target_answer": "C",
       "order": 43,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:51:38+00:00"
     },
     {
       "quiz_id": "Q-1.7-S1",
@@ -1171,7 +1200,7 @@
       "focus_bullet_ids": [
         "TS-1.7-S1"
       ],
-      "scenario_id": 3,
+      "scenario_id": 4,
       "scenario_candidates": [
         1,
         3,
@@ -1180,14 +1209,16 @@
       "target_answer": "A",
       "order": 44,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:52:04+00:00"
     },
     {
       "quiz_id": "Q-1.7-S2",
@@ -1206,14 +1237,14 @@
       "target_answer": "B",
       "order": 45,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:51:56+00:00"
     },
     {
       "quiz_id": "Q-1.7-S3",
@@ -1232,14 +1263,14 @@
       "target_answer": "C",
       "order": 46,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:52:00+00:00"
     },
     {
       "quiz_id": "Q-1.7-S4",
@@ -1249,7 +1280,7 @@
       "focus_bullet_ids": [
         "TS-1.7-S4"
       ],
-      "scenario_id": 3,
+      "scenario_id": 4,
       "scenario_candidates": [
         1,
         3,
@@ -1258,14 +1289,17 @@
       "target_answer": "A",
       "order": 47,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
-      "repairs_ok": 0,
-      "detected_patterns": [],
+      "status": "approved",
+      "attempts": 2,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "detected_patterns": [
+        "scenario_mismatch",
+        "answer_too_long:repaired"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:52:40+00:00"
     },
     {
       "quiz_id": "Q-2.1-K1",
@@ -1312,14 +1346,16 @@
       "target_answer": "B",
       "order": 49,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
-      "repairs_ok": 0,
-      "detected_patterns": [],
+      "status": "approved",
+      "attempts": 1,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "detected_patterns": [
+        "answer_too_long:repaired"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:52:25+00:00"
     },
     {
       "quiz_id": "Q-2.1-K3",
@@ -1338,14 +1374,14 @@
       "target_answer": "A",
       "order": 50,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:52:20+00:00"
     },
     {
       "quiz_id": "Q-2.1-K4",
@@ -1364,14 +1400,14 @@
       "target_answer": "B",
       "order": 51,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:52:25+00:00"
     },
     {
       "quiz_id": "Q-2.1-S1",
@@ -1390,14 +1426,14 @@
       "target_answer": "A",
       "order": 52,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:52:38+00:00"
     },
     {
       "quiz_id": "Q-2.1-S2",
@@ -1416,14 +1452,14 @@
       "target_answer": "D",
       "order": 53,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:52:44+00:00"
     },
     {
       "quiz_id": "Q-2.1-S3",
@@ -1442,14 +1478,14 @@
       "target_answer": "C",
       "order": 54,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:52:44+00:00"
     },
     {
       "quiz_id": "Q-2.1-S4",
@@ -1468,14 +1504,14 @@
       "target_answer": "D",
       "order": 55,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:52:58+00:00"
     },
     {
       "quiz_id": "Q-2.2-K1",
@@ -1494,14 +1530,14 @@
       "target_answer": "D",
       "order": 56,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:53:02+00:00"
     },
     {
       "quiz_id": "Q-2.2-K2",
@@ -1520,14 +1556,16 @@
       "target_answer": "A",
       "order": 57,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "meta_reference"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:53:13+00:00"
     },
     {
       "quiz_id": "Q-2.2-K3",
@@ -1546,14 +1584,14 @@
       "target_answer": "D",
       "order": 58,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:53:03+00:00"
     },
     {
       "quiz_id": "Q-2.2-K4",
@@ -1572,14 +1610,14 @@
       "target_answer": "B",
       "order": 59,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:53:19+00:00"
     },
     {
       "quiz_id": "Q-2.2-S1",
@@ -1598,14 +1636,14 @@
       "target_answer": "A",
       "order": 60,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:53:25+00:00"
     },
     {
       "quiz_id": "Q-2.2-S2",
@@ -1624,14 +1662,16 @@
       "target_answer": "C",
       "order": 61,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "answer_not_supported"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:53:42+00:00"
     },
     {
       "quiz_id": "Q-2.2-S3",
@@ -1650,14 +1690,14 @@
       "target_answer": "D",
       "order": 62,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:53:33+00:00"
     },
     {
       "quiz_id": "Q-2.2-S4",
@@ -1676,14 +1716,16 @@
       "target_answer": "B",
       "order": 63,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "meta_reference"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:53:47+00:00"
     },
     {
       "quiz_id": "Q-2.3-K1",
@@ -1702,14 +1744,14 @@
       "target_answer": "A",
       "order": 64,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:53:45+00:00"
     },
     {
       "quiz_id": "Q-2.3-K2",
@@ -1728,14 +1770,14 @@
       "target_answer": "B",
       "order": 65,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:53:55+00:00"
     },
     {
       "quiz_id": "Q-2.3-K3",
@@ -1754,14 +1796,14 @@
       "target_answer": "D",
       "order": 66,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:54:04+00:00"
     },
     {
       "quiz_id": "Q-2.3-K4",
@@ -1780,14 +1822,14 @@
       "target_answer": "C",
       "order": 67,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:54:03+00:00"
     },
     {
       "quiz_id": "Q-2.3-S1",
@@ -1832,14 +1874,16 @@
       "target_answer": "C",
       "order": 69,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "meta_reference"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:54:23+00:00"
     },
     {
       "quiz_id": "Q-2.3-S3",
@@ -1858,14 +1902,14 @@
       "target_answer": "C",
       "order": 70,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:54:14+00:00"
     },
     {
       "quiz_id": "Q-2.3-S4",
@@ -1884,14 +1928,14 @@
       "target_answer": "A",
       "order": 71,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:54:20+00:00"
     },
     {
       "quiz_id": "Q-2.3-S5",
@@ -1910,14 +1954,14 @@
       "target_answer": "B",
       "order": 72,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:54:24+00:00"
     },
     {
       "quiz_id": "Q-2.4-K1",
@@ -1936,14 +1980,16 @@
       "target_answer": "C",
       "order": 73,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
-      "repairs_ok": 0,
-      "detected_patterns": [],
+      "status": "approved",
+      "attempts": 1,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "detected_patterns": [
+        "answer_too_long:repaired"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:54:47+00:00"
     },
     {
       "quiz_id": "Q-2.4-K2",
@@ -1962,14 +2008,14 @@
       "target_answer": "D",
       "order": 74,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:54:40+00:00"
     },
     {
       "quiz_id": "Q-2.4-K3",
@@ -1988,14 +2034,16 @@
       "target_answer": "B",
       "order": 75,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "multiple_correct"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:55:11+00:00"
     },
     {
       "quiz_id": "Q-2.4-K4",
@@ -2014,14 +2062,14 @@
       "target_answer": "C",
       "order": 76,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:54:43+00:00"
     },
     {
       "quiz_id": "Q-2.4-S1",
@@ -2040,14 +2088,16 @@
       "target_answer": "C",
       "order": 77,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
-      "repairs_ok": 0,
-      "detected_patterns": [],
+      "status": "approved",
+      "attempts": 1,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "detected_patterns": [
+        "answer_too_long:repaired"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:55:07+00:00"
     },
     {
       "quiz_id": "Q-2.4-S2",
@@ -2066,14 +2116,14 @@
       "target_answer": "C",
       "order": 78,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:55:02+00:00"
     },
     {
       "quiz_id": "Q-2.4-S3",
@@ -2092,14 +2142,14 @@
       "target_answer": "D",
       "order": 79,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:55:06+00:00"
     },
     {
       "quiz_id": "Q-2.4-S4",
@@ -2118,14 +2168,14 @@
       "target_answer": "A",
       "order": 80,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:55:23+00:00"
     },
     {
       "quiz_id": "Q-2.4-S5",
@@ -2144,14 +2194,14 @@
       "target_answer": "C",
       "order": 81,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:55:26+00:00"
     },
     {
       "quiz_id": "Q-2.5-K1",
@@ -2170,14 +2220,22 @@
       "target_answer": "B",
       "order": 82,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "rejected",
+      "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
-      "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "detected_patterns": [
+        "parse",
+        "meta_reference",
+        "scenario_mismatch"
+      ],
+      "last_errors": [
+        "[review:scenario_mismatch] TS-2.5-K1은 'Grep for content search (searching file contents for patterns like function names, error messages, or import statements)'로 **코드베이스 내 파일 콘텐츠 검색**을 다루는 반면, 문제 상황은 고객 지원 에이전트가 MCP 도구(search_interaction_history)를 통해 대화 기록, 에이전트 노트, 해결 요약을 검색하는 것입니다. 이는 코드 파일이 아닌 비즈니스 데이터를 검색하는 시나리오로, focus item의 범위(file contents, function names, error messages, import statements)와 맞지 않습니다.",
+        "[review:scenario_mismatch] Focus item TS-2.5-K1은 개발/디버깅 맥락에서 코드베이스를 탐색하는 Grep 도구의 사용을 다루지만, 이 문제는 런타임 고객 지원 시나리오에서 MCP 도구 설명 작성을 다루고 있어 scenario_mismatch에 해당합니다. Grep은 Claude가 코드베이스를 분석할 때 사용하는 built-in 도구이지, MCP 서버가 제공하는 커스텀 검색 도구가 아닙니다.",
+        "[review:scenario_mismatch] 정답 A의 rationale에서 '코드베이스에서 function name, error message, import statement를 찾는 것과 동일한 원리'라고 비유하지만, 이는 억지 연결입니다. TS-2.5는 Claude의 built-in tools(Read, Write, Edit, Bash, Grep, Glob) 선택과 적용을 다루는 것이지, MCP 도구 설계나 도구 설명 작성 방법을 다루지 않습니다."
+      ],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:56:07+00:00"
     },
     {
       "quiz_id": "Q-2.5-K2",
@@ -2196,14 +2254,14 @@
       "target_answer": "D",
       "order": 83,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:55:31+00:00"
     },
     {
       "quiz_id": "Q-2.5-K3",
@@ -2222,14 +2280,14 @@
       "target_answer": "A",
       "order": 84,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:55:43+00:00"
     },
     {
       "quiz_id": "Q-2.5-K4",
@@ -2239,7 +2297,7 @@
       "focus_bullet_ids": [
         "TS-2.5-K4"
       ],
-      "scenario_id": 1,
+      "scenario_id": 3,
       "scenario_candidates": [
         1,
         3,
@@ -2248,14 +2306,16 @@
       "target_answer": "A",
       "order": 85,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:56:04+00:00"
     },
     {
       "quiz_id": "Q-2.5-S1",
@@ -2274,14 +2334,16 @@
       "target_answer": "A",
       "order": 86,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "answer_not_supported"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:56:23+00:00"
     },
     {
       "quiz_id": "Q-2.5-S2",
@@ -2300,14 +2362,14 @@
       "target_answer": "D",
       "order": 87,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:56:04+00:00"
     },
     {
       "quiz_id": "Q-2.5-S3",
@@ -2326,14 +2388,14 @@
       "target_answer": "B",
       "order": 88,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:56:24+00:00"
     },
     {
       "quiz_id": "Q-2.5-S4",
@@ -2352,14 +2414,14 @@
       "target_answer": "D",
       "order": 89,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:56:24+00:00"
     },
     {
       "quiz_id": "Q-2.5-S5",
@@ -2378,14 +2440,20 @@
       "target_answer": "D",
       "order": 90,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "rejected",
+      "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
-      "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "detected_patterns": [
+        "label_reference",
+        "answer_not_supported",
+        "meta_reference"
+      ],
+      "last_errors": [
+        "[code:meta_reference] option A rationale mentions internal terms ('focus item', 'task statement', source_excerpt); learners read rationales, so explain the idea itself"
+      ],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:57:03+00:00"
     },
     {
       "quiz_id": "Q-3.1-K1",
@@ -2430,14 +2498,14 @@
       "target_answer": "D",
       "order": 92,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:56:43+00:00"
     },
     {
       "quiz_id": "Q-3.1-K3",
@@ -2456,14 +2524,14 @@
       "target_answer": "B",
       "order": 93,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:56:43+00:00"
     },
     {
       "quiz_id": "Q-3.1-K4",
@@ -2482,14 +2550,14 @@
       "target_answer": "B",
       "order": 94,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:56:44+00:00"
     },
     {
       "quiz_id": "Q-3.1-S1",
@@ -2508,14 +2576,14 @@
       "target_answer": "B",
       "order": 95,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:57:05+00:00"
     },
     {
       "quiz_id": "Q-3.1-S2",
@@ -2525,7 +2593,7 @@
       "focus_bullet_ids": [
         "TS-3.1-S2"
       ],
-      "scenario_id": 5,
+      "scenario_id": 2,
       "scenario_candidates": [
         2,
         4,
@@ -2534,14 +2602,16 @@
       "target_answer": "A",
       "order": 96,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:57:29+00:00"
     },
     {
       "quiz_id": "Q-3.1-S3",
@@ -2560,14 +2630,14 @@
       "target_answer": "C",
       "order": 97,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:57:03+00:00"
     },
     {
       "quiz_id": "Q-3.1-S4",
@@ -2586,14 +2656,14 @@
       "target_answer": "B",
       "order": 98,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:57:23+00:00"
     },
     {
       "quiz_id": "Q-3.2-K1",
@@ -2612,14 +2682,14 @@
       "target_answer": "A",
       "order": 99,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:57:24+00:00"
     },
     {
       "quiz_id": "Q-3.2-K2",
@@ -2638,14 +2708,14 @@
       "target_answer": "A",
       "order": 100,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:57:21+00:00"
     },
     {
       "quiz_id": "Q-3.2-K3",
@@ -2655,7 +2725,7 @@
       "focus_bullet_ids": [
         "TS-3.2-K3"
       ],
-      "scenario_id": 5,
+      "scenario_id": 2,
       "scenario_candidates": [
         2,
         4,
@@ -2664,14 +2734,16 @@
       "target_answer": "C",
       "order": 101,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:58:00+00:00"
     },
     {
       "quiz_id": "Q-3.2-K4",
@@ -2690,14 +2762,14 @@
       "target_answer": "A",
       "order": 102,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:57:40+00:00"
     },
     {
       "quiz_id": "Q-3.2-S1",
@@ -2716,14 +2788,17 @@
       "target_answer": "C",
       "order": 103,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "other",
+        "multiple_correct"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:58:35+00:00"
     },
     {
       "quiz_id": "Q-3.2-S2",
@@ -2733,7 +2808,7 @@
       "focus_bullet_ids": [
         "TS-3.2-S2"
       ],
-      "scenario_id": 5,
+      "scenario_id": 2,
       "scenario_candidates": [
         2,
         4,
@@ -2742,14 +2817,16 @@
       "target_answer": "C",
       "order": 104,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:58:18+00:00"
     },
     {
       "quiz_id": "Q-3.2-S3",
@@ -2768,14 +2845,17 @@
       "target_answer": "B",
       "order": 105,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "answer_not_supported",
+        "other"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:58:42+00:00"
     },
     {
       "quiz_id": "Q-3.2-S4",
@@ -2794,14 +2874,14 @@
       "target_answer": "D",
       "order": 106,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:58:17+00:00"
     },
     {
       "quiz_id": "Q-3.2-S5",
@@ -2811,7 +2891,7 @@
       "focus_bullet_ids": [
         "TS-3.2-S5"
       ],
-      "scenario_id": 5,
+      "scenario_id": 2,
       "scenario_candidates": [
         2,
         4,
@@ -2820,14 +2900,16 @@
       "target_answer": "A",
       "order": 107,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:59:07+00:00"
     },
     {
       "quiz_id": "Q-3.3-K1",
@@ -2846,14 +2928,14 @@
       "target_answer": "C",
       "order": 108,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:58:37+00:00"
     },
     {
       "quiz_id": "Q-3.3-K2",
@@ -2872,14 +2954,14 @@
       "target_answer": "A",
       "order": 109,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:58:53+00:00"
     },
     {
       "quiz_id": "Q-3.3-K3",
@@ -2889,7 +2971,7 @@
       "focus_bullet_ids": [
         "TS-3.3-K3"
       ],
-      "scenario_id": 5,
+      "scenario_id": 2,
       "scenario_candidates": [
         2,
         4,
@@ -2898,14 +2980,17 @@
       "target_answer": "B",
       "order": 110,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
-      "repairs_ok": 0,
-      "detected_patterns": [],
+      "status": "approved",
+      "attempts": 2,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "detected_patterns": [
+        "scenario_mismatch",
+        "answer_too_long:repaired"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:59:31+00:00"
     },
     {
       "quiz_id": "Q-3.3-S1",
@@ -2924,14 +3009,16 @@
       "target_answer": "A",
       "order": 111,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "answer_not_supported"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:59:19+00:00"
     },
     {
       "quiz_id": "Q-3.3-S2",
@@ -2950,14 +3037,14 @@
       "target_answer": "D",
       "order": 112,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:59:11+00:00"
     },
     {
       "quiz_id": "Q-3.3-S3",
@@ -2967,7 +3054,7 @@
       "focus_bullet_ids": [
         "TS-3.3-S3"
       ],
-      "scenario_id": 5,
+      "scenario_id": 2,
       "scenario_candidates": [
         2,
         4,
@@ -2976,14 +3063,17 @@
       "target_answer": "A",
       "order": 113,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
+      "status": "approved",
+      "attempts": 3,
+      "repairs": 1,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "answer_too_long",
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:00:18+00:00"
     },
     {
       "quiz_id": "Q-3.4-K1",
@@ -3002,14 +3092,14 @@
       "target_answer": "C",
       "order": 114,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:59:32+00:00"
     },
     {
       "quiz_id": "Q-3.4-K2",
@@ -3028,14 +3118,14 @@
       "target_answer": "C",
       "order": 115,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:59:36+00:00"
     },
     {
       "quiz_id": "Q-3.4-K3",
@@ -3045,7 +3135,7 @@
       "focus_bullet_ids": [
         "TS-3.4-K3"
       ],
-      "scenario_id": 5,
+      "scenario_id": 2,
       "scenario_candidates": [
         2,
         4,
@@ -3054,14 +3144,16 @@
       "target_answer": "D",
       "order": 116,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:00:23+00:00"
     },
     {
       "quiz_id": "Q-3.4-K4",
@@ -3080,14 +3172,16 @@
       "target_answer": "B",
       "order": 117,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "off_focus_bullet"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:00:14+00:00"
     },
     {
       "quiz_id": "Q-3.4-S1",
@@ -3132,14 +3226,14 @@
       "target_answer": "A",
       "order": 119,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T04:59:53+00:00"
     },
     {
       "quiz_id": "Q-3.4-S3",
@@ -3158,14 +3252,14 @@
       "target_answer": "B",
       "order": 120,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:00:11+00:00"
     },
     {
       "quiz_id": "Q-3.4-S4",
@@ -3184,14 +3278,14 @@
       "target_answer": "B",
       "order": 121,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:00:29+00:00"
     },
     {
       "quiz_id": "Q-3.5-K1",
@@ -3210,14 +3304,14 @@
       "target_answer": "C",
       "order": 122,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:00:30+00:00"
     },
     {
       "quiz_id": "Q-3.5-K2",
@@ -3236,14 +3330,16 @@
       "target_answer": "C",
       "order": 123,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "meta_reference"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:00:45+00:00"
     },
     {
       "quiz_id": "Q-3.5-K3",
@@ -3262,14 +3358,14 @@
       "target_answer": "A",
       "order": 124,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:00:41+00:00"
     },
     {
       "quiz_id": "Q-3.5-K4",
@@ -3288,14 +3384,14 @@
       "target_answer": "B",
       "order": 125,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:00:49+00:00"
     },
     {
       "quiz_id": "Q-3.5-S1",
@@ -3314,14 +3410,14 @@
       "target_answer": "D",
       "order": 126,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:00:49+00:00"
     },
     {
       "quiz_id": "Q-3.5-S2",
@@ -3331,7 +3427,7 @@
       "focus_bullet_ids": [
         "TS-3.5-S2"
       ],
-      "scenario_id": 5,
+      "scenario_id": 2,
       "scenario_candidates": [
         2,
         4,
@@ -3340,14 +3436,22 @@
       "target_answer": "C",
       "order": 127,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
+      "status": "rejected",
+      "attempts": 3,
+      "repairs": 1,
       "repairs_ok": 0,
-      "detected_patterns": [],
-      "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "detected_patterns": [
+        "scenario_mismatch",
+        "answer_too_long",
+        "answer_not_supported"
+      ],
+      "last_errors": [
+        "[review:answer_not_supported] TS-3.5-S2는 '구현 전에(before implementation)' 테스트 스위트를 작성하는 것을 명시하지만, 문항의 상황은 '초기 버전이 이미 구현되어 단순한 평면 객체는 올바르게 처리하지만 여러 문제가 발견된' 사후 상황입니다. 이는 초기 구현 전이 아니라 구현 후 개선 단계이므로 focus item의 'before implementation' 조건과 맞지 않습니다.",
+        "[review:answer_not_supported] 옵션 B('두세 개의 구체적인 입출력 예시 쌍 제공')는 TS-3.5-S1('2-3 concrete input/output examples to clarify transformation requirements when natural language descriptions produce inconsistent results')에 정확히 부합하며, 이미 구현이 존재하고 구체적인 실패 사례가 발견된 상황에서는 방어 가능한 접근법입니다. 옵션 A의 rationale은 '이미 구현이 존재하고 여러 엣지 케이스와 성능 문제가 발견된 상황'이라고 인정하면서도 테스트 스위트가 더 낫다고 주장하지만, focus item의 'before implementation' 조건을 충족하지 못합니다.",
+        "[review:answer_not_supported] 옵션 C의 rationale은 '이미 구체적인 문제가 발견된 상황'이라고 명시하여, 문항 상황이 사전 설계 단계가 아니라 사후 개선 단계임을 확인합니다. 이는 'before implementation'을 요구하는 TS-3.5-S2와의 불일치를 더욱 명확히 합니다."
+      ],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:01:53+00:00"
     },
     {
       "quiz_id": "Q-3.5-S3",
@@ -3366,14 +3470,14 @@
       "target_answer": "A",
       "order": 128,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:01:05+00:00"
     },
     {
       "quiz_id": "Q-3.5-S4",
@@ -3392,14 +3496,14 @@
       "target_answer": "B",
       "order": 129,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:01:09+00:00"
     },
     {
       "quiz_id": "Q-3.5-S5",
@@ -3418,14 +3522,14 @@
       "target_answer": "D",
       "order": 130,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:01:08+00:00"
     },
     {
       "quiz_id": "Q-3.6-K1",
@@ -3444,14 +3548,14 @@
       "target_answer": "D",
       "order": 131,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:01:22+00:00"
     },
     {
       "quiz_id": "Q-3.6-K2",
@@ -3470,14 +3574,14 @@
       "target_answer": "B",
       "order": 132,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:01:26+00:00"
     },
     {
       "quiz_id": "Q-3.6-K3",
@@ -3496,14 +3600,16 @@
       "target_answer": "B",
       "order": 133,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "multiple_correct"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:02:00+00:00"
     },
     {
       "quiz_id": "Q-3.6-K4",
@@ -3522,14 +3628,14 @@
       "target_answer": "C",
       "order": 134,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:01:40+00:00"
     },
     {
       "quiz_id": "Q-3.6-S1",
@@ -3548,14 +3654,14 @@
       "target_answer": "B",
       "order": 135,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:01:45+00:00"
     },
     {
       "quiz_id": "Q-3.6-S2",
@@ -3574,14 +3680,14 @@
       "target_answer": "B",
       "order": 136,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:02:00+00:00"
     },
     {
       "quiz_id": "Q-3.6-S3",
@@ -3600,14 +3706,14 @@
       "target_answer": "A",
       "order": 137,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:02:04+00:00"
     },
     {
       "quiz_id": "Q-3.6-S4",
@@ -3626,14 +3732,14 @@
       "target_answer": "B",
       "order": 138,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:02:12+00:00"
     },
     {
       "quiz_id": "Q-3.6-S5",
@@ -3652,14 +3758,14 @@
       "target_answer": "D",
       "order": 139,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:02:21+00:00"
     },
     {
       "quiz_id": "Q-4.1-K1",
@@ -3704,14 +3810,16 @@
       "target_answer": "C",
       "order": 141,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
-      "repairs_ok": 0,
-      "detected_patterns": [],
+      "status": "approved",
+      "attempts": 1,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "detected_patterns": [
+        "answer_too_long:repaired"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:02:26+00:00"
     },
     {
       "quiz_id": "Q-4.1-K3",
@@ -3729,14 +3837,14 @@
       "target_answer": "C",
       "order": 142,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:02:23+00:00"
     },
     {
       "quiz_id": "Q-4.1-S1",
@@ -3746,7 +3854,7 @@
       "focus_bullet_ids": [
         "TS-4.1-S1"
       ],
-      "scenario_id": 6,
+      "scenario_id": 5,
       "scenario_candidates": [
         5,
         6
@@ -3754,14 +3862,18 @@
       "target_answer": "D",
       "order": 143,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
-      "repairs_ok": 0,
-      "detected_patterns": [],
+      "status": "approved",
+      "attempts": 2,
+      "repairs": 2,
+      "repairs_ok": 2,
+      "detected_patterns": [
+        "answer_too_long:repaired",
+        "scenario_mismatch",
+        "answer_too_long:repaired"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:03:13+00:00"
     },
     {
       "quiz_id": "Q-4.1-S2",
@@ -3779,14 +3891,14 @@
       "target_answer": "B",
       "order": 144,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:02:40+00:00"
     },
     {
       "quiz_id": "Q-4.1-S3",
@@ -3796,7 +3908,7 @@
       "focus_bullet_ids": [
         "TS-4.1-S3"
       ],
-      "scenario_id": 6,
+      "scenario_id": 5,
       "scenario_candidates": [
         5,
         6
@@ -3804,14 +3916,17 @@
       "target_answer": "C",
       "order": 145,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "meta_reference",
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:03:16+00:00"
     },
     {
       "quiz_id": "Q-4.2-K1",
@@ -3829,14 +3944,17 @@
       "target_answer": "B",
       "order": 146,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "meta_reference",
+        "multiple_correct"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:03:13+00:00"
     },
     {
       "quiz_id": "Q-4.2-K2",
@@ -3854,14 +3972,14 @@
       "target_answer": "D",
       "order": 147,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:03:04+00:00"
     },
     {
       "quiz_id": "Q-4.2-K3",
@@ -3879,14 +3997,14 @@
       "target_answer": "A",
       "order": 148,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:03:24+00:00"
     },
     {
       "quiz_id": "Q-4.2-K4",
@@ -3904,14 +4022,16 @@
       "target_answer": "D",
       "order": 149,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "meta_reference"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:03:43+00:00"
     },
     {
       "quiz_id": "Q-4.2-S1",
@@ -3929,14 +4049,14 @@
       "target_answer": "A",
       "order": 150,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:03:34+00:00"
     },
     {
       "quiz_id": "Q-4.2-S2",
@@ -3954,14 +4074,14 @@
       "target_answer": "C",
       "order": 151,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:03:35+00:00"
     },
     {
       "quiz_id": "Q-4.2-S3",
@@ -3979,14 +4099,16 @@
       "target_answer": "D",
       "order": 152,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "meta_reference"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:03:59+00:00"
     },
     {
       "quiz_id": "Q-4.2-S4",
@@ -4004,14 +4126,14 @@
       "target_answer": "B",
       "order": 153,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:03:53+00:00"
     },
     {
       "quiz_id": "Q-4.2-S5",
@@ -4021,7 +4143,7 @@
       "focus_bullet_ids": [
         "TS-4.2-S5"
       ],
-      "scenario_id": 5,
+      "scenario_id": 6,
       "scenario_candidates": [
         5,
         6
@@ -4029,14 +4151,16 @@
       "target_answer": "B",
       "order": 154,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:04:19+00:00"
     },
     {
       "quiz_id": "Q-4.3-K1",
@@ -4054,14 +4178,14 @@
       "target_answer": "D",
       "order": 155,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:04:01+00:00"
     },
     {
       "quiz_id": "Q-4.3-K2",
@@ -4079,14 +4203,16 @@
       "target_answer": "A",
       "order": 156,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "multiple_correct"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:04:37+00:00"
     },
     {
       "quiz_id": "Q-4.3-K3",
@@ -4096,7 +4222,7 @@
       "focus_bullet_ids": [
         "TS-4.3-K3"
       ],
-      "scenario_id": 5,
+      "scenario_id": 6,
       "scenario_candidates": [
         5,
         6
@@ -4104,14 +4230,16 @@
       "target_answer": "A",
       "order": 157,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:04:42+00:00"
     },
     {
       "quiz_id": "Q-4.3-K4",
@@ -4129,14 +4257,14 @@
       "target_answer": "A",
       "order": 158,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:04:21+00:00"
     },
     {
       "quiz_id": "Q-4.3-S1",
@@ -4154,14 +4282,14 @@
       "target_answer": "A",
       "order": 159,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:04:39+00:00"
     },
     {
       "quiz_id": "Q-4.3-S2",
@@ -4179,14 +4307,14 @@
       "target_answer": "A",
       "order": 160,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:04:41+00:00"
     },
     {
       "quiz_id": "Q-4.3-S3",
@@ -4204,14 +4332,14 @@
       "target_answer": "B",
       "order": 161,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:04:55+00:00"
     },
     {
       "quiz_id": "Q-4.3-S4",
@@ -4229,14 +4357,14 @@
       "target_answer": "A",
       "order": 162,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:05:00+00:00"
     },
     {
       "quiz_id": "Q-4.3-S5",
@@ -4254,14 +4382,14 @@
       "target_answer": "A",
       "order": 163,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:05:02+00:00"
     },
     {
       "quiz_id": "Q-4.3-S6",
@@ -4279,14 +4407,14 @@
       "target_answer": "C",
       "order": 164,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:05:03+00:00"
     },
     {
       "quiz_id": "Q-4.4-K1",
@@ -4296,7 +4424,7 @@
       "focus_bullet_ids": [
         "TS-4.4-K1"
       ],
-      "scenario_id": 5,
+      "scenario_id": 6,
       "scenario_candidates": [
         5,
         6
@@ -4304,14 +4432,16 @@
       "target_answer": "C",
       "order": 165,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:05:36+00:00"
     },
     {
       "quiz_id": "Q-4.4-K2",
@@ -4329,14 +4459,14 @@
       "target_answer": "B",
       "order": 166,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:05:19+00:00"
     },
     {
       "quiz_id": "Q-4.4-K3",
@@ -4354,14 +4484,14 @@
       "target_answer": "C",
       "order": 167,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:05:20+00:00"
     },
     {
       "quiz_id": "Q-4.4-K4",
@@ -4379,14 +4509,16 @@
       "target_answer": "D",
       "order": 168,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
-      "repairs_ok": 0,
-      "detected_patterns": [],
+      "status": "approved",
+      "attempts": 1,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "detected_patterns": [
+        "answer_too_long:repaired"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:05:29+00:00"
     },
     {
       "quiz_id": "Q-4.4-S1",
@@ -4404,14 +4536,14 @@
       "target_answer": "A",
       "order": 169,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:05:40+00:00"
     },
     {
       "quiz_id": "Q-4.4-S2",
@@ -4454,14 +4586,14 @@
       "target_answer": "D",
       "order": 171,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:05:39+00:00"
     },
     {
       "quiz_id": "Q-4.4-S4",
@@ -4479,14 +4611,14 @@
       "target_answer": "D",
       "order": 172,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:05:48+00:00"
     },
     {
       "quiz_id": "Q-4.5-K1",
@@ -4496,7 +4628,7 @@
       "focus_bullet_ids": [
         "TS-4.5-K1"
       ],
-      "scenario_id": 5,
+      "scenario_id": 6,
       "scenario_candidates": [
         5,
         6
@@ -4504,14 +4636,16 @@
       "target_answer": "B",
       "order": 173,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:06:19+00:00"
     },
     {
       "quiz_id": "Q-4.5-K2",
@@ -4529,14 +4663,14 @@
       "target_answer": "A",
       "order": 174,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:06:02+00:00"
     },
     {
       "quiz_id": "Q-4.5-K3",
@@ -4546,7 +4680,7 @@
       "focus_bullet_ids": [
         "TS-4.5-K3"
       ],
-      "scenario_id": 5,
+      "scenario_id": 6,
       "scenario_candidates": [
         5,
         6
@@ -4554,14 +4688,16 @@
       "target_answer": "D",
       "order": 175,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:06:27+00:00"
     },
     {
       "quiz_id": "Q-4.5-K4",
@@ -4579,14 +4715,16 @@
       "target_answer": "B",
       "order": 176,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "label_reference"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:06:14+00:00"
     },
     {
       "quiz_id": "Q-4.5-S1",
@@ -4604,14 +4742,14 @@
       "target_answer": "A",
       "order": 177,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:06:22+00:00"
     },
     {
       "quiz_id": "Q-4.5-S2",
@@ -4629,14 +4767,14 @@
       "target_answer": "D",
       "order": 178,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:06:34+00:00"
     },
     {
       "quiz_id": "Q-4.5-S3",
@@ -4646,7 +4784,7 @@
       "focus_bullet_ids": [
         "TS-4.5-S3"
       ],
-      "scenario_id": 5,
+      "scenario_id": 6,
       "scenario_candidates": [
         5,
         6
@@ -4654,14 +4792,17 @@
       "target_answer": "B",
       "order": 179,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
-      "repairs_ok": 0,
-      "detected_patterns": [],
+      "status": "approved",
+      "attempts": 2,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "detected_patterns": [
+        "scenario_mismatch",
+        "answer_too_long:repaired"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:07:04+00:00"
     },
     {
       "quiz_id": "Q-4.5-S4",
@@ -4679,14 +4820,14 @@
       "target_answer": "A",
       "order": 180,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:06:40+00:00"
     },
     {
       "quiz_id": "Q-4.6-K1",
@@ -4704,14 +4845,14 @@
       "target_answer": "C",
       "order": 181,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:06:47+00:00"
     },
     {
       "quiz_id": "Q-4.6-K2",
@@ -4729,14 +4870,14 @@
       "target_answer": "B",
       "order": 182,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:06:52+00:00"
     },
     {
       "quiz_id": "Q-4.6-K3",
@@ -4754,14 +4895,14 @@
       "target_answer": "B",
       "order": 183,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:07:00+00:00"
     },
     {
       "quiz_id": "Q-4.6-S1",
@@ -4779,14 +4920,14 @@
       "target_answer": "C",
       "order": 184,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:07:03+00:00"
     },
     {
       "quiz_id": "Q-4.6-S2",
@@ -4804,14 +4945,16 @@
       "target_answer": "D",
       "order": 185,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "meta_reference"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:07:20+00:00"
     },
     {
       "quiz_id": "Q-4.6-S3",
@@ -4829,14 +4972,14 @@
       "target_answer": "D",
       "order": 186,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:07:20+00:00"
     },
     {
       "quiz_id": "Q-5.1-K1",
@@ -4883,14 +5026,17 @@
       "target_answer": "D",
       "order": 188,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
-      "repairs_ok": 0,
-      "detected_patterns": [],
+      "status": "approved",
+      "attempts": 2,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "detected_patterns": [
+        "parse",
+        "answer_too_long:repaired"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:07:48+00:00"
     },
     {
       "quiz_id": "Q-5.1-K3",
@@ -4910,14 +5056,14 @@
       "target_answer": "C",
       "order": 189,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:07:23+00:00"
     },
     {
       "quiz_id": "Q-5.1-K4",
@@ -4937,14 +5083,14 @@
       "target_answer": "B",
       "order": 190,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:07:38+00:00"
     },
     {
       "quiz_id": "Q-5.1-S1",
@@ -4964,14 +5110,14 @@
       "target_answer": "C",
       "order": 191,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:07:40+00:00"
     },
     {
       "quiz_id": "Q-5.1-S2",
@@ -4981,7 +5127,7 @@
       "focus_bullet_ids": [
         "TS-5.1-S2"
       ],
-      "scenario_id": 2,
+      "scenario_id": 3,
       "scenario_candidates": [
         1,
         2,
@@ -4991,14 +5137,21 @@
       "target_answer": "A",
       "order": 192,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "rejected",
+      "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
-      "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "detected_patterns": [
+        "meta_reference",
+        "scenario_mismatch",
+        "scenario_mismatch"
+      ],
+      "last_errors": [
+        "[review:scenario_mismatch] TS-5.1-S2는 'multi-issue sessions'에서 'order IDs, amounts, statuses'와 같은 '구조화된 이슈 데이터'를 추출하고 유지하는 기술을 다룹니다. 이는 고객 서비스 맥락에서 여러 주문/이슈를 동시에 처리하는 상황을 의미합니다. 그러나 문제의 시나리오는 SC-3 (Multi-Agent Research System)으로, 연구 시스템이 공급망 중단, 반도체 부족, 배송 지연 등을 조사하는 상황입니다. 이는 고객 서비스나 주문 처리와 무관한 연구/분석 도메인이며, 'order IDs, amounts, statuses' 같은 트랜잭션 데이터가 아닌 연구 메트릭($240B 손실, 18일 지연 등)을 다룹니다.",
+        "[review:scenario_mismatch] Focus item TS-5.1-S2의 예시는 명확히 고객 서비스 맥락('order IDs, amounts, statuses')을 가리키는데, 문제는 연구 보고서 생성 시스템에서 연구 스레드 간 데이터 혼동을 다루고 있어 시나리오가 불일치합니다. 'multi-issue sessions'는 여러 고객 이슈를 처리하는 것이지 여러 연구 주제를 조사하는 것이 아닙니다."
+      ],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:08:24+00:00"
     },
     {
       "quiz_id": "Q-5.1-S3",
@@ -5018,14 +5171,14 @@
       "target_answer": "D",
       "order": 193,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:07:56+00:00"
     },
     {
       "quiz_id": "Q-5.1-S4",
@@ -5035,7 +5188,7 @@
       "focus_bullet_ids": [
         "TS-5.1-S4"
       ],
-      "scenario_id": 6,
+      "scenario_id": 1,
       "scenario_candidates": [
         1,
         2,
@@ -5045,14 +5198,16 @@
       "target_answer": "C",
       "order": 194,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:08:34+00:00"
     },
     {
       "quiz_id": "Q-5.1-S5",
@@ -5072,14 +5227,14 @@
       "target_answer": "D",
       "order": 195,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:08:10+00:00"
     },
     {
       "quiz_id": "Q-5.1-S6",
@@ -5089,7 +5244,7 @@
       "focus_bullet_ids": [
         "TS-5.1-S6"
       ],
-      "scenario_id": 2,
+      "scenario_id": 3,
       "scenario_candidates": [
         1,
         2,
@@ -5099,14 +5254,17 @@
       "target_answer": "D",
       "order": 196,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "meta_reference",
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:08:52+00:00"
     },
     {
       "quiz_id": "Q-5.2-K1",
@@ -5126,14 +5284,16 @@
       "target_answer": "A",
       "order": 197,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "multiple_correct"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:08:59+00:00"
     },
     {
       "quiz_id": "Q-5.2-K2",
@@ -5143,7 +5303,7 @@
       "focus_bullet_ids": [
         "TS-5.2-K2"
       ],
-      "scenario_id": 2,
+      "scenario_id": 3,
       "scenario_candidates": [
         1,
         2,
@@ -5153,14 +5313,22 @@
       "target_answer": "B",
       "order": 198,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "rejected",
+      "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
-      "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "detected_patterns": [
+        "answer_not_supported",
+        "scenario_mismatch",
+        "answer_not_supported"
+      ],
+      "last_errors": [
+        "[review:answer_not_supported] TS-5.2-K2는 '고객이 명시적으로 요구할 때 즉시 에스컬레이션하는 것'과 '문제가 간단할 때 해결을 제안하는 것' 사이의 구분을 다룹니다. 문제 상황에서 사용자는 \"I need a human researcher to handle this request\"라고 명시적으로 요청했습니다. Focus item에 따르면 명시적 요구 시 즉시 에스컬레이션해야 하는데, 정답 A는 '해결을 제안한 후 사용자가 재차 요청하면 에스컬레이션'하는 접근을 취하고 있어 focus item과 모순됩니다.",
+        "[review:answer_not_supported] TS-5.2-S3에는 'Honoring explicit customer requests for human agents immediately without first attempting investigation'와 'Acknowledging frustration while offering resolution when the issue is within the agent's capability, escalating only if the customer reiterates their preference'가 모두 포함되어 있습니다. 그러나 focus item은 TS-5.2-K2만 지정하고 있으며, K2는 이 두 상황의 '구분(distinction)'에 대한 지식을 다룹니다. 명시적 요청이 있는 현재 상황에서는 즉시 에스컬레이션(옵션 B)이 더 적절하지만, 정답은 A로 표시되어 있습니다.",
+        "[review:answer_not_supported] 옵션 B의 rationale은 '무조건 즉시 에스컬레이션하는 것은 과도한 대응'이라고 설명하지만, TS-5.2-S2 ('Honoring explicit customer requests for human agents immediately without first attempting investigation')에 따르면 명시적 요청 시 즉시 에스컬레이션이 올바른 접근입니다. Source_excerpt와 focus item이 이 상황에서 어느 접근이 맞는지 명확히 구분하지 못하고 있습니다."
+      ],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:09:46+00:00"
     },
     {
       "quiz_id": "Q-5.2-K3",
@@ -5170,7 +5338,7 @@
       "focus_bullet_ids": [
         "TS-5.2-K3"
       ],
-      "scenario_id": 3,
+      "scenario_id": 1,
       "scenario_candidates": [
         1,
         2,
@@ -5180,14 +5348,18 @@
       "target_answer": "A",
       "order": 199,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
-      "repairs_ok": 0,
-      "detected_patterns": [],
+      "status": "approved",
+      "attempts": 3,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "detected_patterns": [
+        "scenario_mismatch",
+        "answer_too_long:repaired",
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:09:55+00:00"
     },
     {
       "quiz_id": "Q-5.2-K4",
@@ -5197,7 +5369,7 @@
       "focus_bullet_ids": [
         "TS-5.2-K4"
       ],
-      "scenario_id": 6,
+      "scenario_id": 1,
       "scenario_candidates": [
         1,
         2,
@@ -5207,14 +5379,16 @@
       "target_answer": "C",
       "order": 200,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:09:38+00:00"
     },
     {
       "quiz_id": "Q-5.2-S1",
@@ -5234,14 +5408,14 @@
       "target_answer": "C",
       "order": 201,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:09:19+00:00"
     },
     {
       "quiz_id": "Q-5.2-S2",
@@ -5251,7 +5425,7 @@
       "focus_bullet_ids": [
         "TS-5.2-S2"
       ],
-      "scenario_id": 2,
+      "scenario_id": 6,
       "scenario_candidates": [
         1,
         2,
@@ -5261,14 +5435,21 @@
       "target_answer": "D",
       "order": 202,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "rejected",
+      "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
-      "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "detected_patterns": [
+        "scenario_mismatch",
+        "scenario_mismatch",
+        "scenario_mismatch"
+      ],
+      "last_errors": [
+        "[review:scenario_mismatch] SC-6는 '구조화된 데이터 추출 시스템(structured data extraction system)'을 다루며 '비구조화된 문서에서 정보를 추출하고 JSON 스키마를 사용하여 출력을 검증'하는 것이 목표입니다. 그러나 이 문제는 보험 청구 양식을 처리하는 고객 서비스 에스컬레이션 시나리오('I need a human adjuster to review this right now')를 다루고 있으며, 사용자가 인간 담당자를 요청하는 상황은 고객 지원 시나리오(예: SC-1 Customer Support Chatbot)에 더 적합합니다. 데이터 추출 시스템의 기술적 구현이 아닌 고객 에스컬레이션 정책을 테스트하고 있습니다.",
+        "[review:scenario_mismatch] TS-5.2-S2는 '고객(customer)'이 인간 상담원(human agents)을 요청하는 상황을 다루지만, SC-6의 구조화된 데이터 추출 시스템은 고객 대면 챗봇이 아니라 문서 처리 시스템입니다. 'user submits a partially completed form'이라는 표현은 시나리오의 맥락(문서에서 데이터 추출)과 맞지 않으며, 실시간 고객 상호작용을 암시합니다."
+      ],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:10:23+00:00"
     },
     {
       "quiz_id": "Q-5.2-S3",
@@ -5278,7 +5459,7 @@
       "focus_bullet_ids": [
         "TS-5.2-S3"
       ],
-      "scenario_id": 3,
+      "scenario_id": 1,
       "scenario_candidates": [
         1,
         2,
@@ -5288,14 +5469,23 @@
       "target_answer": "A",
       "order": 203,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "rejected",
+      "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
-      "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "detected_patterns": [
+        "scenario_mismatch",
+        "scenario_mismatch",
+        "answer_not_supported"
+      ],
+      "last_errors": [
+        "[review:answer_not_supported] TS-5.2-S3은 '고객이 선호를 재확인(reiterate)할 때만 에스컬레이션'하는 패턴을 명시하지만, 문제 상황에서 고객은 이미 명시적으로 \"Just transfer me to a human who can actually help\"라고 요청했습니다. 이는 명확한 인간 상담원 요청이며, TS-5.2-K2 ('The distinction between escalating immediately when a customer explicitly demands it versus offering to resolve when the issue is straightforward')에 따르면 명시적 요청 시 즉시 에스컬레이션해야 합니다.",
+        "[review:answer_not_supported] 정답 A ('offer to escalate if they still prefer speaking to a human after the refund is processed')는 고객의 명시적 에스컬레이션 요청을 무시하고 환불 처리 후에야 에스컬레이션 옵션을 제공하는데, 이는 TS-5.2-S2 ('Honoring explicit customer requests for human agents immediately without first attempting investigation')와 충돌합니다.",
+        "[review:answer_not_supported] 옵션 B ('Immediately call escalate_to_human')가 TS-5.2-K2와 TS-5.2-S2에 더 부합하지만, 이 문제는 TS-5.2-S3만을 focus item으로 지정했습니다. S3의 적용 조건('고객이 선호를 재확인할 때')이 명확하지 않은 상황(이미 명시적 요청이 있는 경우)에서 S3만으로는 정답을 결정할 수 없습니다.",
+        "[review:answer_not_supported] 옵션 B의 rationale은 '진행 부족에 대한 좌절에서 비롯된 것'이라고 해석하지만, 고객 메시지 \"Just transfer me to a human\"은 명시적(explicit) 요청으로 읽히며, 이 해석의 차이가 정답 판단에 영향을 줍니다. Focus item S3만으로는 이 구분을 명확히 할 수 없습니다."
+      ],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:11:05+00:00"
     },
     {
       "quiz_id": "Q-5.2-S4",
@@ -5305,7 +5495,7 @@
       "focus_bullet_ids": [
         "TS-5.2-S4"
       ],
-      "scenario_id": 6,
+      "scenario_id": 1,
       "scenario_candidates": [
         1,
         2,
@@ -5315,14 +5505,16 @@
       "target_answer": "C",
       "order": 204,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:10:34+00:00"
     },
     {
       "quiz_id": "Q-5.2-S5",
@@ -5342,14 +5534,14 @@
       "target_answer": "A",
       "order": 205,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:10:16+00:00"
     },
     {
       "quiz_id": "Q-5.3-K1",
@@ -5369,14 +5561,14 @@
       "target_answer": "D",
       "order": 206,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:10:36+00:00"
     },
     {
       "quiz_id": "Q-5.3-K2",
@@ -5386,7 +5578,7 @@
       "focus_bullet_ids": [
         "TS-5.3-K2"
       ],
-      "scenario_id": 2,
+      "scenario_id": 3,
       "scenario_candidates": [
         1,
         2,
@@ -5396,14 +5588,17 @@
       "target_answer": "C",
       "order": 207,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
-      "repairs_ok": 0,
-      "detected_patterns": [],
+      "status": "approved",
+      "attempts": 2,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "detected_patterns": [
+        "answer_too_long:repaired",
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:11:15+00:00"
     },
     {
       "quiz_id": "Q-5.3-K3",
@@ -5423,14 +5618,14 @@
       "target_answer": "B",
       "order": 208,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:10:57+00:00"
     },
     {
       "quiz_id": "Q-5.3-K4",
@@ -5450,14 +5645,14 @@
       "target_answer": "B",
       "order": 209,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:10:58+00:00"
     },
     {
       "quiz_id": "Q-5.3-S1",
@@ -5477,14 +5672,14 @@
       "target_answer": "C",
       "order": 210,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:11:16+00:00"
     },
     {
       "quiz_id": "Q-5.3-S2",
@@ -5494,7 +5689,7 @@
       "focus_bullet_ids": [
         "TS-5.3-S2"
       ],
-      "scenario_id": 2,
+      "scenario_id": 3,
       "scenario_candidates": [
         1,
         2,
@@ -5504,14 +5699,16 @@
       "target_answer": "A",
       "order": 211,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:11:47+00:00"
     },
     {
       "quiz_id": "Q-5.3-S3",
@@ -5531,14 +5728,14 @@
       "target_answer": "C",
       "order": 212,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:11:27+00:00"
     },
     {
       "quiz_id": "Q-5.3-S4",
@@ -5558,14 +5755,14 @@
       "target_answer": "D",
       "order": 213,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:11:36+00:00"
     },
     {
       "quiz_id": "Q-5.4-K1",
@@ -5575,7 +5772,7 @@
       "focus_bullet_ids": [
         "TS-5.4-K1"
       ],
-      "scenario_id": 1,
+      "scenario_id": 2,
       "scenario_candidates": [
         1,
         2,
@@ -5585,14 +5782,17 @@
       "target_answer": "A",
       "order": 214,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
-      "repairs_ok": 0,
-      "detected_patterns": [],
+      "status": "approved",
+      "attempts": 2,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "detected_patterns": [
+        "scenario_mismatch",
+        "answer_too_long:repaired"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:12:12+00:00"
     },
     {
       "quiz_id": "Q-5.4-K2",
@@ -5612,14 +5812,14 @@
       "target_answer": "D",
       "order": 215,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:11:49+00:00"
     },
     {
       "quiz_id": "Q-5.4-K3",
@@ -5644,9 +5844,11 @@
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
-      "last_errors": [],
+      "last_errors": [
+        "[error] TransientError: Bedrock transient error after 6 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
+      ],
       "prompt_version": null,
-      "updated_at": null
+      "updated_at": "2026-11-04T05:14:50+00:00"
     },
     {
       "quiz_id": "Q-5.4-K4",
@@ -5656,7 +5858,7 @@
       "focus_bullet_ids": [
         "TS-5.4-K4"
       ],
-      "scenario_id": 6,
+      "scenario_id": 1,
       "scenario_candidates": [
         1,
         2,
@@ -5666,14 +5868,16 @@
       "target_answer": "D",
       "order": 217,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:13:15+00:00"
     },
     {
       "quiz_id": "Q-5.4-S1",
@@ -5698,9 +5902,11 @@
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
-      "last_errors": [],
+      "last_errors": [
+        "[error] TransientError: Bedrock transient error after 6 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
+      ],
       "prompt_version": null,
-      "updated_at": null
+      "updated_at": "2026-11-04T05:14:02+00:00"
     },
     {
       "quiz_id": "Q-5.4-S2",
@@ -5737,7 +5943,7 @@
       "focus_bullet_ids": [
         "TS-5.4-S3"
       ],
-      "scenario_id": 3,
+      "scenario_id": 6,
       "scenario_candidates": [
         1,
         2,
@@ -5747,14 +5953,21 @@
       "target_answer": "A",
       "order": 220,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "rejected",
+      "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
-      "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "detected_patterns": [
+        "meta_reference",
+        "scenario_mismatch",
+        "scenario_mismatch"
+      ],
+      "last_errors": [
+        "[review:scenario_mismatch] SC-6는 '구조화된 데이터 추출 시스템'을 다루며 '비구조화된 문서에서 정보를 추출하고 JSON 스키마로 검증'하는 것이 핵심입니다. 그러나 이 문항의 stem은 '복잡한 법률 계약서를 처리하기 위해 coordinator가 discovery subagent를 생성하고, 이후 extraction subagent를 생성'하는 대규모 코드베이스 탐색 시나리오를 설명합니다. 이는 TS-5.4 ('대규모 코드베이스 탐색에서 컨텍스트 효과적 관리')의 전형적인 상황이지만, SC-6의 '구조화된 데이터 추출 시스템'과는 맞지 않습니다. SC-6는 subagent 조정이나 탐색 단계 간 지식 전달보다는 프롬프트 엔지니어링, JSON 스키마 검증, 엣지 케이스 처리에 초점을 맞춥니다.",
+        "[review:scenario_mismatch] Stem에서 'discovery subagent가 20분 동안 모든 계약 섹션, 조항 유형, 문서 구조 패턴을 식별하여 45,000 토큰의 상세한 스키마 매핑과 섹션 계층을 생성'하는 설명은 코드베이스 탐색 시나리오(예: 대규모 소프트웨어 시스템 분석)에 더 적합하며, 단일 문서 또는 문서 배치에서 구조화된 데이터를 추출하는 SC-6의 맥락과 맞지 않습니다."
+      ],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:13:13+00:00"
     },
     {
       "quiz_id": "Q-5.4-S4",
@@ -5764,7 +5977,7 @@
       "focus_bullet_ids": [
         "TS-5.4-S4"
       ],
-      "scenario_id": 6,
+      "scenario_id": 2,
       "scenario_candidates": [
         1,
         2,
@@ -5774,14 +5987,17 @@
       "target_answer": "D",
       "order": 221,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "detected_patterns": [
+        "scenario_mismatch",
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:14:19+00:00"
     },
     {
       "quiz_id": "Q-5.4-S5",
@@ -5806,9 +6022,11 @@
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
-      "last_errors": [],
+      "last_errors": [
+        "[error] TransientError: Bedrock transient error after 6 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
+      ],
       "prompt_version": null,
-      "updated_at": null
+      "updated_at": "2026-11-04T05:14:51+00:00"
     },
     {
       "quiz_id": "Q-5.5-K1",
@@ -5833,9 +6051,11 @@
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
-      "last_errors": [],
+      "last_errors": [
+        "[error] TransientError: Bedrock transient error after 6 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
+      ],
       "prompt_version": null,
-      "updated_at": null
+      "updated_at": "2026-11-04T05:15:32+00:00"
     },
     {
       "quiz_id": "Q-5.5-K2",
@@ -5860,9 +6080,11 @@
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
-      "last_errors": [],
+      "last_errors": [
+        "[error] TransientError: Bedrock transient error after 6 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
+      ],
       "prompt_version": null,
-      "updated_at": null
+      "updated_at": "2026-11-04T05:17:23+00:00"
     },
     {
       "quiz_id": "Q-5.5-K3",
@@ -5887,9 +6109,11 @@
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
-      "last_errors": [],
+      "last_errors": [
+        "[error] TransientError: Bedrock transient error after 6 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
+      ],
       "prompt_version": null,
-      "updated_at": null
+      "updated_at": "2026-11-04T05:16:43+00:00"
     },
     {
       "quiz_id": "Q-5.5-K4",
@@ -5914,9 +6138,11 @@
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
-      "last_errors": [],
+      "last_errors": [
+        "[error] TransientError: Bedrock transient error after 6 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
+      ],
       "prompt_version": null,
-      "updated_at": null
+      "updated_at": "2026-11-04T05:16:06+00:00"
     },
     {
       "quiz_id": "Q-5.5-S1",
@@ -5968,9 +6194,11 @@
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
-      "last_errors": [],
+      "last_errors": [
+        "[error] TransientError: Bedrock transient error after 6 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
+      ],
       "prompt_version": null,
-      "updated_at": null
+      "updated_at": "2026-11-04T05:17:35+00:00"
     },
     {
       "quiz_id": "Q-5.5-S3",
@@ -5995,9 +6223,11 @@
       "repairs": 0,
       "repairs_ok": 0,
       "detected_patterns": [],
-      "last_errors": [],
+      "last_errors": [
+        "[error] TransientError: Bedrock transient error after 6 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
+      ],
       "prompt_version": null,
-      "updated_at": null
+      "updated_at": "2026-11-04T05:18:03+00:00"
     },
     {
       "quiz_id": "Q-5.5-S4",

@@ -3,12 +3,12 @@
   "guide_version": "0.2",
   "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
   "created_at": "2026-11-04T03:56:13+00:00",
-  "updated_at": "2026-11-04T05:39:59+00:00",
+  "updated_at": "2026-11-04T06:11:28+00:00",
   "summary": {
-    "pending": 50,
-    "approved": 210,
-    "rejected": 10,
-    "duplicate": 0
+    "pending": 0,
+    "approved": 265,
+    "rejected": 16,
+    "duplicate": 2
   },
   "slots": [
     {
@@ -32,6 +32,8 @@
       "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "meta_reference",
         "answer_not_supported",
@@ -66,6 +68,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -94,6 +98,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -120,6 +126,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -146,6 +154,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -172,6 +182,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -198,6 +210,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -224,6 +238,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -250,6 +266,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -276,6 +294,8 @@
       "attempts": 2,
       "repairs": 1,
       "repairs_ok": 1,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "answer_too_long:repaired",
         "scenario_mismatch"
@@ -305,6 +325,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -331,6 +353,8 @@
       "attempts": 3,
       "repairs": 1,
       "repairs_ok": 1,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "meta_reference",
         "answer_too_long:repaired",
@@ -365,6 +389,8 @@
       "attempts": 3,
       "repairs": 1,
       "repairs_ok": 1,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "answer_too_long:repaired",
         "scenario_mismatch",
@@ -395,6 +421,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -421,6 +449,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -447,6 +477,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -473,6 +505,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -499,6 +533,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -527,6 +563,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -553,6 +591,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -579,6 +619,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -605,6 +647,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -631,6 +675,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -657,6 +703,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -683,6 +731,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -711,6 +761,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -737,6 +789,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -763,6 +817,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -791,6 +847,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -817,6 +875,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -843,6 +903,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -869,6 +931,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -895,6 +959,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -923,6 +989,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -949,6 +1017,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -975,6 +1045,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1001,6 +1073,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1027,6 +1101,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "meta_reference"
       ],
@@ -1055,6 +1131,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1081,6 +1159,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1107,6 +1187,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1133,6 +1215,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -1161,6 +1245,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1187,6 +1273,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1213,6 +1301,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -1241,6 +1331,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1267,6 +1359,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1293,6 +1387,8 @@
       "attempts": 2,
       "repairs": 1,
       "repairs_ok": 1,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch",
         "answer_too_long:repaired"
@@ -1322,6 +1418,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "parse"
       ],
@@ -1350,6 +1448,8 @@
       "attempts": 1,
       "repairs": 1,
       "repairs_ok": 1,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "answer_too_long:repaired"
       ],
@@ -1378,6 +1478,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1404,6 +1506,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1430,6 +1534,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1456,6 +1562,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1482,6 +1590,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1508,6 +1618,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1534,6 +1646,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1560,6 +1674,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "meta_reference"
       ],
@@ -1588,6 +1704,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1614,6 +1732,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1640,6 +1760,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1666,6 +1788,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "answer_not_supported"
       ],
@@ -1694,6 +1818,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1720,6 +1846,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "meta_reference"
       ],
@@ -1748,6 +1876,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1774,6 +1904,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1800,6 +1932,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1826,6 +1960,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1852,6 +1988,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1878,6 +2016,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "meta_reference"
       ],
@@ -1906,6 +2046,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1932,6 +2074,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1958,6 +2102,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -1984,6 +2130,8 @@
       "attempts": 1,
       "repairs": 1,
       "repairs_ok": 1,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "answer_too_long:repaired"
       ],
@@ -2012,6 +2160,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2038,6 +2188,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "multiple_correct"
       ],
@@ -2066,6 +2218,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2092,6 +2246,8 @@
       "attempts": 1,
       "repairs": 1,
       "repairs_ok": 1,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "answer_too_long:repaired"
       ],
@@ -2120,6 +2276,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2146,6 +2304,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2172,6 +2332,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2198,6 +2360,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2224,6 +2388,8 @@
       "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "parse",
         "meta_reference",
@@ -2258,6 +2424,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2284,6 +2452,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2310,6 +2480,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -2338,6 +2510,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "answer_not_supported"
       ],
@@ -2366,6 +2540,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2392,6 +2568,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2418,6 +2596,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2444,6 +2624,8 @@
       "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "label_reference",
         "answer_not_supported",
@@ -2476,6 +2658,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2502,6 +2686,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2528,6 +2714,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2554,6 +2742,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2580,6 +2770,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2606,6 +2798,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -2630,14 +2824,18 @@
       "target_answer": "C",
       "order": 97,
       "pilot": false,
-      "status": "approved",
+      "status": "duplicate",
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "generator_model": null,
+      "reviewer_model": null,
+      "detected_patterns": [
+        "duplicate_of:Q-3.1-K4"
+      ],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
-      "updated_at": "2026-11-04T04:57:03+00:00"
+      "updated_at": "2026-11-04T06:00:54+00:00"
     },
     {
       "quiz_id": "Q-3.1-S4",
@@ -2660,6 +2858,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2686,6 +2886,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2712,6 +2914,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2738,6 +2942,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -2766,6 +2972,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2792,6 +3000,8 @@
       "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "other",
         "multiple_correct"
@@ -2821,6 +3031,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -2849,6 +3061,8 @@
       "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "answer_not_supported",
         "other"
@@ -2878,6 +3092,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2904,6 +3120,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -2932,6 +3150,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2958,6 +3178,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -2984,6 +3206,8 @@
       "attempts": 2,
       "repairs": 1,
       "repairs_ok": 1,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch",
         "answer_too_long:repaired"
@@ -3013,6 +3237,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "answer_not_supported"
       ],
@@ -3041,6 +3267,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3067,6 +3295,8 @@
       "attempts": 3,
       "repairs": 1,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "answer_too_long",
         "scenario_mismatch"
@@ -3096,6 +3326,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3122,6 +3354,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3148,6 +3382,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -3176,6 +3412,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "off_focus_bullet"
       ],
@@ -3204,6 +3442,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3230,6 +3470,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3256,6 +3498,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3282,6 +3526,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3308,6 +3554,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3334,6 +3582,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "meta_reference"
       ],
@@ -3362,6 +3612,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3388,6 +3640,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3414,6 +3668,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3440,6 +3696,8 @@
       "attempts": 3,
       "repairs": 1,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch",
         "answer_too_long",
@@ -3474,6 +3732,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3500,6 +3760,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3526,6 +3788,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3552,6 +3816,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3578,6 +3844,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3604,6 +3872,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "multiple_correct"
       ],
@@ -3632,6 +3902,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3658,6 +3930,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3684,6 +3958,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3710,6 +3986,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3736,6 +4014,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3762,6 +4042,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3787,6 +4069,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "multiple_correct"
       ],
@@ -3814,6 +4098,8 @@
       "attempts": 1,
       "repairs": 1,
       "repairs_ok": 1,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "answer_too_long:repaired"
       ],
@@ -3841,6 +4127,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3866,6 +4154,8 @@
       "attempts": 2,
       "repairs": 2,
       "repairs_ok": 2,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "answer_too_long:repaired",
         "scenario_mismatch",
@@ -3895,6 +4185,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -3920,6 +4212,8 @@
       "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "meta_reference",
         "scenario_mismatch"
@@ -3948,6 +4242,8 @@
       "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "meta_reference",
         "multiple_correct"
@@ -3976,6 +4272,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4001,6 +4299,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4026,6 +4326,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "meta_reference"
       ],
@@ -4053,6 +4355,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4078,6 +4382,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4103,6 +4409,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "meta_reference"
       ],
@@ -4130,6 +4438,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4155,6 +4465,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -4182,6 +4494,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4207,6 +4521,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "multiple_correct"
       ],
@@ -4234,6 +4550,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -4261,6 +4579,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4286,6 +4606,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4311,6 +4633,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4336,6 +4660,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4361,6 +4687,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4386,6 +4714,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4411,6 +4741,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4436,6 +4768,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -4463,6 +4797,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4488,6 +4824,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4513,6 +4851,8 @@
       "attempts": 1,
       "repairs": 1,
       "repairs_ok": 1,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "answer_too_long:repaired"
       ],
@@ -4540,6 +4880,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4565,6 +4907,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4590,6 +4934,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4615,6 +4961,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4640,6 +4988,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -4667,6 +5017,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4692,6 +5044,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -4719,6 +5073,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "label_reference"
       ],
@@ -4746,6 +5102,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4771,6 +5129,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4796,6 +5156,8 @@
       "attempts": 2,
       "repairs": 1,
       "repairs_ok": 1,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch",
         "answer_too_long:repaired"
@@ -4824,6 +5186,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4849,6 +5213,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4874,6 +5240,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4899,6 +5267,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4924,6 +5294,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -4949,6 +5321,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "meta_reference"
       ],
@@ -4976,6 +5350,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -5003,6 +5379,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -5030,6 +5408,8 @@
       "attempts": 2,
       "repairs": 1,
       "repairs_ok": 1,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "parse",
         "answer_too_long:repaired"
@@ -5060,6 +5440,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -5087,6 +5469,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -5114,6 +5498,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -5141,6 +5527,8 @@
       "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "meta_reference",
         "scenario_mismatch",
@@ -5175,6 +5563,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -5202,6 +5592,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -5231,6 +5623,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -5258,6 +5652,8 @@
       "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "meta_reference",
         "scenario_mismatch"
@@ -5288,6 +5684,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "multiple_correct"
       ],
@@ -5317,6 +5715,8 @@
       "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "answer_not_supported",
         "scenario_mismatch",
@@ -5352,6 +5752,8 @@
       "attempts": 3,
       "repairs": 1,
       "repairs_ok": 1,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch",
         "answer_too_long:repaired",
@@ -5383,6 +5785,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -5412,6 +5816,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -5439,6 +5845,8 @@
       "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch",
         "scenario_mismatch",
@@ -5473,6 +5881,8 @@
       "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch",
         "scenario_mismatch",
@@ -5509,6 +5919,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -5538,6 +5950,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -5565,6 +5979,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -5592,6 +6008,8 @@
       "attempts": 2,
       "repairs": 1,
       "repairs_ok": 1,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "answer_too_long:repaired",
         "scenario_mismatch"
@@ -5622,6 +6040,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -5649,6 +6069,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -5676,6 +6098,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -5703,6 +6127,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -5732,6 +6158,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -5759,6 +6187,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -5786,6 +6216,8 @@
       "attempts": 2,
       "repairs": 1,
       "repairs_ok": 1,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch",
         "answer_too_long:repaired"
@@ -5816,6 +6248,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -5829,7 +6263,7 @@
       "focus_bullet_ids": [
         "TS-5.4-K3"
       ],
-      "scenario_id": 3,
+      "scenario_id": 6,
       "scenario_candidates": [
         1,
         2,
@@ -5839,16 +6273,23 @@
       "target_answer": "B",
       "order": 216,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "rejected",
+      "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
-      "last_errors": [
-        "[error] TransientError: Bedrock transient error after 8 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "meta_reference",
+        "scenario_mismatch",
+        "scenario_mismatch"
       ],
-      "prompt_version": null,
-      "updated_at": "2026-11-04T05:33:16+00:00"
+      "last_errors": [
+        "[review:scenario_mismatch] SC-6는 '구조화된 데이터 추출 시스템'을 다루며 '비구조화된 문서에서 정보를 추출하고 JSON 스키마로 검증'하는 것이 목표입니다. 그러나 TS-5.4는 'large codebase exploration'을 관리하는 작업으로, 'find all test files', 'trace refund flow dependencies' 같은 코드베이스 탐색 예시를 제공합니다. 이 문제의 상황(보험 청구 양식 처리, 문서 파싱, 필드 추출)은 코드베이스 탐색이 아니라 문서 처리 파이프라인이므로 TS-5.4의 맥락과 맞지 않습니다.",
+        "[review:scenario_mismatch] TS-5.4-K3은 'verbose exploration output'을 격리하는 것을 다루는데, 이는 코드베이스 탐색 중 발생하는 상세한 탐색 결과(예: 파일 목록, 의존성 추적 로그)를 의미합니다. 문제에서 다루는 '22,000 토큰의 extraction logs showing every field it examined'는 문서 파싱 로그이지 코드베이스 탐색 출력이 아닙니다. Focus item의 맥락과 문제 상황이 불일치합니다."
+      ],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:45:56+00:00"
     },
     {
       "quiz_id": "Q-5.4-K4",
@@ -5872,6 +6313,8 @@
       "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch"
       ],
@@ -5887,7 +6330,7 @@
       "focus_bullet_ids": [
         "TS-5.4-S1"
       ],
-      "scenario_id": 1,
+      "scenario_id": 2,
       "scenario_candidates": [
         1,
         2,
@@ -5897,16 +6340,18 @@
       "target_answer": "B",
       "order": 218,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
-      "last_errors": [
-        "[error] TransientError: Bedrock transient error after 8 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "scenario_mismatch"
       ],
-      "prompt_version": null,
-      "updated_at": "2026-11-04T05:33:29+00:00"
+      "last_errors": [],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:45:41+00:00"
     },
     {
       "quiz_id": "Q-5.4-S2",
@@ -5930,6 +6375,8 @@
       "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [],
       "last_errors": [],
       "prompt_version": "3d2b61fc",
@@ -5957,6 +6404,8 @@
       "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "meta_reference",
         "scenario_mismatch",
@@ -5991,6 +6440,8 @@
       "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": null,
+      "reviewer_model": null,
       "detected_patterns": [
         "scenario_mismatch",
         "scenario_mismatch"
@@ -6007,7 +6458,7 @@
       "focus_bullet_ids": [
         "TS-5.4-S5"
       ],
-      "scenario_id": 1,
+      "scenario_id": 2,
       "scenario_candidates": [
         1,
         2,
@@ -6017,16 +6468,18 @@
       "target_answer": "A",
       "order": 222,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
-      "last_errors": [
-        "[error] TransientError: Bedrock transient error after 8 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "scenario_mismatch"
       ],
-      "prompt_version": null,
-      "updated_at": "2026-11-04T05:36:58+00:00"
+      "last_errors": [],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:46:27+00:00"
     },
     {
       "quiz_id": "Q-5.5-K1",
@@ -6036,7 +6489,7 @@
       "focus_bullet_ids": [
         "TS-5.5-K1"
       ],
-      "scenario_id": 1,
+      "scenario_id": 3,
       "scenario_candidates": [
         1,
         2,
@@ -6046,16 +6499,23 @@
       "target_answer": "A",
       "order": 223,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "rejected",
+      "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
-      "last_errors": [
-        "[error] TransientError: Bedrock transient error after 8 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "scenario_mismatch",
+        "scenario_mismatch",
+        "scenario_mismatch"
       ],
-      "prompt_version": null,
-      "updated_at": "2026-11-04T05:36:43+00:00"
+      "last_errors": [
+        "[review:scenario_mismatch] scenario_mismatch: SCENARIO SC-3는 '멀티 에이전트 연구 시스템'을 다루며 coordinator agent가 specialized subagents(웹 검색, 문서 분석, 종합, 보고서 생성)에 작업을 위임하는 agentic architecture를 설명합니다. 그러나 TS-5.5는 'Design human review workflows and confidence calibration'으로 문서 추출(document extraction)의 정확도 검증, 필드 수준 신뢰도 점수, 인간 검토 라우팅을 다룹니다. 이 문항의 상황(보고서 품질 검사, 인용 오류, 클레임 검증)은 문서 추출 워크플로우가 아닌 연구 보고서 생성 시스템에 관한 것으로, TS-5.5의 문서 추출 컨텍스트와 맞지 않습니다.",
+        "[review:scenario_mismatch] off_focus_bullet: TS-5.5-K1은 '전체 정확도 지표가 특정 문서 유형이나 필드에서의 낮은 성능을 가릴 수 있다는 위험'에 대한 지식입니다. 그러나 옵션 C('Implement stratified random sampling of validated reports to continuously measure error rates across all topic categories in production')는 TS-5.5-S1(계층화된 무작위 샘플링 구현 기술)에 더 직접적으로 해당하며, 옵션 D('Route reports on emerging technologies to human review based on topic classification')는 TS-5.5-S4(낮은 신뢰도 추출을 인간 검토로 라우팅하는 기술)에 해당합니다. 문항이 K1만을 테스트하려면 세분화된 측정의 필요성을 인식하는 것에 초점을 맞춰야 하는데, 현재 옵션들은 여러 skill 항목들과 혼재되어 있습니다."
+      ],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:47:16+00:00"
     },
     {
       "quiz_id": "Q-5.5-K2",
@@ -6065,7 +6525,7 @@
       "focus_bullet_ids": [
         "TS-5.5-K2"
       ],
-      "scenario_id": 2,
+      "scenario_id": 6,
       "scenario_candidates": [
         1,
         2,
@@ -6075,16 +6535,19 @@
       "target_answer": "B",
       "order": 224,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
-      "last_errors": [
-        "[error] TransientError: Bedrock transient error after 8 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "scenario_mismatch",
+        "scenario_mismatch"
       ],
-      "prompt_version": null,
-      "updated_at": "2026-11-04T05:39:59+00:00"
+      "last_errors": [],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:47:28+00:00"
     },
     {
       "quiz_id": "Q-5.5-K3",
@@ -6094,7 +6557,7 @@
       "focus_bullet_ids": [
         "TS-5.5-K3"
       ],
-      "scenario_id": 3,
+      "scenario_id": 6,
       "scenario_candidates": [
         1,
         2,
@@ -6104,16 +6567,18 @@
       "target_answer": "D",
       "order": 225,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
-      "last_errors": [
-        "[error] TransientError: Bedrock transient error after 6 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "scenario_mismatch"
       ],
-      "prompt_version": null,
-      "updated_at": "2026-11-04T05:16:43+00:00"
+      "last_errors": [],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:48:01+00:00"
     },
     {
       "quiz_id": "Q-5.5-K4",
@@ -6133,16 +6598,16 @@
       "target_answer": "D",
       "order": 226,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
-      "last_errors": [
-        "[error] TransientError: Bedrock transient error after 6 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
-      ],
-      "prompt_version": null,
-      "updated_at": "2026-11-04T05:16:06+00:00"
+      "last_errors": [],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:47:48+00:00"
     },
     {
       "quiz_id": "Q-5.5-S1",
@@ -6152,7 +6617,7 @@
       "focus_bullet_ids": [
         "TS-5.5-S1"
       ],
-      "scenario_id": 1,
+      "scenario_id": 3,
       "scenario_candidates": [
         1,
         2,
@@ -6162,14 +6627,24 @@
       "target_answer": "B",
       "order": 227,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
-      "repairs_ok": 0,
-      "detected_patterns": [],
-      "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "status": "rejected",
+      "attempts": 3,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "answer_too_long:repaired",
+        "scenario_mismatch",
+        "scenario_mismatch",
+        "scenario_mismatch"
+      ],
+      "last_errors": [
+        "[review:scenario_mismatch] scenario_mismatch: 문제 상황이 SC-3(Multi-Agent Research System)의 범위와 맞지 않습니다. SC-3는 '웹 검색, 문서 분석, 결과 종합, 보고서 생성을 수행하는 연구 시스템'이며 주요 도메인은 'Agentic Architecture & Orchestration, Tool Design & MCP Integration, Context Management & Reliability'입니다. 그러나 이 문제는 문서에서 구조화된 데이터를 추출하고 필드별 정확도를 측정하며 신뢰도 점수 기반으로 인간 검토를 라우팅하는 전형적인 문서 처리/IDP(Intelligent Document Processing) 워크플로우를 다룹니다. 'compliance-date fields', 'regulatory filings', '필드 수준 정확도 측정', '신뢰도 임계값 기반 라우팅' 등은 문서 추출 시스템의 특징이며, 연구 시스템의 핵심 기능(주제 연구, 인용된 보고서 생성)과는 거리가 멉니다. 연구 시스템에서 문서 분석 서브에이전트가 '구조화된 데이터 추출'을 수행한다는 설정 자체가 SC-3의 '문서 분석(analyzes documents)' 역할과 불일치합니다.",
+        "[review:scenario_mismatch] off_focus_bullet: 문제가 TS-5.5-S1(계층화된 무작위 샘플링 구현)을 직접적으로 테스트하지만, 이는 Task Statement 5.5 전체의 맥락에서 벗어났습니다. TS-5.5는 '인간 검토 워크플로우 및 신뢰도 보정 설계(Design human review workflows and confidence calibration)'이며, 이는 문서 추출 시스템(IDP)의 맥락에서 정의된 작업입니다. SC-3(연구 시스템)에서는 이러한 문서 추출 워크플로우가 핵심 기능이 아니므로, 포커스 항목이 시나리오와 맞지 않습니다."
+      ],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:49:14+00:00"
     },
     {
       "quiz_id": "Q-5.5-S2",
@@ -6179,7 +6654,7 @@
       "focus_bullet_ids": [
         "TS-5.5-S2"
       ],
-      "scenario_id": 2,
+      "scenario_id": 6,
       "scenario_candidates": [
         1,
         2,
@@ -6189,16 +6664,20 @@
       "target_answer": "A",
       "order": 228,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
-      "repairs_ok": 0,
-      "detected_patterns": [],
-      "last_errors": [
-        "[error] TransientError: Bedrock transient error after 6 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
+      "status": "approved",
+      "attempts": 3,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "scenario_mismatch",
+        "answer_too_long:repaired",
+        "scenario_mismatch"
       ],
-      "prompt_version": null,
-      "updated_at": "2026-11-04T05:17:35+00:00"
+      "last_errors": [],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:49:11+00:00"
     },
     {
       "quiz_id": "Q-5.5-S3",
@@ -6208,7 +6687,7 @@
       "focus_bullet_ids": [
         "TS-5.5-S3"
       ],
-      "scenario_id": 3,
+      "scenario_id": 6,
       "scenario_candidates": [
         1,
         2,
@@ -6218,16 +6697,18 @@
       "target_answer": "A",
       "order": 229,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
-      "last_errors": [
-        "[error] TransientError: Bedrock transient error after 6 tries: An error occurred (ThrottlingException) when calling the Converse operation (reached max retries: 4): Too many tokens per day, please wait before trying again."
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "scenario_mismatch"
       ],
-      "prompt_version": null,
-      "updated_at": "2026-11-04T05:18:03+00:00"
+      "last_errors": [],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:49:55+00:00"
     },
     {
       "quiz_id": "Q-5.5-S4",
@@ -6247,14 +6728,16 @@
       "target_answer": "D",
       "order": 230,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:49:34+00:00"
     },
     {
       "quiz_id": "Q-5.6-K1",
@@ -6274,14 +6757,16 @@
       "target_answer": "D",
       "order": 231,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:49:53+00:00"
     },
     {
       "quiz_id": "Q-5.6-K2",
@@ -6291,7 +6776,7 @@
       "focus_bullet_ids": [
         "TS-5.6-K2"
       ],
-      "scenario_id": 2,
+      "scenario_id": 3,
       "scenario_candidates": [
         1,
         2,
@@ -6301,14 +6786,19 @@
       "target_answer": "C",
       "order": 232,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "meta_reference",
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:50:49+00:00"
     },
     {
       "quiz_id": "Q-5.6-K3",
@@ -6328,14 +6818,16 @@
       "target_answer": "B",
       "order": 233,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:50:18+00:00"
     },
     {
       "quiz_id": "Q-5.6-K4",
@@ -6355,14 +6847,16 @@
       "target_answer": "C",
       "order": 234,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:50:37+00:00"
     },
     {
       "quiz_id": "Q-5.6-S1",
@@ -6382,14 +6876,18 @@
       "target_answer": "B",
       "order": 235,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
-      "repairs_ok": 0,
-      "detected_patterns": [],
+      "status": "approved",
+      "attempts": 1,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "answer_too_long:repaired"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:51:07+00:00"
     },
     {
       "quiz_id": "Q-5.6-S2",
@@ -6399,7 +6897,7 @@
       "focus_bullet_ids": [
         "TS-5.6-S2"
       ],
-      "scenario_id": 2,
+      "scenario_id": 3,
       "scenario_candidates": [
         1,
         2,
@@ -6409,14 +6907,20 @@
       "target_answer": "C",
       "order": 236,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
-      "repairs_ok": 0,
-      "detected_patterns": [],
+      "status": "approved",
+      "attempts": 3,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "meta_reference",
+        "scenario_mismatch",
+        "answer_too_long:repaired"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:51:53+00:00"
     },
     {
       "quiz_id": "Q-5.6-S3",
@@ -6436,14 +6940,16 @@
       "target_answer": "D",
       "order": 237,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:51:29+00:00"
     },
     {
       "quiz_id": "Q-5.6-S4",
@@ -6463,14 +6969,18 @@
       "target_answer": "A",
       "order": 238,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "meta_reference"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:52:01+00:00"
     },
     {
       "quiz_id": "Q-5.6-S5",
@@ -6490,14 +7000,18 @@
       "target_answer": "A",
       "order": 239,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "meta_reference"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:52:22+00:00"
     },
     {
       "quiz_id": "Q-1.1-X1",
@@ -6517,14 +7031,16 @@
       "target_answer": "C",
       "order": 240,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:52:20+00:00"
     },
     {
       "quiz_id": "Q-1.1-X2",
@@ -6544,14 +7060,16 @@
       "target_answer": "A",
       "order": 241,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:52:42+00:00"
     },
     {
       "quiz_id": "Q-1.2-X1",
@@ -6571,14 +7089,16 @@
       "target_answer": "C",
       "order": 242,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:52:43+00:00"
     },
     {
       "quiz_id": "Q-1.3-X1",
@@ -6598,14 +7118,16 @@
       "target_answer": "A",
       "order": 243,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:53:01+00:00"
     },
     {
       "quiz_id": "Q-1.4-X1",
@@ -6625,14 +7147,16 @@
       "target_answer": "A",
       "order": 244,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:53:01+00:00"
     },
     {
       "quiz_id": "Q-1.5-X1",
@@ -6652,14 +7176,16 @@
       "target_answer": "C",
       "order": 245,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:53:19+00:00"
     },
     {
       "quiz_id": "Q-1.6-X1",
@@ -6670,7 +7196,7 @@
         "TS-1.6-K2",
         "TS-1.6-S2"
       ],
-      "scenario_id": 1,
+      "scenario_id": 4,
       "scenario_candidates": [
         1,
         3,
@@ -6679,14 +7205,20 @@
       "target_answer": "C",
       "order": 246,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
-      "repairs_ok": 0,
-      "detected_patterns": [],
+      "status": "approved",
+      "attempts": 3,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "scenario_mismatch",
+        "scenario_mismatch",
+        "answer_too_long:repaired"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:54:06+00:00"
     },
     {
       "quiz_id": "Q-1.7-X1",
@@ -6706,14 +7238,16 @@
       "target_answer": "B",
       "order": 247,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:53:39+00:00"
     },
     {
       "quiz_id": "Q-2.1-X1",
@@ -6733,14 +7267,16 @@
       "target_answer": "A",
       "order": 248,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:53:59+00:00"
     },
     {
       "quiz_id": "Q-2.2-X1",
@@ -6760,14 +7296,16 @@
       "target_answer": "B",
       "order": 249,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:54:20+00:00"
     },
     {
       "quiz_id": "Q-2.3-X1",
@@ -6787,14 +7325,18 @@
       "target_answer": "B",
       "order": 250,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "duplicate",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "duplicate_of:Q-2.3-S3"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T06:00:54+00:00"
     },
     {
       "quiz_id": "Q-2.4-X1",
@@ -6814,14 +7356,16 @@
       "target_answer": "D",
       "order": 251,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:54:40+00:00"
     },
     {
       "quiz_id": "Q-2.5-X1",
@@ -6832,7 +7376,7 @@
         "TS-2.5-K3",
         "TS-2.5-S3"
       ],
-      "scenario_id": 1,
+      "scenario_id": 3,
       "scenario_candidates": [
         1,
         3,
@@ -6841,14 +7385,18 @@
       "target_answer": "C",
       "order": 252,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:55:15+00:00"
     },
     {
       "quiz_id": "Q-3.1-X1",
@@ -6859,7 +7407,7 @@
         "TS-3.1-K3",
         "TS-3.1-S2"
       ],
-      "scenario_id": 5,
+      "scenario_id": 2,
       "scenario_candidates": [
         2,
         4,
@@ -6868,14 +7416,18 @@
       "target_answer": "B",
       "order": 253,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:55:32+00:00"
     },
     {
       "quiz_id": "Q-3.2-X1",
@@ -6895,14 +7447,16 @@
       "target_answer": "A",
       "order": 254,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:55:32+00:00"
     },
     {
       "quiz_id": "Q-3.3-X1",
@@ -6922,14 +7476,16 @@
       "target_answer": "C",
       "order": 255,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:55:51+00:00"
     },
     {
       "quiz_id": "Q-3.4-X1",
@@ -6940,7 +7496,7 @@
         "TS-3.4-K2",
         "TS-3.4-S2"
       ],
-      "scenario_id": 5,
+      "scenario_id": 2,
       "scenario_candidates": [
         2,
         4,
@@ -6949,14 +7505,18 @@
       "target_answer": "D",
       "order": 256,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:56:12+00:00"
     },
     {
       "quiz_id": "Q-3.5-X1",
@@ -6976,14 +7536,16 @@
       "target_answer": "A",
       "order": 257,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:56:12+00:00"
     },
     {
       "quiz_id": "Q-3.6-X1",
@@ -7003,14 +7565,16 @@
       "target_answer": "A",
       "order": 258,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:56:26+00:00"
     },
     {
       "quiz_id": "Q-4.1-X1",
@@ -7029,14 +7593,16 @@
       "target_answer": "C",
       "order": 259,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:56:34+00:00"
     },
     {
       "quiz_id": "Q-4.2-X1",
@@ -7055,14 +7621,16 @@
       "target_answer": "C",
       "order": 260,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:56:47+00:00"
     },
     {
       "quiz_id": "Q-4.3-X1",
@@ -7081,14 +7649,18 @@
       "target_answer": "D",
       "order": 261,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
-      "repairs": 0,
-      "repairs_ok": 0,
-      "detected_patterns": [],
+      "status": "approved",
+      "attempts": 1,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "answer_too_long:repaired"
+      ],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:56:59+00:00"
     },
     {
       "quiz_id": "Q-4.4-X1",
@@ -7107,14 +7679,16 @@
       "target_answer": "D",
       "order": 262,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:57:05+00:00"
     },
     {
       "quiz_id": "Q-4.5-X1",
@@ -7133,14 +7707,16 @@
       "target_answer": "A",
       "order": 263,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:57:17+00:00"
     },
     {
       "quiz_id": "Q-4.6-X1",
@@ -7159,14 +7735,16 @@
       "target_answer": "A",
       "order": 264,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:57:26+00:00"
     },
     {
       "quiz_id": "Q-5.2-X1",
@@ -7177,7 +7755,7 @@
         "TS-5.2-K2",
         "TS-5.2-S3"
       ],
-      "scenario_id": 2,
+      "scenario_id": 6,
       "scenario_candidates": [
         1,
         2,
@@ -7187,14 +7765,24 @@
       "target_answer": "C",
       "order": 265,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "rejected",
+      "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
-      "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "scenario_mismatch",
+        "scenario_mismatch",
+        "scenario_mismatch"
+      ],
+      "last_errors": [
+        "[review:scenario_mismatch] SC-6는 '구조화된 데이터 추출 시스템(Structured Data Extraction)'을 다루며 비구조화 문서에서 정보를 추출하고 JSON 스키마로 검증하는 시스템입니다. 그러나 이 문항은 고객 서비스 에스컬레이션 패턴(customer service escalation patterns)을 테스트하고 있으며, 고객이 '사람 리뷰를 요청'하고 '시스템이 항상 주소를 잘못 처리한다'고 불만을 표현하는 상황을 다룹니다. 이는 고객 지원 에이전트 시나리오(customer support agent scenario)에 적합하며, 데이터 추출 시스템의 프롬프트 엔지니어링이나 구조화된 출력 설계와는 관련이 없습니다.",
+        "[review:scenario_mismatch] TS-5.2-K2는 '고객이 명시적으로 요구할 때 즉시 에스컬레이션하는 것과 문제가 간단할 때 해결을 제안하는 것의 구분'을 다루는데, 이는 대화형 고객 서비스 에이전트의 맥락에서 의미가 있습니다. 구조화된 데이터 추출 시스템은 일반적으로 고객과 실시간 대화를 하거나 '우려를 인정하고 해결을 제안'하는 방식으로 작동하지 않습니다.",
+        "[review:scenario_mismatch] 옵션 A '우려를 인정하면서 해결을 제안하고(acknowledging frustration while offering resolution)'는 대화형 에이전트의 행동이며, 배치 처리 방식의 데이터 추출 시스템에는 적용되지 않습니다. SC-6 시나리오에서는 시스템이 고객과 이런 식으로 상호작용한다는 설정이 없습니다."
+      ],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:58:29+00:00"
     },
     {
       "quiz_id": "Q-5.3-X1",
@@ -7215,14 +7803,16 @@
       "target_answer": "C",
       "order": 266,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:57:46+00:00"
     },
     {
       "quiz_id": "Q-5.4-X1",
@@ -7243,14 +7833,16 @@
       "target_answer": "D",
       "order": 267,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 1,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:58:10+00:00"
     },
     {
       "quiz_id": "Q-5.5-X1",
@@ -7261,7 +7853,7 @@
         "TS-5.5-K2",
         "TS-5.5-S1"
       ],
-      "scenario_id": 1,
+      "scenario_id": 3,
       "scenario_candidates": [
         1,
         2,
@@ -7271,14 +7863,23 @@
       "target_answer": "A",
       "order": 268,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "rejected",
+      "attempts": 3,
       "repairs": 0,
       "repairs_ok": 0,
-      "detected_patterns": [],
-      "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "scenario_mismatch",
+        "scenario_mismatch",
+        "scenario_mismatch"
+      ],
+      "last_errors": [
+        "[review:scenario_mismatch] scenario_mismatch: 이 문제는 SC-3 (Multi-Agent Research System)의 맥락을 사용하지만, 실제로는 문서 추출 시스템의 신뢰도 보정 및 인간 검토 워크플로우를 다루고 있습니다. 이는 TS-5.5의 원래 맥락인 문서 이해/추출 시스템(예: Textract, IDP)에 더 적합합니다. 'document analysis subagent extracts key facts from legal documents'라는 설정은 억지로 에이전트 시나리오에 끼워 맞춘 것으로, SC-3의 핵심 도메인(Agentic Architecture & Orchestration, Tool Design & MCP Integration, Context Management & Reliability)과 맞지 않습니다. 실제 multi-agent research system의 문제는 에이전트 간 조율, 도구 통합, 컨텍스트 관리 등이어야 합니다.",
+        "[review:scenario_mismatch] off_focus_bullet: 문제가 TS-5.5-K2와 S1을 모두 포커스로 지정했지만, 실제로는 K2(지식)만으로 충분히 답할 수 있습니다. S1(기술)은 '구현'을 강조하지만, 문제는 단순히 '어떤 접근법이 최선인가'를 묻고 있으며, 실제 구현 세부사항(샘플 크기 결정, 샘플링 메커니즘 설정, 오류율 계산 방법 등)을 요구하지 않습니다. 옵션 A는 stratified random sampling을 '사용한다'고만 말할 뿐 구현 기술을 테스트하지 않습니다."
+      ],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:59:33+00:00"
     },
     {
       "quiz_id": "Q-5.6-X1",
@@ -7289,7 +7890,7 @@
         "TS-5.6-K4",
         "TS-5.6-S4"
       ],
-      "scenario_id": 2,
+      "scenario_id": 3,
       "scenario_candidates": [
         1,
         2,
@@ -7299,14 +7900,425 @@
       "target_answer": "D",
       "order": 269,
       "pilot": false,
-      "status": "pending",
-      "attempts": 0,
+      "status": "approved",
+      "attempts": 2,
       "repairs": 0,
       "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "scenario_mismatch"
+      ],
+      "last_errors": [],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T05:59:15+00:00"
+    },
+    {
+      "quiz_id": "Q-1.2-S2-F",
+      "slot_type": "fill",
+      "task_id": "TS-1.2",
+      "domain": 1,
+      "focus_bullet_ids": [
+        "TS-1.2-S2"
+      ],
+      "scenario_id": 3,
+      "scenario_candidates": [
+        3,
+        1,
+        2,
+        6,
+        5,
+        4
+      ],
+      "target_answer": "D",
+      "order": 270,
+      "pilot": false,
+      "status": "approved",
+      "attempts": 2,
+      "repairs": 0,
+      "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "meta_reference"
+      ],
+      "last_errors": [],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T06:08:50+00:00"
+    },
+    {
+      "quiz_id": "Q-2.5-K1-F",
+      "slot_type": "fill",
+      "task_id": "TS-2.5",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.5-K1"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        4,
+        2,
+        5,
+        3,
+        6,
+        1
+      ],
+      "target_answer": "B",
+      "order": 271,
+      "pilot": false,
+      "status": "approved",
+      "attempts": 1,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "answer_too_long:repaired"
+      ],
+      "last_errors": [],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T06:08:47+00:00"
+    },
+    {
+      "quiz_id": "Q-2.5-S5-F",
+      "slot_type": "fill",
+      "task_id": "TS-2.5",
+      "domain": 2,
+      "focus_bullet_ids": [
+        "TS-2.5-S5"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        1,
+        3,
+        4
+      ],
+      "target_answer": "C",
+      "order": 272,
+      "pilot": false,
+      "status": "approved",
+      "attempts": 1,
+      "repairs": 0,
+      "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       "detected_patterns": [],
       "last_errors": [],
-      "prompt_version": null,
-      "updated_at": null
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T06:09:06+00:00"
+    },
+    {
+      "quiz_id": "Q-3.1-S3-F",
+      "slot_type": "fill",
+      "task_id": "TS-3.1",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.1-S3"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "A",
+      "order": 273,
+      "pilot": false,
+      "status": "approved",
+      "attempts": 1,
+      "repairs": 0,
+      "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T06:09:10+00:00"
+    },
+    {
+      "quiz_id": "Q-3.5-S2-F",
+      "slot_type": "fill",
+      "task_id": "TS-3.5",
+      "domain": 3,
+      "focus_bullet_ids": [
+        "TS-3.5-S2"
+      ],
+      "scenario_id": 2,
+      "scenario_candidates": [
+        2,
+        4,
+        5
+      ],
+      "target_answer": "A",
+      "order": 274,
+      "pilot": false,
+      "status": "approved",
+      "attempts": 2,
+      "repairs": 0,
+      "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "meta_reference"
+      ],
+      "last_errors": [],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T06:09:37+00:00"
+    },
+    {
+      "quiz_id": "Q-5.1-S2-F",
+      "slot_type": "fill",
+      "task_id": "TS-5.1",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.1-S2"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        6,
+        4,
+        5,
+        3,
+        2
+      ],
+      "target_answer": "A",
+      "order": 275,
+      "pilot": false,
+      "status": "approved",
+      "attempts": 1,
+      "repairs": 0,
+      "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T06:09:32+00:00"
+    },
+    {
+      "quiz_id": "Q-5.2-K2-F",
+      "slot_type": "fill",
+      "task_id": "TS-5.2",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.2-K2"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "C",
+      "order": 276,
+      "pilot": false,
+      "status": "rejected",
+      "attempts": 3,
+      "repairs": 0,
+      "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "scenario_mismatch",
+        "scenario_mismatch",
+        "multiple_correct"
+      ],
+      "last_errors": [
+        "[review:multiple_correct] TS-5.2-K2는 '명시적 요구 시 즉시 에스컬레이션' 대 '문제가 간단할 때 해결 제안'의 구분을 테스트합니다. 그러나 stem의 고객 메시지는 두 가지 요소를 모두 포함합니다: (1) \"I want a refund\" (해결 가능한 구체적 요청)와 (2) \"I need to talk to a real person... connect me to someone now\" (명시적 에스컬레이션 요구). TS-5.2-S3는 '불만을 인정하면서 해결 제안, 고객이 선호를 재확인할 경우에만 에스컬레이션'을 명시합니다. 이 상황에서 옵션 A(즉시 에스컬레이션)와 옵션 B(해결 제안 후 재요청 시 에스컬레이션)는 모두 방어 가능합니다. 고객의 \"connect me to someone now\"를 절대적 명령으로 해석하면 A가 맞고, \"I want a refund\"를 주요 의도로 보고 에스컬레이션 요청을 초기 불만 표현으로 해석하면 B가 맞습니다. TS-5.2-S2는 '명시적 요청을 조사 없이 즉시 존중'을 요구하지만, TS-5.2-S3는 '문제가 에이전트 능력 내일 때 해결 제안'을 허용합니다. 이 두 지침 사이의 경계가 stem에서 모호하여 정답이 불명확합니다.",
+        "[review:multiple_correct] 옵션 B의 rationale은 '명시적 에스컬레이션 요구에는 즉시 응답해야 합니다'라고 인정하면서도 옵션 B를 오답으로 표시하는데, 이는 stem의 고객 메시지가 실제로 얼마나 '명시적'인지에 대한 해석 차이를 보여줍니다. Focus item TS-5.2-K2만으로는 이 경계 사례를 명확히 구분할 수 없습니다."
+      ],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T06:10:48+00:00"
+    },
+    {
+      "quiz_id": "Q-5.2-S2-F",
+      "slot_type": "fill",
+      "task_id": "TS-5.2",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.2-S2"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        4,
+        5,
+        3,
+        6,
+        2
+      ],
+      "target_answer": "C",
+      "order": 277,
+      "pilot": false,
+      "status": "approved",
+      "attempts": 1,
+      "repairs": 0,
+      "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T06:09:55+00:00"
+    },
+    {
+      "quiz_id": "Q-5.2-S3-F",
+      "slot_type": "fill",
+      "task_id": "TS-5.2",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.2-S3"
+      ],
+      "scenario_id": 1,
+      "scenario_candidates": [
+        1,
+        2,
+        3,
+        6
+      ],
+      "target_answer": "D",
+      "order": 278,
+      "pilot": false,
+      "status": "approved",
+      "attempts": 1,
+      "repairs": 0,
+      "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T06:10:14+00:00"
+    },
+    {
+      "quiz_id": "Q-5.4-K3-F",
+      "slot_type": "fill",
+      "task_id": "TS-5.4",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.4-K3"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        4,
+        2,
+        5,
+        1,
+        3,
+        6
+      ],
+      "target_answer": "D",
+      "order": 279,
+      "pilot": false,
+      "status": "approved",
+      "attempts": 1,
+      "repairs": 1,
+      "repairs_ok": 1,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "answer_too_long:repaired"
+      ],
+      "last_errors": [],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T06:10:41+00:00"
+    },
+    {
+      "quiz_id": "Q-5.4-S3-F",
+      "slot_type": "fill",
+      "task_id": "TS-5.4",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.4-S3"
+      ],
+      "scenario_id": 4,
+      "scenario_candidates": [
+        4,
+        2,
+        5,
+        1,
+        3,
+        6
+      ],
+      "target_answer": "A",
+      "order": 280,
+      "pilot": false,
+      "status": "approved",
+      "attempts": 2,
+      "repairs": 0,
+      "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [
+        "meta_reference"
+      ],
+      "last_errors": [],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T06:11:13+00:00"
+    },
+    {
+      "quiz_id": "Q-5.5-K1-F",
+      "slot_type": "fill",
+      "task_id": "TS-5.5",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.5-K1"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        6,
+        4,
+        5,
+        1,
+        3,
+        2
+      ],
+      "target_answer": "C",
+      "order": 281,
+      "pilot": false,
+      "status": "approved",
+      "attempts": 1,
+      "repairs": 0,
+      "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T06:11:09+00:00"
+    },
+    {
+      "quiz_id": "Q-5.5-S1-F",
+      "slot_type": "fill",
+      "task_id": "TS-5.5",
+      "domain": 5,
+      "focus_bullet_ids": [
+        "TS-5.5-S1"
+      ],
+      "scenario_id": 6,
+      "scenario_candidates": [
+        6,
+        5,
+        4,
+        1,
+        3,
+        2
+      ],
+      "target_answer": "A",
+      "order": 282,
+      "pilot": false,
+      "status": "approved",
+      "attempts": 1,
+      "repairs": 0,
+      "repairs_ok": 0,
+      "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "reviewer_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "detected_patterns": [],
+      "last_errors": [],
+      "prompt_version": "3d2b61fc",
+      "updated_at": "2026-11-04T06:11:28+00:00"
     }
   ]
 }

@@ -4,13 +4,12 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
 기획: SERVICE.md · 설계: docs/DESIGN.md · 평가: evaluation/test_queries.csv
 설계 세부는 필요할 때 docs/DESIGN.md의 해당 절(§)을 읽을 것. 전체를 미리 읽지 말 것.
 
-## 현재 단계: S2 완료 → S3(=P1) 시작 가능 · S1 후반 병행 (DESIGN §1-1 단계표)
+## 현재 단계: S1·S2 완료 → S3(=P1) (DESIGN §1-1 단계표)
 - 완료: S0(ingest 62/240) · S1 전반(문제 풀 승인 266/284 슬롯(93.7%), 세부 항목 커버리지 240/240,
   정답이 가장 긴 보기 54% → 33.8%(목표 35% 이하 달성, --rebalance-length 성공 55·원본 유지 20),
   5% 초과 비율 28% → 7.9%(참고). 수치·예외 기록은 evaluation/quiz_pool_report.md)
-  · S1 후반 사람 표본 검토 38/38 OK(오류 0, 경미 0) — 재검토 시 review_sample.xlsx 기입 → review_sample.py --apply
-- S1 후반 남은 작업 (S2와 병행 가능):
-  - scripts/seed_study_log.py (더미 사용자 demo_heavy·demo_new)
+  · S1 후반: 사람 표본 검토 38/38 OK(오류 0, 경미 0) — 재검토 시 review_sample.xlsx 기입 → review_sample.py --apply
+    · study_log 시드: demo_heavy 61회(약점 D2 > D5 > D1 > D4 > D3), demo_new 기록 없음
 - S2(=P0) 완료: search_guide, get_quiz(MCP), submit_answer(MCP) + Supervisor + /query
   - evaluation/smoke_p0.py 18/18 PASS (개념 질문 → 풀 출제 → 채점, study_log.json 기록, 정답 비노출)
   - RAGAS 3건 기준선 (evaluation/ragas_smoke.json): faithfulness 0.896 · recall 1.0 · precision 0.917 · relevancy 0.681
@@ -34,6 +33,7 @@ python scripts/build_quiz_pool.py --resume --concurrency 1   # 동시 실행 수
 python scripts/review_sample.py                      # 사람 표본 검토 xlsx + 결과 CSV (층화, repair 문항 층마다 1개 이상)
 python scripts/review_sample.py --apply             # 검토 반영: human_checked, 오류 → needs_fix, 리포트 갱신 (--dry-run 가능)
 python scripts/pool_report.py                        # evaluation/quiz_pool_report.md 자동 절 갱신
+python scripts/seed_study_log.py                     # 더미 사용자 demo_heavy·demo_new → data/study_log.json (--force 재생성, --dry-run)
 uvicorn src.api:api --port 8000                      # API 서버
 python evaluation/smoke_p0.py                        # P0 한 바퀴 검증 (--url 실행 중 서버, --keep 기록 남김)
 python evaluation/ragas_smoke.py                     # RAGAS 3건 스모크 → evaluation/ragas_smoke.json

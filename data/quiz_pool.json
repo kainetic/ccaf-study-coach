@@ -415,7 +415,7 @@
       "answer_too_long:repaired",
       "scenario_mismatch"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T04:48:26+00:00"
@@ -843,7 +843,7 @@
     "detected_patterns": [
       "length_cue:rebalanced"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T04:49:09+00:00"
@@ -1387,7 +1387,7 @@
       "scenario_mismatch",
       "length_cue:rebalance_failed"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T04:50:52+00:00"
@@ -1553,7 +1553,7 @@
     "status": "approved",
     "review_retries": 0,
     "detected_patterns": [],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T04:50:57+00:00"
@@ -1936,7 +1936,7 @@
     "status": "approved",
     "review_retries": 0,
     "detected_patterns": [],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T04:51:56+00:00"
@@ -2316,7 +2316,7 @@
     "detected_patterns": [
       "length_cue:rebalanced"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T04:52:44+00:00"
@@ -2528,7 +2528,7 @@
     "detected_patterns": [
       "length_cue:rebalanced"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T04:53:19+00:00"
@@ -2655,7 +2655,7 @@
     "status": "approved",
     "review_retries": 0,
     "detected_patterns": [],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T04:53:33+00:00"
@@ -2862,7 +2862,7 @@
     "status": "approved",
     "review_retries": 0,
     "detected_patterns": [],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T04:54:03+00:00"
@@ -2946,7 +2946,7 @@
     "detected_patterns": [
       "meta_reference"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T04:54:23+00:00"
@@ -3665,7 +3665,7 @@
       "answer_not_supported",
       "length_cue:rebalanced"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T04:56:23+00:00"
@@ -4335,7 +4335,7 @@
     "status": "approved",
     "review_retries": 0,
     "detected_patterns": [],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T04:57:40+00:00"
@@ -4466,7 +4466,7 @@
       "answer_not_supported",
       "other"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T04:58:42+00:00"
@@ -4719,7 +4719,7 @@
     "detected_patterns": [
       "answer_not_supported"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T04:59:19+00:00"
@@ -5139,7 +5139,7 @@
     "detected_patterns": [
       "length_cue:rebalanced"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T05:00:29+00:00"
@@ -5223,7 +5223,7 @@
     "detected_patterns": [
       "meta_reference"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T05:00:45+00:00"
@@ -5971,7 +5971,7 @@
     "detected_patterns": [
       "answer_too_long:repaired"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T05:02:26+00:00"
@@ -6145,7 +6145,7 @@
       "meta_reference",
       "scenario_mismatch"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T05:03:16+00:00"
@@ -6654,7 +6654,7 @@
       "scenario_mismatch",
       "length_cue:rebalanced"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T05:04:42+00:00"
@@ -6736,7 +6736,7 @@
     "status": "approved",
     "review_retries": 0,
     "detected_patterns": [],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T05:04:39+00:00"
@@ -6777,7 +6777,7 @@
     "status": "approved",
     "review_retries": 0,
     "detected_patterns": [],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T05:04:41+00:00"
@@ -7829,7 +7829,7 @@
       "meta_reference",
       "length_cue:rebalanced"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T05:07:20+00:00"
@@ -7956,7 +7956,7 @@
       "answer_too_long:repaired",
       "length_cue:rebalance_failed"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T05:07:48+00:00"
@@ -8296,7 +8296,7 @@
       "meta_reference",
       "scenario_mismatch"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T05:08:52+00:00"
@@ -9070,7 +9070,7 @@
       "answer_too_long:repaired",
       "length_cue:rebalanced"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T05:12:12+00:00"
@@ -9287,7 +9287,7 @@
     "detected_patterns": [
       "length_cue:rebalanced"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T04:36:22+00:00"
@@ -9897,7 +9897,7 @@
     "status": "approved",
     "review_retries": 0,
     "detected_patterns": [],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T05:50:18+00:00"
@@ -9938,7 +9938,7 @@
     "status": "approved",
     "review_retries": 0,
     "detected_patterns": [],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T05:50:37+00:00"
@@ -10114,7 +10114,7 @@
     "detected_patterns": [
       "meta_reference"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T05:52:01+00:00"
@@ -10329,7 +10329,7 @@
     "status": "approved",
     "review_retries": 0,
     "detected_patterns": [],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T05:53:01+00:00"
@@ -10373,7 +10373,7 @@
     "detected_patterns": [
       "length_cue:rebalanced"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T05:53:01+00:00"
@@ -10461,7 +10461,7 @@
       "scenario_mismatch",
       "answer_too_long:repaired"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T05:54:06+00:00"
@@ -10764,7 +10764,7 @@
       "scenario_mismatch",
       "length_cue:rebalanced"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T05:55:32+00:00"
@@ -10806,7 +10806,7 @@
     "status": "approved",
     "review_retries": 0,
     "detected_patterns": [],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T05:55:32+00:00"
@@ -10976,7 +10976,7 @@
     "status": "approved",
     "review_retries": 0,
     "detected_patterns": [],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T05:56:26+00:00"
@@ -11152,7 +11152,7 @@
     "detected_patterns": [
       "length_cue:rebalanced"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T05:57:05+00:00"
@@ -11801,7 +11801,7 @@
     "status": "approved",
     "review_retries": 0,
     "detected_patterns": [],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T06:09:55+00:00"
@@ -11931,7 +11931,7 @@
     "detected_patterns": [
       "meta_reference"
     ],
-    "human_checked": false,
+    "human_checked": true,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T06:11:13+00:00"

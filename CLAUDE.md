@@ -8,9 +8,8 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
 - 완료: S0(ingest 62/240) · S1 전반(문제 풀 승인 266/284 슬롯(93.7%), 세부 항목 커버리지 240/240,
   정답이 가장 긴 보기 54% → 33.8%(목표 35% 이하 달성, --rebalance-length 성공 55·원본 유지 20),
   5% 초과 비율 28% → 7.9%(참고). 수치·예외 기록은 evaluation/quiz_pool_report.md)
+  · S1 후반 사람 표본 검토 38/38 OK(오류 0, 경미 0) — 재검토 시 review_sample.xlsx 기입 → review_sample.py --apply
 - S1 후반 남은 작업 (S2와 병행 가능):
-  - 사람 표본 검토: evaluation/review_sample.xlsx 시트1에 내 답·판정·사유 기입 → python scripts/review_sample.py --apply
-    (성공 기준 오류 = 판정 "오류"만, 경미는 별도. xlsx는 커밋 금지, 결과는 human_review_results.csv)
   - scripts/seed_study_log.py (더미 사용자 demo_heavy·demo_new)
 - S2(=P0) 완료: search_guide, get_quiz(MCP), submit_answer(MCP) + Supervisor + /query
   - evaluation/smoke_p0.py 18/18 PASS (개념 질문 → 풀 출제 → 채점, study_log.json 기록, 정답 비노출)

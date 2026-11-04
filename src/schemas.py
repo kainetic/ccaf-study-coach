@@ -159,7 +159,7 @@ SlotStatus = Literal["pending", "approved", "rejected", "duplicate"]
 class ManifestSlot(BaseModel):
     """생성 슬롯 하나. quiz_id가 배치의 custom_id 역할 (TS 4.5)."""
     quiz_id: str
-    slot_type: Literal["base", "extra", "fill"]
+    slot_type: Literal["base", "extra", "fill", "exception"]   # exception: 항목당 2슬롯 규칙의 명시적 예외 (§5-2)
     task_id: str
     domain: int
     focus_bullet_ids: list[str]

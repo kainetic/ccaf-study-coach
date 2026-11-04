@@ -4,13 +4,16 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
 기획: SERVICE.md · 설계: docs/DESIGN.md · 평가: evaluation/test_queries.csv
 설계 세부는 필요할 때 docs/DESIGN.md의 해당 절(§)을 읽을 것. 전체를 미리 읽지 말 것.
 
-## 현재 단계: 선행 → P0 (DESIGN §1-1)
-- 선행: src/ingest.py(청크 62개 + 세부 항목 240개) · src/quiz_gen.py(오프라인 전용) · 파일럿 풀 10문제
-  → 저녁에 풀 전체 생성(270문제, 세부 항목 단위, DESIGN §5-2) 시작
-- P0 도구 3개만: search_guide, get_quiz(MCP), submit_answer(MCP)
-- P0 완료 기준: /query 3회 호출로 "개념 질문 → 풀 출제 → 채점"이 동작하고
+## 현재 단계: S1 후반 ∥ S2(=P0) (DESIGN §1-1 단계표)
+- 완료: S0(ingest 62/240) · S1 전반(문제 풀 승인 265, 세부 항목 커버리지 239/240)
+- S1 후반 남은 작업 (S2와 병행 가능):
+  - 사람 표본 검토: evaluation/human_review_sample.csv에 verdict 기입 → python scripts/pool_report.py
+  - scripts/seed_study_log.py (더미 사용자 demo_heavy·demo_new)
+- S2(=P0) 도구 3개만: search_guide, get_quiz(MCP), submit_answer(MCP)
+- S2 완료 기준: /query 3회 호출로 "개념 질문 → 풀 출제 → 채점"이 동작하고
   채점 결과가 data/study_log.json에 기록됨 (evaluation/smoke_p0.py 통과)
-- P0가 끝나기 전에는 P1·v2 작업을 시작하지 않는다
+- S2가 끝나기 전에는 S3(=P1)·선택 항목(v2) 작업을 시작하지 않는다
+- S4(round1)는 S3 완료 즉시, 개선 작업보다 먼저 실행한다
 
 ## 명령 (Windows PowerShell)
 ..\.venv\Scripts\activate; pip install -r requirements.txt   # 상위 venv 공용 (버전 동일 고정, 독립 저장소 분리 시 새 venv)
@@ -20,6 +23,10 @@ python -m src.ingest                                 # 가이드 PDF → guide_c
 python scripts/build_quiz_pool.py --pilot 10         # 파일럿 풀
 python scripts/build_quiz_pool.py --resume           # 전체 풀 270문제 (매니페스트 기준 이어서, 기본 슬롯 240개 먼저)
 python scripts/build_quiz_pool.py --fill-gaps        # 승인 문제가 없는 세부 항목만 보충
+python scripts/build_quiz_pool.py --rebalance-length # 정답이 가장 긴 오답보다 5% 넘게 긴 승인 문항의 보기 재조정
+python scripts/build_quiz_pool.py --exception-slot TS-5.2-K2:1   # 미커버 항목 시나리오 고정 예외 슬롯
+python scripts/review_sample.py                      # 사람 표본 검토 CSV (층화, repair 문항 층마다 1개 이상)
+python scripts/pool_report.py                        # evaluation/quiz_pool_report.md 자동 절 갱신
 uvicorn src.api:api --port 8000                      # API 서버
 python evaluation/smoke_p0.py                        # P0 한 바퀴 검증
 python evaluation/run_eval.py                        # 20건 평가 (P1부터)
@@ -44,7 +51,7 @@ MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언�
 - 승인(approved) 상태가 아닌 문제는 출제하지 않는다
 - 런타임에 문제를 생성하지 않는다. quiz_gen은 scripts/build_quiz_pool.py에서만 호출하고 에이전트 도구로 노출하지 않는다
 - 세부 항목 수가 240개가 아니면 ingest 파싱 오류로 보고 멈춘다
-- v2 항목은 요청 전까지 만들지 않는다: reset_progress HITL, 요약 미들웨어, 웹 UI, Dockerfile
+- 선택 항목(v2)은 요청 전까지 만들지 않는다: reset_progress HITL, 요약 미들웨어, 웹 UI, Dockerfile
 - 커밋 금지: data/raw/*.pdf, data/guide_chunks.jsonl, data/guide_bullets.jsonl, chroma_db/, .env
   (data/quiz_pool.json, quiz_pool_manifest.json, study_log.json은 커밋)
 - evaluation/test_queries.csv와 ragas_reference.csv의 기대값은 묻지 않고 바꾸지 않는다

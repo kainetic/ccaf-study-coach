@@ -29,6 +29,7 @@ from src.quiz_gen import (  # noqa: E402
     short_model,
     FORBIDDEN_SCENARIOS, ScenarioRanker, dedupe, keywords, load_corpus, mismatched_scenarios, now_iso,
     order_scenarios, pair_extra_bullets, pick_fewshot, rejected_for_scenario, seeded_rng,
+    REBALANCE_SELECT, correct_vs_longest,
 )
 from src.schemas import LABELS, ManifestSlot, QuizItem, QuizManifest  # noqa: E402
 
@@ -45,6 +46,8 @@ SCENARIO_OVERRIDES = {
 }
 COVERAGE_TARGET = 228                                        # 240의 95%
 LONGEST_TARGET = 0.35                                        # 정답이 가장 긴 보기 비율 상한 (DESIGN §9-3)
+# 사후 작업(정답 길이 재조정·예외 슬롯) 모델 순서: us Sonnet 4.5 할당량을 아끼려고 제외, global 4.5 우선
+MAINT_MODEL_CHAIN = [m for m in config.QUIZ_GEN_MODEL_CHAIN if m != config.MODEL_ID]
 TRANSIENT_STOP = 3                                           # 일시 오류로 연속 실패한 슬롯이 이 수가 되면 실행 중단
 DEFAULT_CONCURRENCY = 2                                      # 과정 공용 Bedrock 할당량 기준 (쓰로틀링으로 4 → 2)
 
@@ -237,7 +240,7 @@ def reset_stale(manifest: QuizManifest, pool: dict[str, QuizItem], built: list[M
         if s.status == "pending" or s.prompt_version == pv:
             continue
         pool.pop(s.quiz_id, None)
-        if s.slot_type == "fill":
+        if s.slot_type in ("fill", "exception"):
             manifest.slots.remove(s)
             removed.append(s.quiz_id)
             continue
@@ -301,6 +304,93 @@ def add_fill_slots(manifest: QuizManifest, pool: dict[str, QuizItem], corpus: Co
     return new
 
 
+
+def add_exception_slot(manifest: QuizManifest, pool: dict[str, QuizItem], corpus: Corpus, spec: str) -> ManifestSlot:
+    """미커버 세부 항목 하나에 시나리오를 고정한 예외 슬롯 (항목당 base+fill 2슬롯 규칙의 명시적 예외, DESIGN §5-2).
+    spec 예: "TS-5.2-K2:1" → Q-5.2-K2-E, scenario_candidates=[1] (재시도에서도 SC-1)."""
+    try:
+        bid, sc_txt = spec.rsplit(":", 1)
+        sc = int(sc_txt)
+    except ValueError:
+        raise CorpusError(f"형식은 BULLET_ID:SC (예: TS-5.2-K2:1), 입력 {spec!r}")
+    b = corpus.bullet_by_id.get(bid)
+    if b is None:
+        raise CorpusError(f"알 수 없는 세부 항목 {bid}")
+    if sc not in range(1, 7) or sc in FORBIDDEN_SCENARIOS.get(b.task_id, set()):
+        raise CorpusError(f"{b.task_id} × SC-{sc}는 허용되지 않는 조합")
+    covered = {x for it in pool.values() if it.status == "approved" for x in it.focus_bullet_ids}
+    if bid in covered:
+        raise CorpusError(f"{bid}는 이미 승인 문항이 있음 — 예외 슬롯은 미커버 항목에만")
+    quiz_id = qid(b.task_id, bid.rsplit("-", 1)[1] + "-E")
+    if any(s.quiz_id == quiz_id for s in manifest.slots):
+        raise CorpusError(f"{quiz_id}가 이미 있음")
+    slot = ManifestSlot(quiz_id=quiz_id, slot_type="exception", task_id=b.task_id, domain=b.domain,
+                        focus_bullet_ids=[bid], scenario_id=sc, scenario_candidates=[sc],
+                        target_answer=fill_target(quiz_id), order=max(s.order for s in manifest.slots) + 1)
+    manifest.slots.append(slot)
+    return slot
+
+
+def rebalance_targets(manifest: QuizManifest, pool: dict[str, QuizItem]) -> list[QuizItem]:
+    """정답이 가장 긴 오답보다 5% 넘게 긴 승인 문항 (이미 재조정을 시도한 문항은 제외 → 재실행해도 멱등)."""
+    order = {s.quiz_id: s.order for s in manifest.slots}
+    out = [it for it in pool.values()
+           if it.status == "approved" and correct_vs_longest(it) > REBALANCE_SELECT
+           and not any(p.startswith("length_cue:") for p in it.detected_patterns)]
+    return sorted(out, key=lambda it: order.get(it.quiz_id, 10**9))
+
+
+def run_rebalance(gen: QuizGenerator, manifest: QuizManifest, pool: dict[str, QuizItem],
+                  targets: list[QuizItem], concurrency: int) -> bool:
+    """재조정 실행. 성공하면 보기 교체, 실패하면 원래 문항 유지. 일시 오류로 연속 실패하면 run_slots와 같이 중단."""
+    if not targets:
+        print("[rebalance] 처리할 문항 없음")
+        return True
+    by_id = {s.quiz_id: s for s in manifest.slots}
+    ex = ThreadPoolExecutor(max_workers=concurrency)
+    futs = {ex.submit(gen.rebalance_item, by_id[it.quiz_id], it): it for it in targets}
+    done = ok_n = 0
+    streak, stopped = 0, False
+    try:
+        for fut in as_completed(futs):
+            it = futs[fut]
+            if fut.cancelled():
+                continue
+            done += 1
+            s = by_id[it.quiz_id]
+            try:
+                r = fut.result()
+            except Exception as e:  # noqa: BLE001 — 문항은 그대로, 다음 실행에서 다시 대상
+                print(f"  [{done}/{len(targets)}] {it.quiz_id}: 오류 → 그대로 유지 ({type(e).__name__}: {str(e)[:120]})")
+                streak = streak + 1 if isinstance(e, TransientError) else 0
+                if streak >= TRANSIENT_STOP and not stopped:
+                    stopped = True
+                    n_cancel = sum(f.cancel() for f in futs)
+                    print(f"[rebalance] 일시 오류 연속 {streak}회 — 중단 (취소 {n_cancel}개)", flush=True)
+                continue
+            streak = 0
+            if r.ok:
+                ok_n += 1
+                pool[it.quiz_id] = r.item
+                s.detected_patterns = s.detected_patterns + ["length_cue:rebalanced"]
+                s.reviewer_model = r.reviewer_model
+                print(f"  [{done}/{len(targets)}] {it.quiz_id}: 재조정 {r.before:.2f} → {r.after:.2f} "
+                      f"(호출 {r.calls}, 검토 {short_model(r.reviewer_model)})")
+            else:
+                pool[it.quiz_id] = it.model_copy(
+                    update={"detected_patterns": it.detected_patterns + ["length_cue:rebalance_failed"]})
+                s.detected_patterns = s.detected_patterns + ["length_cue:rebalance_failed"]
+                print(f"  [{done}/{len(targets)}] {it.quiz_id}: 실패 → 원래 문항 유지 ({r.reason})")
+            s.updated_at = now_iso()
+            save(manifest, pool)
+    except KeyboardInterrupt:
+        save(manifest, pool)
+        print("\n[rebalance] 중단 — 처리된 문항은 저장됨. 다시 실행하면 나머지만 처리", flush=True)
+        os._exit(130)
+    ex.shutdown(wait=True)
+    print(f"[rebalance] 성공 {ok_n} / 처리 {done} / 대상 {len(targets)}")
+    return not stopped
+
 # ---------------------------------------------------------------- 실행
 
 def run_slots(gen: QuizGenerator, manifest: QuizManifest, pool: dict[str, QuizItem],
@@ -314,7 +404,7 @@ def run_slots(gen: QuizGenerator, manifest: QuizManifest, pool: dict[str, QuizIt
     print(f"[run] 슬롯 {len(targets)}개, 동시 {concurrency}, prompt_version {pv}")
 
     def avoid_for(s: ManifestSlot) -> list[str]:
-        if s.slot_type != "fill":
+        if s.slot_type not in ("fill", "exception"):
             return []
         return [it.stem for it in pool.values() if it.status == "approved" and it.task_id == s.task_id]
 
@@ -462,6 +552,9 @@ def print_summary(manifest: QuizManifest, pool: dict[str, QuizItem], corpus: Cor
         longest = sum(1 for i in approved if longest_is_correct(i))
         print(f"[summary] 정답이 가장 긴 보기: {longest}/{len(approved)} ({longest / len(approved):.0%}, "
               f"목표 {LONGEST_TARGET:.0%} 이하, 우연 수준 25%)")
+        over5 = sum(1 for i in approved if correct_vs_longest(i) > REBALANCE_SELECT)
+        print(f"[summary] 정답이 가장 긴 오답보다 5% 넘게 긴 보기: {over5}/{len(approved)} ({over5 / len(approved):.0%}, "
+              "보조 지표)")
     print(f"[summary] 이번 실행 중복 판정: {n_dups}")
     print_model_summary(manifest, pool, models)
     if n_stale := stale_count(manifest):
@@ -505,9 +598,13 @@ def main() -> int:
     mode.add_argument("--resume", action="store_true", help="pending 슬롯을 순서대로 생성")
     mode.add_argument("--fill-gaps", action="store_true",
                       help="승인 문제가 없는 세부 항목만 보충 (기본/추가 슬롯이 모두 끝난 뒤에만)")
+    mode.add_argument("--rebalance-length", action="store_true",
+                      help="정답이 가장 긴 오답보다 5%% 넘게 긴 승인 문항의 보기를 재조정 (목표 0.95, 재검토 필수)")
+    mode.add_argument("--exception-slot", metavar="BULLET_ID:SC",
+                      help="미커버 세부 항목에 시나리오 고정 예외 슬롯 1개 생성 (예: TS-5.2-K2:1)")
     mode.add_argument("--reset-stale", action="store_true",
                       help="현재 prompt_version과 다른 버전으로 처리된 슬롯을 pending으로 되돌림 (fill 슬롯은 삭제)")
-    ap.add_argument("--limit", type=int, help="--resume에서 처리할 최대 슬롯 수")
+    ap.add_argument("--limit", type=int, help="--resume·--rebalance-length에서 처리할 최대 수")
     ap.add_argument("--concurrency", type=int, default=DEFAULT_CONCURRENCY,
                     help=f"동시 실행 슬롯 수 (기본 {DEFAULT_CONCURRENCY})")
     ap.add_argument("--no-dedupe", action="store_true", help="실행 후 중복 제거 생략")
@@ -563,7 +660,9 @@ def main() -> int:
     if n_stale := stale_count(manifest):
         print(f"[build] 경고: 현재 프롬프트({prompt_version()})와 다른 버전으로 처리된 슬롯 {n_stale}개 "
               "— 새 프롬프트로 다시 만들려면 --reset-stale")
-    models = ModelPool()                         # 생성·검토·repair·시나리오 순위가 함께 쓰는 Sonnet 체인
+    maint = args.rebalance_length or bool(args.exception_slot)
+    # 생성·검토·repair·시나리오 순위가 함께 쓰는 Sonnet 체인 (사후 작업은 us Sonnet 4.5 제외)
+    models = ModelPool(MAINT_MODEL_CHAIN) if maint else ModelPool()
     print("[build] 모델 체인: " + " → ".join(short_model(m) for m in models.model_ids))
     gen = QuizGenerator(corpus, models)
 
@@ -579,8 +678,23 @@ def main() -> int:
             pool.pop(s.quiz_id, None)
         save(manifest, pool)
         ok = run_slots(gen, manifest, pool, targets, args.concurrency, verbose=True)
+    elif args.rebalance_length:
+        targets = rebalance_targets(manifest, pool)
+        if args.limit is not None:
+            targets = targets[:args.limit]
+        print(f"[rebalance] 대상 {len(targets)}개 (정답 > 가장 긴 오답 × {REBALANCE_SELECT}, 처리 이력 없는 승인 문항)")
+        ok = run_rebalance(gen, manifest, pool, targets, args.concurrency)
+    elif args.exception_slot:
+        try:
+            slot = add_exception_slot(manifest, pool, corpus, args.exception_slot)
+        except CorpusError as e:
+            print(f"[exception] 거부: {e}", file=sys.stderr)
+            return 1
+        print(f"[exception] {slot.quiz_id}: {slot.focus_bullet_ids[0]} SC-{slot.scenario_id} 고정 (항목당 2슬롯 규칙 예외)")
+        save(manifest, pool)
+        ok = run_slots(gen, manifest, pool, [slot], args.concurrency, verbose=True)
     elif args.resume:
-        rank = {"base": 0, "extra": 1, "fill": 2}
+        rank = {"base": 0, "extra": 1, "fill": 2, "exception": 3}
         targets = sorted((s for s in manifest.slots if s.status == "pending"),
                          key=lambda s: (rank[s.slot_type], s.order))
         if args.limit is not None:
@@ -595,7 +709,8 @@ def main() -> int:
         ok = run_slots(gen, manifest, pool, targets, args.concurrency, verbose=False)
 
     # 쓰로틀링으로 멈췄으면 임베딩 호출(중복 제거)도 건너뛴다 — 다음 실행 끝에 수행됨
-    n_dups = 0 if (args.no_dedupe or not ok) else apply_dedupe(manifest, pool)
+    # 재조정은 지문을 바꾸지 않으므로 중복 제거를 다시 할 필요가 없다
+    n_dups = 0 if (args.no_dedupe or not ok or args.rebalance_length) else apply_dedupe(manifest, pool)
     print_summary(manifest, pool, corpus, n_dups, models)
     return 0 if ok else 2
 

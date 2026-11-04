@@ -150,20 +150,22 @@
       },
       {
         "label": "C",
-        "text": "Check whether the assistant message contains text content and terminate the loop when a non-empty response is present.",
+        "text": "Check whether the assistant message contains text content and terminate when a non-empty response is present.",
         "rationale": "어시스턴트 텍스트 콘텐츠의 존재 여부를 완료 지표로 사용하는 것은 안티패턴입니다. Claude는 tool_use와 텍스트를 동시에 반환할 수 있으므로, 텍스트가 있다고 해서 작업이 완료된 것은 아니며 추가 도구 호출이 필요할 수 있습니다."
       },
       {
         "label": "D",
-        "text": "Set a maximum iteration count of five turns and terminate the loop when that limit is reached or no tools are called.",
-        "rationale": "임의의 반복 횟수 제한을 주요 중단 메커니즘으로 사용하는 것은 안티패턴입니다. 이 방식은 복잡한 케이스를 조기에 종료하거나 간단한 케이스에서 불필요한 반복을 허용할 수 있으며, Claude가 작업 완료 여부를 판단하는 능력을 활용하지 못합니다."
+        "text": "Set a maximum iteration count of five turns and terminate the loop when that limit is reached or when no tool_use blocks are present in the response.",
+        "rationale": "임의의 반복 횟수 제한을 주요 중단 메커니즘으로 사용하는 것은 안티패턴입니다. 이 방식은 복잡한 케이스를 조기에 종료하거나 간단한 케이스에서 불필요한 반복을 허용할 수 있으며, Claude가 end_turn을 통해 작업 완료 여부를 판단하는 능력을 활용하지 못합니다."
       }
     ],
     "answer": "B",
     "source_excerpt": "Implementing agentic loop control flow that continues when stop_reason is \"tool_use\" and terminates when stop_reason is \"end_turn\"",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -522,13 +524,13 @@
       },
       {
         "label": "B",
-        "text": "Configure the coordinator to always invoke search with a predefined checklist of subtopics for every research request, ensuring all dimensions are covered initially.",
+        "text": "Configure the coordinator to invoke search with a predefined checklist of subtopics for every research request, ensuring all dimensions are covered initially.",
         "rationale": "모든 요청에 고정된 체크리스트를 적용하면 coordinator의 동적 선택 역할을 무시하고, 주제마다 다른 관련 영역을 반영하지 못합니다. 전기차 배터리 시장과 반도체 공급망은 서로 다른 차원을 요구하므로, 정보 누락은 합성 후 평가 및 재위임 메커니즘의 부재에서 발생합니다."
       },
       {
         "label": "C",
-        "text": "Partition the research topic into predefined subtopics at the start, assign each subtopic to a separate search subagent instance, and aggregate all results before synthesis.",
-        "rationale": "사전에 하위 주제를 분할하는 것은 작업 범위 분배 기법이지만, 초기 분할만으로는 합성 후 발견되는 예상치 못한 정보 공백을 해결할 수 없습니다. 문제는 초기 검색 범위가 아니라 합성 후 평가 및 보완 메커니즘의 부재에 있습니다."
+        "text": "Partition the research topic into predefined subtopics at the start, assign each subtopic to a separate search subagent instance running in parallel, and aggregate all results before synthesis to ensure comprehensive initial coverage.",
+        "rationale": "사전에 하위 주제를 분할하고 병렬 검색 인스턴스를 사용하는 것은 작업 범위 분배 기법이지만, 초기 분할만으로는 합성 후 발견되는 예상치 못한 정보 공백을 해결할 수 없습니다. 문제는 초기 검색 범위가 아니라 합성 후 평가 및 보완 메커니즘의 부재에 있습니다."
       },
       {
         "label": "D",
@@ -543,7 +545,8 @@
     "detected_patterns": [
       "answer_too_long:repaired",
       "scenario_mismatch",
-      "meta_reference"
+      "meta_reference",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -567,17 +570,17 @@
       },
       {
         "label": "B",
-        "text": "Configure the synthesis agent to wait for both web search and document analysis results before processing, rejecting any incomplete input sets it receives.",
-        "rationale": "합성 에이전트에서 입력 검증을 추가하는 것은 증상을 감지할 수 있지만, 웹 검색 에이전트가 코디네이터를 우회하는 근본 원인을 해결하지 못합니다. 코디네이터를 통한 제어된 정보 흐름과 observability가 여전히 손상된 상태로 남습니다."
+        "text": "Configure the synthesis agent to wait for both web search and document analysis results before processing, implementing a timeout mechanism and rejecting any incomplete input sets it receives from either source.",
+        "rationale": "합성 에이전트에서 입력 검증과 타임아웃 메커니즘을 추가하는 것은 증상을 감지할 수 있지만, 웹 검색 에이전트가 코디네이터를 우회하는 근본 원인을 해결하지 못합니다. 코디네이터를 통한 제어된 정보 흐름과 observability가 여전히 손상된 상태로 남습니다."
       },
       {
         "label": "C",
-        "text": "Enforce that all subagent communication passes through the coordinator by removing direct network access between subagents and implementing message routing exclusively via the coordinator.",
+        "text": "Enforce that all subagent communication passes through the coordinator by removing direct network access between subagents and routing messages exclusively via the coordinator.",
         "rationale": "모든 서브에이전트 간 통신을 코디네이터를 통해 라우팅하도록 강제(programmatic enforcement)하면 observability, 일관된 에러 처리, 제어된 정보 흐름을 보장할 수 있습니다. 직접 통신 경로를 제거하고 코디네이터를 유일한 메시지 라우팅 지점으로 만들면 웹 검색 에이전트가 임의로 합성 에이전트에 직접 전송하는 문제를 근본적으로 방지합니다."
       },
       {
         "label": "D",
-        "text": "Add prompt instructions to the web search agent emphasizing that it must always return results to the coordinator and never communicate directly with other subagents.",
+        "text": "Add prompt instructions to the web search agent emphasizing that it must always return results to the coordinator.",
         "rationale": "프롬프트 지침만으로는 아키텍처 수준의 통신 흐름을 보장할 수 없습니다. 웹 검색 에이전트가 이미 직접 통신 경로를 사용하고 있다면, 지침만 추가해도 프로그램적 강제가 없어 동일한 우회 동작이 반복될 수 있습니다."
       }
     ],
@@ -585,7 +588,9 @@
     "source_excerpt": "Routing all subagent communication through the coordinator for observability, consistent error handling, and controlled information flow",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -644,8 +649,8 @@
     "options": [
       {
         "label": "A",
-        "text": "The coordinator's system prompt describes the workflow but does not specify how subagents should share state, causing the handoff to fail.",
-        "rationale": "코디네이터의 시스템 프롬프트가 워크플로우를 설명하더라도, 서브에이전트 간 상태 공유는 자동으로 발생하지 않습니다. 그러나 문제는 코디네이터 프롬프트의 설명이 아니라, 코디네이터가 Task 도구 호출 시 웹 검색 결과를 문서 분석 에이전트의 프롬프트에 실제로 포함시키지 않았다는 점입니다."
+        "text": "The coordinator's system prompt describes the workflow but does not specify how subagents should share state through session memory or persistent storage mechanisms, causing the handoff to fail.",
+        "rationale": "코디네이터의 시스템 프롬프트가 워크플로우를 설명하더라도, 서브에이전트 간 상태 공유는 자동으로 발생하지 않습니다. 그러나 문제는 세션 메모리나 영구 저장소 메커니즘이 아니라, 코디네이터가 Task 도구 호출 시 웹 검색 결과를 문서 분석 에이전트의 프롬프트에 실제로 포함시키지 않았다는 점입니다."
       },
       {
         "label": "B",
@@ -654,7 +659,7 @@
       },
       {
         "label": "C",
-        "text": "The web search agent is storing results in its internal state rather than returning them in the tool response for the coordinator to access.",
+        "text": "The web search agent is storing results internally rather than returning them for the coordinator to access.",
         "rationale": "웹 검색 에이전트의 로그가 성공적으로 소스를 검색했음을 보여주므로, 에이전트가 결과를 반환했을 가능성이 높습니다. 문제는 코디네이터가 해당 결과를 받았더라도 다음 서브에이전트 호출 시 명시적으로 전달하지 않았다는 점입니다."
       },
       {
@@ -667,7 +672,9 @@
     "source_excerpt": "That subagent context must be explicitly provided in the prompt—subagents do not automatically inherit parent context or share memory between invocations",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -815,17 +822,17 @@
       },
       {
         "label": "B",
-        "text": "Pass context to the synthesis subagent using structured JSON objects that separate code snippets from their file paths, line numbers, and grep match metadata.",
+        "text": "Pass context to the synthesis subagent using structured JSON that separates code snippets from their file paths, line numbers, and grep match metadata.",
         "rationale": "구조화된 데이터 형식(structured data format)을 사용하여 콘텐츠(코드 스니펫)와 메타데이터(파일 경로, 줄 번호, grep 매치 정보)를 분리하면 에이전트 간 컨텍스트 전달 시 출처 정보(attribution)가 보존됩니다. 합성 서브에이전트는 이 구조화된 정보를 받아 최종 설명에 정확한 참조를 포함할 수 있습니다."
       },
       {
         "label": "C",
-        "text": "Instruct the coordinator prompt to emphasize that all subagents must include file paths and line numbers in their natural language responses.",
+        "text": "Instruct the coordinator prompt to emphasize that all subagents must include file paths and line numbers in their natural language responses to downstream agents.",
         "rationale": "프롬프트 지시(prompt instruction)에 의존하는 방식은 확률적이며, 자연어 응답에 메타데이터가 섞이면 파싱 오류와 누락이 발생하기 쉽습니다. 구조화된 형식 없이는 합성 단계에서 출처 정보를 안정적으로 추출하고 보존할 수 없습니다."
       },
       {
         "label": "D",
-        "text": "Configure the synthesis subagent's system prompt to request source attribution for every claim it makes in the final explanation output.",
+        "text": "Configure the synthesis subagent's system prompt to request source attribution for every claim.",
         "rationale": "합성 서브에이전트에게 출처를 요청하는 것은 이미 전달된 컨텍스트에 메타데이터가 포함되어 있을 때만 효과적입니다. 이전 에이전트들이 파일 경로와 줄 번호를 구조화된 형식으로 전달하지 않으면 합성 단계에서 정확한 참조를 생성할 수 없습니다."
       }
     ],
@@ -833,7 +840,9 @@
     "source_excerpt": "Using structured data formats to separate content from metadata (source URLs, document names, page numbers) when passing context between agents to preserve attribution",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -1039,7 +1048,8 @@
     "status": "approved",
     "review_retries": 1,
     "detected_patterns": [
-      "scenario_mismatch"
+      "scenario_mismatch",
+      "length_cue:rebalance_failed"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -1164,7 +1174,8 @@
     "status": "approved",
     "review_retries": 1,
     "detected_patterns": [
-      "scenario_mismatch"
+      "scenario_mismatch",
+      "length_cue:rebalance_failed"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -1229,8 +1240,8 @@
       },
       {
         "label": "B",
-        "text": "Configure the coordinator agent to monitor all subagent tool calls and inject a confirmation step before any delete_source operation executes.",
-        "rationale": "코디네이터에서 모든 하위 에이전트 도구 호출을 모니터링하는 것은 과도한 중앙화로, 코디네이터의 책임을 불필요하게 확장하고 시스템 복잡도를 증가시킵니다. 도구 호출 가로채기 훅은 에이전트 수준에서 정책을 강제하므로 더 모듈화되고 유지보수가 용이합니다."
+        "text": "Configure the coordinator agent to monitor all subagent tool calls in real time and inject a confirmation step with escalation metadata before any delete_source operation executes.",
+        "rationale": "코디네이터에서 모든 하위 에이전트 도구 호출을 실시간으로 모니터링하는 것은 과도한 중앙화로, 코디네이터의 책임을 불필요하게 확장하고 시스템 복잡도를 증가시킵니다. 도구 호출 가로채기 훅은 에이전트 수준에서 정책을 강제하므로 더 모듈화되고 유지보수가 용이합니다."
       },
       {
         "label": "C",
@@ -1239,15 +1250,17 @@
       },
       {
         "label": "D",
-        "text": "Implement a PostToolUse hook that inspects delete_source results and rolls back the deletion if more than 10 documents were removed.",
-        "rationale": "PostToolUse 훅은 도구 실행 후 결과를 변환하는 데 사용되지만, 이 시점에는 이미 삭제가 완료된 상태입니다. 롤백은 복잡하고 오류가 발생하기 쉬우며, 삭제가 실행되기 전에 차단하는 것이 더 효과적입니다. 이 접근 방식은 사전 예방이 아닌 사후 대응입니다."
+        "text": "Implement a PostToolUse hook that inspects delete_source results and rolls back the deletion.",
+        "rationale": "PostToolUse 훅은 도구 실행 후 결과를 변환하는 데 사용되지만, 이 시점에는 이미 삭제가 완료된 상태입니다. 롤백은 복잡하고 오류가 발생하기 쉬우며, 삭제가 실행되기 전에 차단하는 것이 더 효과적입니다. 이 접근 방식은 사전 예방이 아닌 사후 대응이므로 규정 준수 요구사항에 부적합합니다."
       }
     ],
     "answer": "C",
     "source_excerpt": "Hook patterns that intercept outgoing tool calls to enforce compliance rules (e.g., blocking refunds above a threshold)",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -1371,7 +1384,8 @@
     "status": "approved",
     "review_retries": 1,
     "detected_patterns": [
-      "scenario_mismatch"
+      "scenario_mismatch",
+      "length_cue:rebalance_failed"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -1436,17 +1450,17 @@
       },
       {
         "label": "B",
-        "text": "Use dynamic adaptive decomposition that generates investigation subtasks based on findings at each step, such as checking legacy billing systems when migration indicators are discovered.",
+        "text": "Use dynamic adaptive decomposition that generates investigation subtasks based on findings at each step, such as checking legacy systems when migration indicators are discovered.",
         "rationale": "동적 적응형 분해(dynamic adaptive decomposition)는 각 단계에서 발견된 내용에 따라 하위 작업을 생성하므로, 대화 중간에 드러나는 시스템 마이그레이션이나 소급 적용된 크레딧 같은 예측 불가능한 요소에 대응할 수 있습니다. 이 접근 방식은 개방형 조사 작업(open-ended investigation tasks)에 적합하며, 중간 발견 사항에 기반하여 계획을 조정할 수 있습니다."
       },
       {
         "label": "C",
-        "text": "Create a comprehensive initial prompt that instructs the agent to check for all known edge cases including system migrations and retroactive credits upfront.",
+        "text": "Create a comprehensive initial prompt that instructs the agent to check for all known edge cases including system migrations, retroactive credits, promotional adjustments, and billing cycle overlaps upfront.",
         "rationale": "포괄적인 초기 프롬프트로 모든 엣지 케이스를 미리 확인하도록 지시하는 방식은 고정된 접근 방식이며, 실제로 어떤 엣지 케이스가 관련 있는지는 초기 조사 결과에 따라 달라집니다. 이 방법은 불필요한 확인 작업을 수행하게 하거나 중간 발견 사항에 따른 적응적 조사를 제공하지 못합니다."
       },
       {
         "label": "D",
-        "text": "Split the workflow into per-transaction local analysis passes followed by a separate cross-transaction integration pass to identify patterns across billing periods.",
+        "text": "Split workflow into per-transaction analysis followed by cross-transaction integration to identify patterns.",
         "rationale": "거래별 로컬 분석 후 통합 패스를 수행하는 방식은 대규모 코드 리뷰에서 파일별 분석 후 크로스 파일 통합을 수행하는 패턴과 유사하지만, 이 시나리오의 핵심 문제는 트랜잭션 간 패턴 식별이 아니라 중간에 발견되는 예측 불가능한 요소(시스템 마이그레이션, 소급 크레딧)에 대응하는 것입니다."
       }
     ],
@@ -1454,7 +1468,9 @@
     "source_excerpt": "When to use fixed sequential pipelines (prompt chaining) versus dynamic adaptive decomposition based on intermediate findings",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -1620,7 +1636,9 @@
     "source_excerpt": "Splitting large code reviews into per-file local analysis passes plus a separate cross-file integration pass to avoid attention dilution",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalance_failed"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -1639,17 +1657,17 @@
       {
         "label": "A",
         "text": "Add prompt instructions telling the agent to prioritize business-critical code over utilities and to focus on integration tests before unit tests.",
-        "rationale": "프롬프트 지시만으로는 에이전트가 무엇이 비즈니스 크리티컬한지 발견하거나 통합 지점을 식별할 수 없습니다. 개방형 작업은 중간 발견 사항에 기반한 동적 분해(dynamic decomposition based on intermediate findings)가 필요하며, 단순히 우선순위 지침을 제공하는 것으로는 충분하지 않습니다."
+        "rationale": "프롬프트 지시만으로는 에이전트가 무엇이 비즈니스 크리티컬한지 발견하거나 통합 지점을 식별할 수 없습니다. 개방형 작업(open-ended task)은 중간 발견 사항에 기반한 동적 분해(dynamic decomposition based on intermediate findings)가 필요하며, 단순히 우선순위 지침을 제공하는 것으로는 충분하지 않습니다."
       },
       {
         "label": "B",
-        "text": "Break the task into sequential passes: first generate tests for all public APIs, then for private methods, then run a final integration verification pass.",
-        "rationale": "이 접근 방식은 고정된 순차 파이프라인(fixed sequential pipeline)을 사용하지만, 레거시 코드베이스에 포괄적인 테스트를 추가하는 것은 예측 가능한 다단계 리뷰가 아니라 개방형 조사 작업입니다. 구조를 먼저 이해하지 않고 미리 정의된 단계를 따르면 고영향 영역을 놓칠 수 있습니다."
+        "text": "Break the task into sequential passes: first generate tests for all public APIs in the payment namespace, then for private helper methods, then run a final integration verification pass to check end-to-end transaction flows.",
+        "rationale": "이 접근 방식은 고정된 순차 파이프라인(fixed sequential pipeline)을 사용하지만, 레거시 코드베이스에 포괄적인 테스트를 추가하는 것은 예측 가능한 다단계 리뷰가 아니라 개방형 조사 작업(open-ended investigation task)입니다. 구조를 먼저 이해하지 않고 미리 정의된 단계를 따르면 고영향 영역(high-impact areas)을 놓칠 수 있으며, 발견된 의존성(discovered dependencies)에 따라 계획을 조정할 수 없습니다."
       },
       {
         "label": "C",
         "text": "Configure the agent to first map module dependencies and call graphs, identify critical transaction paths, then generate a prioritized test plan that adapts as it discovers integration points.",
-        "rationale": "이 접근 방식은 개방형 작업(open-ended task)을 올바르게 분해합니다. 먼저 구조를 매핑(mapping structure)하고, 고영향 영역(high-impact areas)인 핵심 트랜잭션 경로를 식별한 다음, 의존성이 발견됨에 따라 적응하는 우선순위 계획(prioritized plan that adapts)을 생성합니다. 이는 TS-1.6-S3의 적응형 분해(adaptive decomposition) 패턴을 정확히 따릅니다."
+        "rationale": "이 접근 방식은 개방형 작업(open-ended task)을 올바르게 분해합니다. 먼저 구조를 매핑(mapping structure)하고, 고영향 영역(high-impact areas)인 핵심 트랜잭션 경로를 식별한 다음, 의존성이 발견됨에 따라 적응하는 우선순위 계획(prioritized plan that adapts as dependencies are discovered)을 생성합니다. 이는 적응형 분해(adaptive decomposition) 패턴을 정확히 따릅니다."
       },
       {
         "label": "D",
@@ -1661,7 +1679,9 @@
     "source_excerpt": "Decomposing open-ended tasks (e.g., \"add comprehensive tests to a legacy codebase\") by first mapping structure, identifying high-impact areas, then creating a prioritized plan that adapts as dependencies are discovered",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -1730,12 +1750,12 @@
       },
       {
         "label": "C",
-        "text": "Start two new sessions with structured summaries of the baseline analysis, then direct each session to explore a different migration framework.",
+        "text": "Start two new sessions with structured summaries of the baseline analysis, then direct each session to explore a different migration framework and document integration patterns.",
         "rationale": "새 세션에 요약을 주입하는 방식은 이전 도구 결과가 오래되었을 때(stale tool results) 더 신뢰할 수 있지만, 이 상황에서는 기준선 분석이 여전히 유효하고 두 엔지니어 모두 동일한 상세한 컨텍스트에서 시작해야 합니다. 요약은 원본 분석의 세부 정보를 잃을 수 있습니다."
       },
       {
         "label": "D",
-        "text": "Resume the baseline session twice using different session names, instructing each resumed session to focus on a different migration framework.",
+        "text": "Resume the baseline session twice, instructing each to focus on a different framework.",
         "rationale": "동일한 기준선 세션을 두 번 재개하면 두 탐색이 같은 세션 히스토리를 공유하게 되어 독립적인 분기가 아닙니다. 한 재개 세션에서의 파일 수정이나 분석 결과가 다른 재개 세션의 컨텍스트에 영향을 줄 수 있어 각 마이그레이션 접근의 독립성을 보장할 수 없습니다."
       }
     ],
@@ -1744,7 +1764,8 @@
     "status": "approved",
     "review_retries": 1,
     "detected_patterns": [
-      "scenario_mismatch"
+      "scenario_mismatch",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -1786,7 +1807,9 @@
     "source_excerpt": "The importance of informing the agent about changes to previously analyzed files when resuming sessions after code modifications",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalance_failed"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -1850,12 +1873,12 @@
       },
       {
         "label": "B",
-        "text": "Use fork_session from the payment-flow baseline to create independent branches exploring different retry strategy implementations in parallel.",
+        "text": "Use fork_session from the payment-flow baseline to create independent branches exploring different retry strategy implementations across the six services in parallel.",
         "rationale": "fork_session은 공유된 분석 기준선(shared baseline)에서 독립적인 분기를 만들어 서로 다른 접근 방식을 병렬로 탐구할 때 사용합니다. 이 시나리오는 기존 플로우 내에서 재시도 로직을 조사하는 단일 작업이지 여러 재시도 전략 구현을 비교하는 것이 아니므로 fork_session은 불필요합니다."
       },
       {
         "label": "C",
-        "text": "Configure the agent to cache Read and Grep results in a persistent store and reload those cached results when starting the retry investigation.",
+        "text": "Configure the agent to cache Read and Grep results and reload those cached results when starting the retry investigation.",
         "rationale": "도구 결과를 직접 캐싱하고 복원하는 것은 Claude Agent SDK가 제공하는 세션 관리 메커니즘을 우회하는 접근입니다. 이 방법은 구현이 복잡하고 캐시 무효화 로직이 필요하며, 명명된 세션 재개가 이미 제공하는 기능을 재구현하는 것입니다."
       },
       {
@@ -1869,7 +1892,8 @@
     "status": "approved",
     "review_retries": 1,
     "detected_patterns": [
-      "scenario_mismatch"
+      "scenario_mismatch",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -1975,17 +1999,17 @@
       },
       {
         "label": "B",
-        "text": "Start a fresh session with a structured summary of yesterday's analysis, then have the agent re-analyze all 25 service files to ensure consistency with the hotfix changes.",
-        "rationale": "변경되지 않은 22개 파일에 대한 기존 분석 결과가 여전히 유효하므로 전체 서비스 레이어를 처음부터 다시 분석하는 것은 불필요한 작업입니다. 90분의 분석을 반복하는 것은 비효율적이며, 이 상황에서는 세션 재개와 targeted re-analysis가 더 적합합니다."
+        "text": "Start a fresh session with a structured summary of yesterday's analysis, then have the agent re-analyze all 25 service files to ensure consistency with the hotfix changes and rebuild the complete dependency graph.",
+        "rationale": "변경되지 않은 22개 파일에 대한 기존 분석 결과가 여전히 유효하므로 전체 서비스 레이어를 처음부터 다시 분석하는 것은 불필요한 작업입니다. 90분의 분석을 반복하는 것은 비효율적이며, dependency graph 재구축도 세 파일의 변경만으로는 필요하지 않습니다. 이 상황에서는 세션 재개와 targeted re-analysis가 더 적합합니다."
       },
       {
         "label": "C",
-        "text": "Use fork_session to create three parallel branches exploring different refactoring strategies for each modified file, then consolidate the independent recommendations.",
+        "text": "Use fork_session to create three parallel branches exploring different refactoring strategies for each modified file.",
         "rationale": "fork_session은 공유된 분석 기준점에서 서로 다른 리팩토링 전략을 비교 탐색하기 위한 것이지, 업데이트된 파일의 재분석을 병렬화하기 위한 도구가 아닙니다. 이 상황에서는 단순히 재개된 세션에서 변경 사항을 알리는 것이 더 직접적이고 효과적입니다."
       },
       {
         "label": "D",
-        "text": "Resume the session without mentioning the hotfix changes, allowing the agent to detect the modified method signatures organically as it continues the refactoring analysis.",
+        "text": "Resume the session without mentioning the hotfix changes, allowing the agent to detect the modified method signatures organically.",
         "rationale": "에이전트에게 파일 변경 사항을 알리지 않으면 stale tool results를 기반으로 리팩토링 제안을 생성할 수 있습니다. 특히 메서드 시그니처가 변경된 경우 에이전트는 더 이상 존재하지 않는 API를 참조하거나 새로운 validation logic을 고려하지 못한 제안을 할 수 있어 부정확한 결과로 이어집니다."
       }
     ],
@@ -1995,7 +2019,8 @@
     "review_retries": 1,
     "detected_patterns": [
       "scenario_mismatch",
-      "answer_too_long:repaired"
+      "answer_too_long:repaired",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -2067,12 +2092,12 @@
       },
       {
         "label": "C",
-        "text": "Rename the tool to extract_pdf_findings, update the coordinator's system prompt with keyword-based routing rules, and add a fallback handler for misrouted inputs.",
-        "rationale": "도구 이름 변경은 도움이 되지만, system prompt의 키워드 기반 라우팅 지침은 잘 작성된 도구 설명을 우회할 수 있는 취약한 접근입니다. 도구 설명 자체에 입력 형식, 예시, 경계를 명시하는 것이 더 신뢰할 수 있는 선택 메커니즘입니다."
+        "text": "Rename the tool to extract_pdf_findings, update the coordinator's system prompt with keyword-based routing rules like 'use extract_pdf_findings for .pdf files', and add a fallback handler for misrouted inputs.",
+        "rationale": "도구 이름 변경은 도움이 되지만, system prompt의 키워드 기반 라우팅 지침(예: '.pdf 파일에는 extract_pdf_findings 사용')은 잘 작성된 도구 설명을 우회할 수 있는 취약한 접근입니다. 도구 설명 자체에 입력 형식, 예시, 경계를 명시하는 것이 더 신뢰할 수 있는 선택 메커니즘입니다."
       },
       {
         "label": "D",
-        "text": "Split into extract_pdf_findings, extract_url_findings, and extract_text_findings, each with a generic description stating the content type it processes.",
+        "text": "Split into extract_pdf_findings, extract_url_findings, and extract_text_findings, each with a generic description stating the content type.",
         "rationale": "도구를 분리하는 것은 좋은 설계이지만, 각 도구에 '일반적인(generic)' 설명만 제공하면 여전히 misrouting이 발생할 수 있습니다. 각 도구 설명에 구체적인 입력 형식, 예시 쿼리, 경계 설명이 포함되어야 LLM이 신뢰할 수 있게 올바른 도구를 선택할 수 있습니다."
       }
     ],
@@ -2081,7 +2106,8 @@
     "status": "approved",
     "review_retries": 0,
     "detected_patterns": [
-      "answer_too_long:repaired"
+      "answer_too_long:repaired",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -2269,17 +2295,17 @@
       },
       {
         "label": "B",
-        "text": "Expand the handle_request tool description to include detailed explanations of each mode value, example queries for each mode, and edge cases where modes overlap.",
-        "rationale": "도구 설명을 개선하는 것은 중요하지만, 단일 도구 내에서 매개변수 값을 선택하는 문제는 여전히 남아 있습니다. LLM은 도구 선택에는 강하지만 복잡한 매개변수 값 결정에는 상대적으로 약하므로, 이 접근법은 근본적인 구조 문제를 해결하지 못합니다."
+        "text": "Expand the handle_request tool description to include detailed explanations of each mode value, example queries for each mode, edge cases where modes overlap, and specific keywords that should trigger each mode selection.",
+        "rationale": "도구 설명을 개선하는 것은 중요하지만, 단일 도구 내에서 매개변수 값을 선택하는 문제는 여전히 남아 있습니다. LLM은 도구 선택에는 강하지만 복잡한 매개변수 값 결정에는 상대적으로 약하므로, 이 접근법은 근본적인 구조 문제를 해결하지 못합니다. 키워드 기반 트리거를 추가해도 모호한 경우나 혼합된 의도를 처리하는 데 한계가 있습니다."
       },
       {
         "label": "C",
-        "text": "Split handle_request into separate tools—process_refund, process_exchange, update_account_info, and resolve_billing_dispute—each with a specific description of its purpose and required inputs.",
+        "text": "Split handle_request into separate tools—process_refund, process_exchange, update_account_info, and resolve_billing_dispute—each with a specific description of its purpose and inputs.",
         "rationale": "단일 도구를 여러 개의 목적별 도구로 분리하면 각 도구가 명확한 입력/출력 계약(input/output contract)과 사용 시점을 가지게 되어 LLM이 올바른 도구를 선택하기 쉬워집니다. 모드 매개변수에 의존하는 대신 도구 이름과 설명 자체가 선택 신호가 되므로 오류율이 크게 감소합니다."
       },
       {
         "label": "D",
-        "text": "Add a system prompt instruction that explains the difference between refund, exchange, account update, and billing dispute scenarios with few-shot examples of correct mode selection.",
+        "text": "Add a system prompt instruction that explains the difference between refund, exchange, account update, and billing dispute scenarios.",
         "rationale": "시스템 프롬프트 지침은 도구 설명보다 우선순위가 낮으며, 도구 선택의 주요 메커니즘은 도구 설명 자체입니다. 프롬프트로 매개변수 선택 로직을 설명하는 것은 확률적이고 불안정하며, 도구 인터페이스 설계 문제를 해결하지 못합니다."
       }
     ],
@@ -2287,7 +2313,9 @@
     "source_excerpt": "Splitting generic tools into purpose-specific tools with defined input/output contracts (e.g., splitting a generic analyze_document into extract_data_points, summarize_content, and verify_claim_against_source)",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -2388,12 +2416,12 @@
       {
         "label": "A",
         "text": "Return each error with a category label—transient for the timeout, validation for the typo, permission for missing credentials, and business for the policy violation.",
-        "rationale": "각 실패 유형을 명확히 구분하면 coordinator가 적절한 복구 전략을 선택할 수 있습니다. Transient 오류는 재시도 가능하고, validation 오류는 사용자 입력 수정이 필요하며, permission 오류는 권한 확보가 필요하고, business 오류는 정책 설명과 함께 건너뛰어야 합니다. 이 구조화된 분류를 통해 agent는 각 상황에 맞는 intelligent recovery를 수행할 수 있습니다."
+        "rationale": "각 실패 유형을 명확히 구분하면 coordinator가 적절한 복구 전략을 선택할 수 있습니다. Transient 오류는 재시도 가능하고, validation 오류는 사용자 입력 수정이 필요하며, permission 오류는 권한 확보가 필요하고, business 오류는 정책 설명과 함께 건너뛰어야 합니다. 이 구조화된 분류를 통해 agent는 각 상황에 맞는 복구 결정을 내릴 수 있습니다."
       },
       {
         "label": "B",
-        "text": "Return all four failures with isRetryable set to true and let the coordinator apply exponential backoff logic uniformly across all error types.",
-        "rationale": "모든 오류를 재시도 가능한 것으로 표시하면 coordinator가 잘못된 복구 결정을 내립니다. URL 오타나 정책 위반은 재시도해도 성공하지 않으며, 권한 문제는 credential 확보 없이는 해결되지 않습니다. 오류 유형을 구분하지 않으면 불필요한 재시도와 리소스 낭비가 발생합니다."
+        "text": "Return all four failures with isRetryable set to true and let the coordinator apply exponential backoff logic uniformly across all error types, including a backoff multiplier field.",
+        "rationale": "모든 오류를 재시도 가능한 것으로 표시하면 coordinator가 잘못된 복구 결정을 내립니다. URL 오타나 정책 위반은 재시도해도 성공하지 않으며, 권한 문제는 credential 확보 없이는 해결되지 않습니다. Backoff multiplier를 추가해도 오류 유형을 구분하지 않으면 불필요한 재시도와 리소스 낭비가 발생합니다."
       },
       {
         "label": "C",
@@ -2411,7 +2439,8 @@
     "status": "approved",
     "review_retries": 1,
     "detected_patterns": [
-      "meta_reference"
+      "meta_reference",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -2435,17 +2464,17 @@
       },
       {
         "label": "B",
-        "text": "Implement retry logic with exponential backoff in the MCP server itself, automatically retrying failed operations up to three times before returning errors to the agent.",
+        "text": "Implement retry logic with exponential backoff in the MCP server itself, automatically retrying failed operations before returning errors to the agent.",
         "rationale": "서버 측 재시도는 일시적 장애에만 유용하며, 검증 오류나 권한 문제에는 적용할 수 없습니다. 균일한 오류 응답 문제를 해결하지 못하므로, 에이전트는 여전히 재시도 가능 여부나 오류 유형을 판단할 수 없어 적절한 복구 전략을 선택할 수 없습니다."
       },
       {
         "label": "C",
-        "text": "Configure the agent to log all search_codebase failures to a monitoring dashboard and alert engineers when error rates exceed thresholds for manual investigation.",
+        "text": "Configure the agent to log all search_codebase failures to a monitoring dashboard with error rate thresholds and PagerDuty integration for manual investigation.",
         "rationale": "모니터링과 알림은 운영 가시성을 제공하지만, 에이전트의 실시간 복구 의사결정 능력을 개선하지 않습니다. 균일한 오류 메시지 문제가 남아있어 에이전트는 여전히 재시도, 입력 수정, 사용자 안내 중 어떤 조치를 취해야 할지 판단할 수 없습니다."
       },
       {
         "label": "D",
-        "text": "Return structured error metadata including errorCategory, isRetryable boolean, and human-readable descriptions so the agent can distinguish transient failures from input problems.",
+        "text": "Return structured error metadata including errorCategory, isRetryable boolean, and human-readable descriptions so the agent can distinguish failure types.",
         "rationale": "구조화된 오류 메타데이터는 에이전트가 일시적 장애(재시도 가능), 검증 오류(입력 수정 필요), 권한 오류(사용자 개입 필요)를 구분할 수 있게 합니다. 이를 통해 에이전트는 각 상황에 맞는 복구 전략을 선택할 수 있으며, 균일한 \"Operation failed\" 메시지가 방지하던 적절한 의사결정이 가능해집니다."
       }
     ],
@@ -2453,7 +2482,9 @@
     "source_excerpt": "Why uniform error responses (generic \"Operation failed\") prevent the agent from making appropriate recovery decisions",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -2476,13 +2507,13 @@
       },
       {
         "label": "B",
-        "text": "Return structured error metadata with isRetryable: false and errorCategory: business for policy violations so the agent recognizes non-retryable failures immediately.",
+        "text": "Return structured error metadata with isRetryable: false and errorCategory: business for policy violations so the agent recognizes non-retryable failures.",
         "rationale": "정책 위반(policy violation)과 같은 비즈니스 규칙 오류는 재시도해도 성공할 수 없습니다. isRetryable: false 플래그와 errorCategory를 포함한 구조화된 메타데이터를 반환하면 에이전트가 즉시 재시도 불가능한 오류를 인식하고 불필요한 재시도를 방지할 수 있습니다. 이는 지연 시간을 줄이고 적절한 에스컬레이션을 가능하게 합니다."
       },
       {
         "label": "C",
-        "text": "Implement exponential backoff with maximum retry limits in the agent orchestration layer to prevent excessive retry attempts on any tool failure.",
-        "rationale": "지수 백오프(exponential backoff)와 재시도 제한은 일시적 오류(transient error)에는 적합하지만, 정책 위반과 같은 비재시도 가능 오류에는 부적절합니다. 이 접근법은 여전히 불필요한 재시도를 수행하며 지연 시간을 추가합니다. 문제는 재시도 횟수가 아니라 재시도 가능 여부를 구분하지 못하는 것입니다."
+        "text": "Implement exponential backoff with maximum retry limits and jitter in the agent orchestration layer to prevent excessive retry attempts on any tool failure regardless of error type.",
+        "rationale": "지수 백오프(exponential backoff)와 재시도 제한은 일시적 오류(transient error)에는 적합하지만, 정책 위반과 같은 비재시도 가능 오류에는 부적절합니다. 이 접근법은 여전히 불필요한 재시도를 수행하며 지연 시간을 추가합니다. 문제는 재시도 횟수나 타이밍이 아니라 재시도 가능 여부를 구분하지 못하는 것입니다."
       },
       {
         "label": "D",
@@ -2494,7 +2525,9 @@
     "source_excerpt": "The difference between retryable and non-retryable errors, and how returning structured metadata prevents wasted retry attempts",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -2535,7 +2568,9 @@
     "source_excerpt": "Returning structured error metadata including errorCategory (transient/validation/permission), isRetryable boolean, and human-readable descriptions",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalance_failed"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -2933,17 +2968,17 @@
       },
       {
         "label": "B",
-        "text": "Add all triage agent tools to the synthesis agent's tool set so it can perform any verification independently without coordinator involvement.",
-        "rationale": "합성 에이전트에게 전문 분야 외의 도구를 과도하게 제공하면 도구 오용과 선택 신뢰성 저하가 발생합니다. 모든 triage 도구를 추가하는 것은 고빈도 검증 요구 사항을 해결하는 비례적 접근이 아닙니다."
+        "text": "Add all triage agent tools to the synthesis agent's tool set, including classify_request, extract_intent, and route_to_specialist, so it can perform any verification independently.",
+        "rationale": "합성 에이전트에게 전문 분야 외의 도구(classify_request, extract_intent, route_to_specialist 등)를 과도하게 제공하면 도구 선택 복잡도가 증가하여 선택 신뢰성이 저하되고 도구 오용이 발생합니다. 모든 triage 도구를 추가하는 것은 고빈도 검증 요구 사항을 해결하는 비례적 접근이 아닙니다."
       },
       {
         "label": "C",
-        "text": "Give the synthesis agent a scoped check_eligibility tool that handles common shipping and return eligibility checks, while routing policy exception cases through the coordinator.",
+        "text": "Give the synthesis agent a scoped check_eligibility tool that handles common shipping and return checks, while routing policy exception cases through the coordinator.",
         "rationale": "고빈도 단순 검증 작업에 대해 범위가 제한된 교차 역할 도구(scoped cross-role tool)를 제공하면 지연 시간을 줄이면서도 복잡한 정책 예외 사례는 coordinator를 통해 라우팅할 수 있습니다. 이 접근 방식은 전문화를 유지하면서 실용적인 성능 요구 사항을 충족합니다."
       },
       {
         "label": "D",
-        "text": "Cache recent eligibility verification results in the synthesis agent's context so it can reference previous coordinator responses without making new requests.",
+        "text": "Cache recent eligibility results in the synthesis agent's context.",
         "rationale": "캐싱은 반복 쿼리에는 도움이 되지만 각 고객 요청마다 고유한 검증이 필요한 상황에서는 초기 지연 시간 문제를 해결하지 못합니다. 범위가 제한된 도구를 제공하는 것이 더 직접적인 해결책입니다."
       }
     ],
@@ -2951,7 +2986,9 @@
     "source_excerpt": "Providing scoped cross-role tools for high-frequency needs (e.g., a verify_fact tool for the synthesis agent) while routing complex cases through the coordinator",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -3056,17 +3093,17 @@
       },
       {
         "label": "B",
-        "text": "Consolidate all three servers into a single unified MCP server in project-scoped .mcp.json, using feature flags to control which tools are exposed to each engineer.",
-        "rationale": "세 개의 독립적인 MCP 서버를 하나로 통합하는 것은 과도한 설계이며, 안정적인 도구와 실험적인 도구를 분리하는 MCP의 스코핑 메커니즘을 활용하지 못합니다. 기능 플래그를 추가하면 불필요한 복잡성이 생기고, 실험 중인 서버를 프로젝트 수준에 포함시키면 아직 준비되지 않은 도구가 모든 팀원에게 노출됩니다."
+        "text": "Consolidate all three servers into a single unified MCP server in project-scoped .mcp.json, using feature flags or conditional tool registration to control which tools are exposed to each engineer based on their role.",
+        "rationale": "세 개의 독립적인 MCP 서버를 하나로 통합하는 것은 과도한 설계이며, 안정적인 도구와 실험적인 도구를 분리하는 MCP의 스코핑 메커니즘을 활용하지 못합니다. 기능 플래그나 조건부 등록을 추가하면 불필요한 복잡성이 생기고, 실험 중인 서버를 프로젝트 수준에 포함시키면 아직 준비되지 않은 도구가 모든 팀원에게 노출될 위험이 있습니다."
       },
       {
         "label": "C",
-        "text": "Move the CRM and order management servers to project-scoped .mcp.json for shared team tooling, and keep the experimental ticketing server in user-scoped ~/.claude.json for individual testing.",
+        "text": "Move the CRM and order management servers to project-scoped .mcp.json for shared team tooling, and keep the experimental ticketing server in user-scoped ~/.claude.json for testing.",
         "rationale": "프로젝트 수준 .mcp.json은 팀 전체가 공유하는 안정적인 도구를 위한 것이고, 사용자 수준 ~/.claude.json은 개인적이거나 실험적인 서버를 위한 것입니다. CRM과 주문 관리 서버를 .mcp.json으로 이동하면 모든 엔지니어가 동일한 도구 세트를 사용하게 되어 일관된 에이전트 동작이 보장되며, 실험 중인 티켓팅 서버는 개별 테스터의 ~/.claude.json에 남겨두어 다른 팀원에게 영향을 주지 않습니다."
       },
       {
         "label": "D",
-        "text": "Move all three servers to project-scoped .mcp.json, and add detailed tool descriptions explaining which tools are production-ready versus experimental to guide agent behavior.",
+        "text": "Move all three servers to project-scoped .mcp.json and use tool descriptions to mark experimental status.",
         "rationale": "실험적인 티켓팅 서버를 프로젝트 수준 설정에 포함시키면 아직 평가 중인 도구가 모든 팀원의 에이전트에 노출되어, 테스트가 완료되지 않은 기능이 프로덕션 케이스에 사용될 위험이 있습니다. 도구 설명으로 에이전트 동작을 제어하려는 것은 프롬프트 기반 접근이며, 스코핑을 통한 프로그램적 제어보다 신뢰성이 낮습니다."
       }
     ],
@@ -3075,7 +3112,8 @@
     "status": "approved",
     "review_retries": 0,
     "detected_patterns": [
-      "answer_too_long:repaired"
+      "answer_too_long:repaired",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -3201,7 +3239,9 @@
     "source_excerpt": "MCP resources as a mechanism for exposing content catalogs (e.g., issue summaries, documentation hierarchies, database schemas) to reduce exploratory tool calls",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalance_failed"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -3308,17 +3348,17 @@
       },
       {
         "label": "B",
-        "text": "Add a system prompt instruction stating that search_knowledge_base must always be called before attempting any file-based search operations.",
-        "rationale": "프롬프트 지시는 도구 순서를 강제하려는 시도이지만, 에이전트가 왜 search_knowledge_base가 더 나은지 이해하지 못하면 일관되게 따르지 않을 수 있습니다. 도구 설명 개선이 에이전트의 판단 자체를 향상시키는 더 근본적인 해결책입니다."
+        "text": "Add a system prompt instruction requiring search_knowledge_base to be invoked before any file-based search, and log all tool selection decisions for compliance auditing.",
+        "rationale": "프롬프트 지시로 도구 순서를 강제하고 로깅을 추가하는 것은 절차적 통제(procedural control)이지만, 에이전트가 왜 search_knowledge_base가 더 나은지 이해하지 못하면 일관되게 따르지 않을 수 있습니다. 도구 설명 개선이 에이전트의 판단 자체를 향상시키는 더 근본적인 해결책입니다."
       },
       {
         "label": "C",
-        "text": "Configure search_knowledge_base in project-scoped .mcp.json with environment variable expansion to ensure all team members have consistent access to the tool.",
+        "text": "Configure search_knowledge_base in project-scoped .mcp.json with environment variable expansion for consistent team access.",
         "rationale": "프로젝트 수준 설정(project-scoped .mcp.json)과 환경 변수 확장은 팀 전체의 도구 접근성과 인증을 관리하는 방법이지만, 에이전트가 이미 도구에 접근할 수 있는 상황에서 도구 선택 문제를 해결하지 못합니다."
       },
       {
         "label": "D",
-        "text": "Enhance the search_knowledge_base tool description to detail the structured output format, coverage of current policies, and faster retrieval compared to file scanning.",
+        "text": "Enhance the search_knowledge_base tool description to detail the structured output format, coverage of current policies, and faster retrieval.",
         "rationale": "MCP 도구 설명을 상세히 작성하면 에이전트가 도구의 capabilities와 outputs를 정확히 이해하여 내장 도구(file search) 대신 더 적합한 MCP 도구를 선택하게 됩니다. 이는 프로그램적 강제(programmatic enforcement) 없이도 에이전트의 도구 선택 판단을 개선하는 적절한 방법입니다."
       }
     ],
@@ -3326,7 +3366,9 @@
     "source_excerpt": "Enhancing MCP tool descriptions to explain capabilities and outputs in detail, preventing the agent from preferring built-in tools (like Grep) over more capable MCP tools",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -3597,11 +3639,11 @@
       {
         "label": "A",
         "text": "Use Grep to search all Python files for the pattern \"validate_citation_format\" to find every location where the function is called or imported.",
-        "rationale": "Grep은 코드베이스 전체에서 함수 이름, 에러 메시지, import 문 등의 패턴을 검색하는 데 가장 효과적입니다. 함수 이름 'validate_citation_format'을 검색하면 해당 함수를 호출하거나 import하는 모든 위치를 찾을 수 있으며, 이는 TS-2.5-S1에서 명시한 '함수의 모든 호출자 찾기(finding all callers of a function)' 사례에 정확히 해당합니다."
+        "rationale": "Grep은 코드베이스 전체에서 함수 이름, 에러 메시지, import 문 등의 패턴을 검색하는 데 가장 효과적입니다. 함수 이름 'validate_citation_format'을 검색하면 해당 함수를 호출하거나 import하는 모든 위치를 찾을 수 있으며, 이는 함수의 모든 호출자를 찾는 작업에 정확히 해당합니다."
       },
       {
         "label": "B",
-        "text": "Use Bash to run Python's ast module on each file and parse import statements to build a dependency graph of the function.",
+        "text": "Use Bash to run Python's ast module on each file, parse the abstract syntax tree to extract all function call nodes, and build a dependency graph of the function.",
         "rationale": "AST 파싱으로 의존성 그래프를 구축하는 것은 가능하지만, 단순히 함수 호출자를 찾는 작업에는 과도하게 복잡합니다. Grep으로 함수 이름을 검색하면 즉시 모든 사용 위치를 찾을 수 있으므로, 이는 불필요하게 엔지니어링이 과한 접근입니다."
       },
       {
@@ -3611,7 +3653,7 @@
       },
       {
         "label": "D",
-        "text": "Use Read to load the file containing validate_citation_format and examine its docstring to see which modules are documented as callers.",
+        "text": "Use Read to load the file containing validate_citation_format and examine its docstring.",
         "rationale": "함수 정의 파일의 docstring은 호출자 목록을 포함하지 않는 것이 일반적이며, 설령 포함하더라도 코드 변경에 따라 outdated될 수 있습니다. 실제 호출 관계를 찾으려면 코드베이스 전체를 검색해야 하므로, 이는 신뢰할 수 없는 간접적인 접근입니다."
       }
     ],
@@ -3620,7 +3662,8 @@
     "status": "approved",
     "review_retries": 1,
     "detected_patterns": [
-      "answer_not_supported"
+      "answer_not_supported",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -3726,17 +3769,17 @@
       },
       {
         "label": "B",
-        "text": "Use Glob to find all Python files matching **/*.py, then Read each file sequentially to identify all references to the function.",
-        "rationale": "모든 파일을 순차적으로 읽는 방식은 관련 없는 파일까지 처리하므로 비효율적입니다. 200개 이상의 파일 중 대부분은 해당 함수와 무관할 가능성이 높으며, 진입점을 먼저 찾아 필요한 파일만 읽는 점진적 접근법이 더 효과적입니다."
+        "text": "Use Glob to find all Python files matching **/*.py, then Read each file sequentially to identify all references to the function and build a complete call graph.",
+        "rationale": "모든 파일을 순차적으로 읽는 방식은 관련 없는 파일까지 처리하므로 비효율적입니다. 200개 이상의 파일 중 대부분은 해당 함수와 무관할 가능성이 높으며, Grep으로 진입점을 먼저 찾아 필요한 파일만 읽는 점진적 접근법이 더 효과적입니다."
       },
       {
         "label": "C",
-        "text": "Read the synthesis/core.py file to understand the function signature, then use Glob to locate test files that exercise the function.",
+        "text": "Read synthesis/core.py to understand the function signature, then use Glob to locate test files.",
         "rationale": "테스트 파일만 찾는 것은 프로덕션 코드에서의 실제 사용 패턴을 놓칩니다. 함수가 wrapper 모듈을 통해 다양한 subagent에서 호출될 수 있으므로, Grep으로 코드베이스 전체에서 호출 지점을 검색한 후 각 사용 컨텍스트를 추적하는 것이 완전한 이해를 위해 필요합니다."
       },
       {
         "label": "D",
-        "text": "Use Grep to search for 'synthesize_citations' across the codebase, then Read each file that imports or calls it to trace the usage patterns.",
+        "text": "Use Grep to search for 'synthesize_citations' across the codebase, then Read each file that imports or calls it to trace usage patterns.",
         "rationale": "이 접근법은 진입점(entry point)을 먼저 찾은 다음 관련 파일만 읽어 흐름을 추적하는 점진적 이해 방식(incremental understanding)을 따릅니다. Grep으로 함수 이름을 검색하여 호출 위치를 식별한 후, Read로 각 호출 컨텍스트를 확인하면 200개 이상의 파일을 모두 읽지 않고도 효율적으로 사용 패턴을 파악할 수 있습니다."
       }
     ],
@@ -3744,7 +3787,9 @@
     "source_excerpt": "Building codebase understanding incrementally: starting with Grep to find entry points, then using Read to follow imports and trace flows, rather than reading all files upfront",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -3953,7 +3998,9 @@
     "source_excerpt": "Splitting large CLAUDE.md files into focused topic-specific files in .claude/rules/ (e.g., testing.md, api-conventions.md, deployment.md)",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalance_failed"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -4735,12 +4782,12 @@
       },
       {
         "label": "B",
-        "text": "Consolidate all conventions into the root CLAUDE.md file with section headers for each file type, relying on Claude to select the relevant section.",
+        "text": "Consolidate all conventions into the root CLAUDE.md file with section headers for each file type (schema, API, test), relying on Claude to parse and select the relevant section based on the file being edited.",
         "rationale": "루트 CLAUDE.md에 모든 컨벤션을 넣으면 어떤 파일을 편집하든 전체 규칙이 로드되어, 스키마 편집 시 API 컨벤션도 컨텍스트에 포함됩니다. 섹션 헤더는 사람이 읽기 쉽게 만들지만, Claude가 파일 타입에 따라 자동으로 관련 섹션만 선택하도록 강제하지 못합니다. 파일 타입별 조건부 로딩은 glob 패턴 기반 path-specific rules로 구현해야 합니다."
       },
       {
         "label": "C",
-        "text": "Create custom slash commands in .claude/commands/ for each convention type (/schema-rules, /api-rules, /test-rules) that developers invoke before editing files.",
+        "text": "Create custom slash commands in .claude/commands/ for each convention type that developers invoke before editing files.",
         "rationale": "커스텀 slash commands는 개발자가 수동으로 호출해야 하므로, 파일을 편집할 때 자동으로 올바른 컨벤션이 적용되지 않습니다. 개발자가 매번 적절한 명령어를 기억하고 실행해야 하는 것은 오류가 발생하기 쉽고 워크플로우를 방해합니다. 파일 타입에 따라 자동으로 규칙을 로드하려면 glob 패턴 기반 path-specific rules를 사용해야 합니다."
       },
       {
@@ -4755,7 +4802,8 @@
     "review_retries": 2,
     "detected_patterns": [
       "answer_too_long",
-      "scenario_mismatch"
+      "scenario_mismatch",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -5070,25 +5118,27 @@
       },
       {
         "label": "B",
-        "text": "Use plan mode to analyze request patterns and design the migration strategy, then switch to direct execution to apply the planned changes.",
+        "text": "Use plan mode to analyze patterns and design the migration strategy, then switch to direct execution to apply the changes.",
         "rationale": "이 접근법은 plan mode를 조사(investigation)에 사용하고 direct execution을 구현(implementation)에 사용하는 올바른 조합입니다. Plan mode에서 코드베이스를 탐색하고 다양한 요청 패턴을 이해한 후 일관된 마이그레이션 전략을 설계할 수 있으며, 그 다음 명확한 계획이 수립된 후 direct execution으로 전환하여 계획된 접근법을 실행할 수 있습니다."
       },
       {
         "label": "C",
-        "text": "Use plan mode for the entire workflow, analyzing patterns and implementing all file changes within a single plan mode session.",
+        "text": "Use plan mode for the entire workflow, analyzing patterns and implementing all file changes within a single plan mode session to maintain consistency.",
         "rationale": "Plan mode를 전체 워크플로우에 사용하는 것은 과도한 설계입니다. 일단 마이그레이션 전략이 명확해지면 개별 파일 변경은 잘 정의된 범위를 가지므로 direct execution이 더 적합합니다. Plan mode를 구현 단계까지 계속 사용하면 불필요하게 복잡해지고 효율성이 떨어집니다."
       },
       {
         "label": "D",
-        "text": "Use direct execution with the Explore subagent to discover usage patterns while implementing changes in a single workflow pass.",
-        "rationale": "Direct execution을 사용하는 것은 이 작업의 복잡성과 아키텍처적 영향을 고려하지 않은 것입니다. Explore subagent는 컨텍스트 관리에 도움이 되지만, 60개 이상의 파일에 영향을 미치는 라이브러리 마이그레이션은 변경을 커밋하기 전에 plan mode에서 설계와 탐색이 필요합니다."
+        "text": "Use direct execution throughout to implement changes file-by-file as you discover each pattern.",
+        "rationale": "Direct execution만 사용하는 것은 이 작업의 복잡성과 아키텍처적 영향을 고려하지 않은 것입니다. 60개 이상의 파일에 영향을 미치는 라이브러리 마이그레이션은 변경을 커밋하기 전에 plan mode에서 전체 사용 패턴을 이해하고 일관된 전략을 설계해야 합니다. 파일별로 즉시 변경하면 불일치가 발생하고 재작업이 필요할 수 있습니다."
       }
     ],
     "answer": "B",
     "source_excerpt": "Combining plan mode for investigation with direct execution for implementation (e.g., planning a library migration, then executing the planned approach)",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -5961,7 +6011,9 @@
     "source_excerpt": "The impact of false positive rates on developer trust: high false positive categories undermine confidence in accurate categories",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalance_failed"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -5980,21 +6032,21 @@
       {
         "label": "A",
         "text": "Add a severity scoring step that rates each flagged issue from 1 to 10, then automatically filter out issues with scores below 7 before presenting to developers.",
-        "rationale": "심각도 점수(severity scoring)는 이미 플래그된 항목을 분류하는 것이지만, 근본 문제는 애초에 보고하지 말아야 할 이슈(스타일, 로컬 패턴)를 플래그하는 것입니다. 명시적 기준(explicit criteria) 없이 사후 필터링을 추가하면 거짓 양성(false positive)의 원인을 해결하지 못합니다."
+        "rationale": "심각도 점수(severity scoring)는 이미 플래그된 항목을 사후 분류하는 방식이지만, 근본 문제는 애초에 보고하지 말아야 할 이슈(스타일 선호도, 로컬 패턴)를 플래그하는 것입니다. 명시적 기준(explicit criteria) 없이 사후 필터링을 추가하면 거짓 양성(false positive)의 원인을 해결하지 못합니다."
       },
       {
         "label": "B",
-        "text": "Revise the prompt to request very high confidence reports only, and provide examples of common false positives like style preferences that should not be flagged.",
+        "text": "Revise the prompt to request very high confidence reports only, and provide examples of common false positives like style preferences and internal utility patterns that should not be flagged.",
         "rationale": "신뢰도 수준을 '매우 높음'으로 조정하는 것은 여전히 모호한 지침에 의존하는 방식입니다. 태스크 문서에 따르면 '보수적으로' 또는 '높은 신뢰도만'과 같은 일반적인 지침(general instructions)은 구체적인 범주형 기준(specific categorical criteria)에 비해 정밀도 개선에 실패합니다."
       },
       {
         "label": "C",
-        "text": "Temporarily disable automated reviews for style and helper pattern categories, keeping only bug and security checks active until improved prompts can be developed.",
+        "text": "Temporarily disable automated reviews for style and helper pattern categories, keeping only bug and security checks active.",
         "rationale": "거짓 양성률이 높은 카테고리를 일시적으로 비활성화하는 것은 개발자 신뢰를 회복하는 유효한 전략이지만, 이 상황에서는 명시적 리뷰 기준(explicit review criteria)을 작성하여 즉시 문제를 해결할 수 있습니다. 비활성화는 프롬프트 개선이 더 오래 걸릴 때 사용하는 보완적 조치입니다."
       },
       {
         "label": "D",
-        "text": "Replace the confidence instruction with explicit criteria: report null pointer dereferences and SQL injection vectors, skip formatting choices and project-specific helper patterns.",
+        "text": "Replace the confidence instruction with explicit criteria: report null pointer dereferences and SQL injection vectors, skip formatting and project-specific helpers.",
         "rationale": "명시적인 리뷰 기준(explicit review criteria)을 사용하여 정확히 어떤 이슈를 보고할지(버그, 보안)와 건너뛸지(스타일, 로컬 패턴)를 정의합니다. 구체적인 범주형 기준(categorical criteria)은 모호한 신뢰도 기반 필터링(confidence-based filtering)보다 정밀도(precision)를 크게 향상시키며, 이는 포커스 항목이 다루는 핵심 기술입니다."
       }
     ],
@@ -6005,7 +6057,8 @@
     "detected_patterns": [
       "answer_too_long:repaired",
       "scenario_mismatch",
-      "answer_too_long:repaired"
+      "answer_too_long:repaired",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -6158,12 +6211,12 @@
       },
       {
         "label": "B",
-        "text": "Add a post-processing validation step that checks for null claim_amount fields and retries extraction with a specialized prompt for monetary values.",
+        "text": "Add a post-processing validation step that checks for null claim_amount fields and retries extraction with a specialized prompt.",
         "rationale": "재시도 로직은 추가 API 호출 비용과 지연을 발생시키며, 근본 원인인 모호한 입력 처리 방법의 불명확성을 해결하지 못합니다. Few-shot examples로 첫 번째 추출에서 일관성을 확보하는 것이 더 효율적이고 비용 효과적입니다. 특화된 프롬프트도 예시 없이는 동일한 일관성 문제를 겪을 수 있습니다."
       },
       {
         "label": "C",
-        "text": "Implement a preprocessing regex filter that standardizes informal monetary notations before passing documents to Claude for extraction.",
+        "text": "Implement a preprocessing regex filter that standardizes informal monetary notations (abbreviations, approximations, symbols) before passing documents to Claude for extraction.",
         "rationale": "정규식 전처리는 예측 가능한 패턴에는 작동하지만, 자연어의 다양한 변형('about five thousand', 'roughly 5K', '5k+')을 모두 포착하기 어렵고 유지보수 부담이 큽니다. Few-shot examples는 Claude의 언어 이해 능력을 활용하여 더 넓은 범위의 비공식 표기를 처리하고 새로운 변형으로 일반화할 수 있습니다."
       },
       {
@@ -6176,7 +6229,9 @@
     "source_excerpt": "The role of few-shot examples in demonstrating ambiguous-case handling (e.g., tool selection for ambiguous requests, branch-level test coverage gaps)",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -6454,12 +6509,12 @@
       },
       {
         "label": "C",
-        "text": "Add a validation pass that re-submits tickets with null fields to Claude, explicitly asking it to extract only the missing fields from the original text.",
+        "text": "Add a validation pass that re-submits tickets with null fields to Claude, explicitly asking it to extract only the missing fields.",
         "rationale": "검증 단계를 추가하여 null 필드를 재추출하는 것은 일부 누락을 복구할 수 있지만, 초기 추출이 실패하는 이유를 해결하지 않아 시스템 비용과 지연 시간을 증가시킵니다. 다양한 티켓 형식에서 올바른 추출 방법을 처음부터 보여주는 것이 더 효율적입니다."
       },
       {
         "label": "D",
-        "text": "Preprocess tickets with a normalization step that converts all formats into a standardized template with labeled sections before running the extraction prompt.",
+        "text": "Preprocess tickets with a normalization step that converts all formats into a standardized template with labeled sections (e.g., ISSUE, IMPACT, COMPONENT) before running the extraction prompt.",
         "rationale": "티켓을 표준화된 템플릿으로 전처리하는 것은 과도한 설계이며 별도의 복잡한 정규화 단계를 추가합니다. Few-shot 예제를 사용하면 모델이 추가 전처리 없이 다양한 형식을 직접 처리하도록 학습할 수 있어 더 간단하고 유지보수가 쉬운 솔루션입니다."
       }
     ],
@@ -6468,7 +6523,8 @@
     "status": "approved",
     "review_retries": 1,
     "detected_patterns": [
-      "scenario_mismatch"
+      "scenario_mismatch",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -6576,17 +6632,17 @@
       },
       {
         "label": "B",
-        "text": "Add detailed prompt instructions explaining that line_item subtotals must sum to total_amount and include examples of correct invoice extraction with matching totals.",
-        "rationale": "프롬프트 지침과 예시는 모델의 추출 정확도를 높일 수 있지만, tool_use의 엄격한 스키마는 의미 오류를 방지하지 못합니다. 모델은 여전히 수학적으로 일치하지 않는 값들을 올바른 형식으로 추출할 수 있으므로 프롬프트만으로는 불충분합니다."
+        "text": "Add detailed prompt instructions explaining that line_item subtotals must sum to total_amount and include examples of correct invoice extraction with matching totals in few-shot demonstrations within the system prompt.",
+        "rationale": "프롬프트 지침과 few-shot 예시는 모델의 추출 정확도를 높일 수 있지만, tool_use의 엄격한 스키마는 의미 오류를 방지하지 못합니다. 모델은 여전히 수학적으로 일치하지 않는 값들을 올바른 형식으로 추출할 수 있으므로 프롬프트만으로는 불충분합니다."
       },
       {
         "label": "C",
-        "text": "Add an enum field for calculation_method with values like sum_of_lines and printed_total, requiring the model to identify which value source to use for total_amount.",
+        "text": "Add an enum field for calculation_method with values like sum_of_lines and printed_total, requiring the model to identify which value source to use.",
         "rationale": "enum 필드를 추가하여 값의 출처를 분류하도록 하는 것은 스키마 구조를 개선하지만, tool_use의 엄격한 스키마는 의미 오류를 방지하지 못합니다. 모델은 여전히 수학적으로 일치하지 않는 값들을 추출할 수 있으므로 스키마 설계만으로는 해결되지 않습니다."
       },
       {
         "label": "D",
-        "text": "Change total_amount to an optional field in the schema so the model returns null when the invoice total is unclear rather than extracting an inconsistent value.",
+        "text": "Change total_amount to an optional field in the schema so the model returns null when the invoice total is unclear.",
         "rationale": "필드를 optional로 만드는 것은 소스 문서에 정보가 없을 때 모델이 값을 날조(fabrication)하는 것을 방지하는 패턴입니다. 그러나 이 시나리오에서는 총액 정보가 인보이스에 존재하며, 문제는 추출된 값들 간의 수학적 불일치라는 의미 오류입니다."
       }
     ],
@@ -6595,7 +6651,8 @@
     "status": "approved",
     "review_retries": 1,
     "detected_patterns": [
-      "scenario_mismatch"
+      "scenario_mismatch",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -6860,12 +6917,12 @@
     "options": [
       {
         "label": "A",
-        "text": "Add a date_format enum field to the schema with values like ISO8601, US_FORMAT, EU_FORMAT so the model can tag the original format.",
-        "rationale": "enum 필드를 추가하여 원본 형식을 태깅하는 방식은 소스 형식을 기록할 수는 있지만, 하류 시스템이 요구하는 표준 형식으로의 변환 문제를 해결하지 못합니다. 이 접근법은 문제를 하류로 미루는 것이며, 추출 단계에서 형식을 정규화하는 것이 더 효율적입니다."
+        "text": "Add a date_format enum field to the schema with values like ISO8601, US_FORMAT, EU_FORMAT so the model can tag the original format and pass metadata to downstream parsers.",
+        "rationale": "enum 필드를 추가하여 원본 형식을 태깅하고 메타데이터를 전달하는 방식은 소스 형식을 기록할 수는 있지만, 하류 시스템이 요구하는 표준 형식으로의 변환 문제를 해결하지 못합니다. 이 접근법은 문제를 하류로 미루는 것이며, 추출 단계에서 형식을 정규화하는 것이 더 효율적입니다."
       },
       {
         "label": "B",
-        "text": "Change the date field in the schema from a required string to an optional field with a default value of null when format is ambiguous.",
+        "text": "Change the date field in the schema from required to optional with a default null when format is ambiguous.",
         "rationale": "필드를 선택적(optional)으로 만드는 것은 소스 문서에 정보가 없을 때 모델이 값을 날조하는 것을 방지하는 기법이지만, 이 상황에서는 날짜가 존재하며 단지 형식이 일관되지 않을 뿐입니다. 필드를 선택적으로 바꾸면 형식 불일치 문제를 해결하지 못하고 오히려 필수 데이터가 누락될 위험만 생깁니다."
       },
       {
@@ -6883,7 +6940,9 @@
     "source_excerpt": "Including format normalization rules in prompts alongside strict output schemas to handle inconsistent source formatting",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -7277,17 +7336,17 @@
       {
         "label": "A",
         "text": "Keep the synchronous Messages API but move extraction to a background job and display a progress indicator, allowing adjusters to continue other work.",
-        "rationale": "동기 API를 유지하되 백그라운드 작업으로 이동하면 심사자의 브라우저를 차단하지 않으면서도 근무 시간 내에 데이터를 제공할 수 있습니다. 이 워크플로는 즉각적인 응답이 필요하지 않지만(비차단) 몇 시간 이내의 결과는 필요하므로, 동기 API의 예측 가능한 지연 시간이 적합합니다. 심사자는 다른 작업을 진행하다가 추출이 완료되면 승인 절차로 넘어갈 수 있습니다."
+        "rationale": "동기 Messages API를 유지하되 백그라운드 작업으로 이동하면 심사자의 브라우저를 차단하지 않으면서도 근무 시간 내에 데이터를 제공할 수 있습니다. 이 워크플로는 즉각적인 응답이 필요하지 않지만(비차단) 몇 시간 이내의 결과는 필요하므로, 동기 API의 예측 가능한 지연 시간이 적합합니다. 심사자는 다른 작업을 진행하다가 추출이 완료되면 승인 절차로 넘어갈 수 있습니다."
       },
       {
         "label": "B",
-        "text": "Use the Message Batches API with 30-minute submission intervals to reduce per-request costs while keeping results available within one hour.",
-        "rationale": "Message Batches API는 최대 24시간의 처리 창을 가지며 지연 시간 SLA를 보장하지 않으므로, 30분 간격으로 제출하더라도 1시간 내 결과를 보장할 수 없습니다. 배치 API는 처리 시점을 제어할 수 없는 비동기 시스템이므로, 1시간 이내처럼 구체적인 지연 시간 요구사항이 있는 워크플로에는 부적합합니다."
+        "text": "Use the Message Batches API with 30-minute submission intervals.",
+        "rationale": "Message Batches API는 최대 24시간의 처리 창을 가지며 지연 시간 SLA를 보장하지 않으므로, 30분 간격으로 제출하더라도 1시간 내 결과를 보장할 수 없습니다. 배치 API는 처리 시점을 제어할 수 없는 비동기 시스템이므로, 근무 시간 내 데이터 접근처럼 구체적인 지연 시간 요구사항이 있는 워크플로에는 부적합합니다."
       },
       {
         "label": "C",
-        "text": "Switch to the Message Batches API and submit documents every 4 hours to guarantee extraction completes within the adjuster's 8-hour shift.",
-        "rationale": "보험 심사자가 자신의 근무 시간(shift) 내에 추출된 데이터를 필요로 한다는 것은 이 워크플로가 비차단(non-blocking)이지만 여전히 몇 시간 이내의 응답을 요구한다는 의미입니다. Message Batches API는 최대 24시간의 처리 시간이 소요될 수 있고 지연 시간 SLA를 보장하지 않으므로, 근무 시간 내 데이터 접근이라는 요구사항을 충족할 수 없습니다. 배치 API는 야간 리포트나 주간 감사처럼 지연 시간에 관대한(latency-tolerant) 워크로드에 적합합니다."
+        "text": "Switch to the Message Batches API and submit documents every 4 hours to guarantee extraction completes within the adjuster's 8-hour shift, leveraging the batch cost savings.",
+        "rationale": "보험 심사자가 자신의 근무 시간(shift) 내에 추출된 데이터를 필요로 한다는 것은 이 워크플로가 비차단(non-blocking)이지만 여전히 몇 시간 이내의 응답을 요구한다는 의미입니다. Message Batches API는 최대 24시간의 처리 시간이 소요될 수 있고 지연 시간 SLA를 보장하지 않으므로, 4시간마다 제출하더라도 근무 시간 내 데이터 접근이라는 요구사항을 충족할 수 없습니다. 배치 API는 야간 리포트나 주간 감사처럼 지연 시간에 관대한(latency-tolerant) 워크로드에 적합합니다."
       },
       {
         "label": "D",
@@ -7299,7 +7358,9 @@
     "source_excerpt": "Batch processing is appropriate for non-blocking, latency-tolerant workloads (overnight reports, weekly audits, nightly test generation) and inappropriate for blocking workflows (pre-merge checks)",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -7449,12 +7510,12 @@
       },
       {
         "label": "B",
-        "text": "Add status polling every 2 hours and resubmit documents as synchronous requests if batches exceed 20 hours processing time.",
+        "text": "Add status polling every 2 hours using the batch retrieval endpoint and resubmit documents as synchronous requests if batches exceed 20 hours processing time.",
         "rationale": "배치가 20시간을 초과할 때 동기 API로 재제출하는 것은 복잡성을 추가하고 비용 절감 효과를 감소시킵니다. 배치 처리 중간에 상태를 확인해도 이미 진행 중인 배치를 취소하거나 가속화할 수 없습니다. 제출 빈도를 조정하는 것이 더 간단하고 효과적인 해결책입니다."
       },
       {
         "label": "C",
-        "text": "Switch to the synchronous Messages API for all claim documents to guarantee processing completes within the 30-hour window.",
+        "text": "Switch to the synchronous Messages API for all claim documents.",
         "rationale": "동기 API로 전환하면 지연 시간 문제는 해결되지만 배치 API의 50% 비용 절감 혜택을 포기하게 됩니다. 보험 청구 처리는 비차단(non-blocking) 워크플로이며 30시간의 여유가 있으므로, 제출 빈도를 조정하여 배치 API로 SLA를 충족할 수 있습니다. 비용 효율적인 해결책이 존재하는 상황에서 과도한 설계입니다."
       },
       {
@@ -7467,7 +7528,9 @@
     "source_excerpt": "Calculating batch submission frequency based on SLA constraints (e.g., 4-hour windows to guarantee 30-hour SLA with 24-hour batch processing)",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -7495,13 +7558,13 @@
       },
       {
         "label": "C",
-        "text": "Switch the 180 failed requests to the synchronous Messages API with extended timeout and larger context window settings to handle both error types.",
+        "text": "Switch the 180 failed requests to the synchronous Messages API to bypass batch processing limitations.",
         "rationale": "동기 API로 전환하는 것은 배치 API의 50% 비용 절감 혜택을 포기하는 것입니다. overnight 처리는 latency-tolerant하므로 실패한 요청을 적절히 수정하여 배치로 재제출하는 것이 더 효율적입니다."
       },
       {
         "label": "D",
-        "text": "Configure the batch API to automatically retry schema failures with enhanced validation rules and split oversized documents into smaller context-compliant chunks.",
-        "rationale": "Message Batches API는 자동 재시도나 콘텐츠 분할 기능을 제공하지 않습니다. 개발자가 custom_id로 실패를 식별하고 적절한 수정(프롬프트 개선, 콘텐츠 분할 등)을 적용하여 수동으로 재제출해야 합니다."
+        "text": "Configure the batch API retry policy to automatically reprocess schema validation failures with enhanced field extraction rules and apply dynamic context window expansion for oversized table content.",
+        "rationale": "Message Batches API는 자동 재시도 정책이나 동적 context window 확장 기능을 제공하지 않습니다. 개발자가 custom_id로 실패를 식별하고 적절한 수정(프롬프트 개선, 콘텐츠 분할 등)을 적용하여 수동으로 재제출해야 합니다."
       }
     ],
     "answer": "B",
@@ -7510,7 +7573,8 @@
     "review_retries": 1,
     "detected_patterns": [
       "scenario_mismatch",
-      "answer_too_long:repaired"
+      "answer_too_long:repaired",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -7575,17 +7639,17 @@
       },
       {
         "label": "B",
-        "text": "The review prompt lacks specific examples of common test weaknesses and edge cases that the model should look for during evaluation.",
-        "rationale": "프롬프트에 구체적인 예시를 추가하면 리뷰 품질이 향상될 수 있지만, 이 상황에서 핵심 문제는 같은 인스턴스가 자신이 방금 생성한 코드를 검토한다는 점입니다. 모델이 생성 시 내린 결정의 맥락을 유지하고 있어, 예시를 제공해도 자신의 논리적 오류를 발견하기 어렵습니다."
+        "text": "The review prompt lacks specific examples of common test weaknesses such as missing boundary conditions, null handling, and concurrency edge cases.",
+        "rationale": "프롬프트에 구체적인 예시(boundary conditions, null handling, concurrency 등)를 추가하면 리뷰 품질이 향상될 수 있지만, 이 상황에서 핵심 문제는 같은 인스턴스가 자신이 방금 생성한 코드를 검토한다는 점입니다. 모델이 생성 시 내린 결정의 맥락을 유지하고 있어, 예시를 제공해도 자신의 논리적 오류를 발견하기 어렵습니다."
       },
       {
         "label": "C",
-        "text": "The model retains reasoning context from test generation, making it less likely to question the decisions it just made in the same session.",
+        "text": "The model retains reasoning context from test generation, making it less likely to question the decisions it just made.",
         "rationale": "생성 과정에서 형성된 추론 맥락(reasoning context)을 모델이 유지하고 있기 때문에, 같은 세션에서 자신이 방금 내린 결정을 비판적으로 재검토하기 어렵습니다. 프롬프트에 비판적 검토 지시를 추가하더라도 self-review의 근본적인 한계를 극복할 수 없습니다. 독립적인 리뷰 인스턴스를 사용하는 것이 더 효과적입니다."
       },
       {
         "label": "D",
-        "text": "The pipeline runs generation and review in rapid succession without allowing sufficient processing time between the two operations.",
+        "text": "The pipeline runs generation and review in rapid succession without sufficient processing time.",
         "rationale": "두 작업 사이의 시간 간격은 문제의 원인이 아닙니다. 모델은 각 API 호출을 독립적으로 처리하며, 처리 시간과 무관하게 같은 대화 세션 내에서는 이전 추론 맥락을 유지합니다. 시간 지연을 추가해도 self-review의 효과성은 개선되지 않습니다."
       }
     ],
@@ -7593,7 +7657,9 @@
     "source_excerpt": "Self-review limitations: a model retains reasoning context from generation, making it less likely to question its own decisions in the same session",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -7657,17 +7723,17 @@
       },
       {
         "label": "B",
-        "text": "Implement per-file local analysis passes to catch file-specific issues, then run a separate cross-file integration pass to verify data flow consistency.",
+        "text": "Implement per-file local analysis passes to catch file-specific issues, then run a separate cross-file integration pass to verify data flow.",
         "rationale": "파일별 로컬 분석 패스(per-file local analysis pass)와 별도의 크로스 파일 통합 패스(cross-file integration pass)로 나누면 주의력 희석(attention dilution)을 방지하고 일관된 깊이의 검토를 보장합니다. 각 파일을 독립적으로 분석하면 동일한 패턴에 대해 모순된 판단을 내리는 문제가 해결되며, 통합 패스에서 파일 간 데이터 흐름 문제를 포착할 수 있습니다."
       },
       {
         "label": "C",
-        "text": "Run the full review twice with different temperature settings and merge the findings, prioritizing issues that appear in both runs.",
-        "rationale": "온도 설정을 변경하며 여러 번 실행하는 것은 모든 파일을 동시에 분석하는 근본적인 문제를 해결하지 못합니다. 주의력 희석으로 인해 각 실행에서 일부 이슈를 놓치게 되며, 합의를 요구하면 실제 버그를 억제할 수 있습니다."
+        "text": "Run the full review twice with different temperature settings (0.0 and 0.7) and merge the findings, prioritizing issues that appear in both runs to ensure consensus.",
+        "rationale": "온도 설정을 변경하며 여러 번 실행하는 것은 모든 파일을 동시에 분석하는 근본적인 문제를 해결하지 못합니다. 주의력 희석으로 인해 각 실행에서 일부 이슈를 놓치게 되며, 합의를 요구하면 실제 버그를 억제할 수 있습니다. 온도 값을 조정해도 구조적인 주의력 분산 문제는 개선되지 않습니다."
       },
       {
         "label": "D",
-        "text": "Add explicit instructions in the system prompt requiring the model to apply consistent standards and double-check all files before responding.",
+        "text": "Add explicit instructions in the system prompt requiring consistent standards across all files.",
         "rationale": "프롬프트 지시사항만으로는 다수의 파일을 동시에 처리할 때 발생하는 주의력 희석 문제를 해결할 수 없습니다. 모델이 22개 파일을 한 번에 분석하면 일부 파일은 깊이 있게, 일부는 피상적으로 검토하게 되며, 지시사항을 추가해도 이 구조적 문제는 개선되지 않습니다."
       }
     ],
@@ -7675,7 +7741,9 @@
     "source_excerpt": "Multi-pass review: splitting large reviews into per-file local analysis passes plus cross-file integration passes to avoid attention dilution and contradictory findings",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -7739,12 +7807,12 @@
       },
       {
         "label": "B",
-        "text": "Increase the context window size and add a verification pass where the model self-reports confidence scores alongside each finding to identify low-confidence areas.",
-        "rationale": "더 큰 context window는 attention 품질 문제를 해결하지 못하며, confidence 점수를 추가하는 verification pass는 이미 놓친 이슈를 발견하는 데 도움이 되지 않습니다. 문제는 일부 파일이 아예 분석되지 않는 것이므로 신뢰도 보고만으로는 해결되지 않습니다."
+        "text": "Increase the context window size and add a verification pass where the model self-reports confidence scores alongside each finding to identify low-confidence areas that need deeper analysis.",
+        "rationale": "더 큰 context window는 attention 품질 문제를 해결하지 못하며, confidence 점수를 추가하는 verification pass는 이미 놓친 이슈를 발견하는 데 도움이 되지 않습니다. 문제는 일부 파일이 아예 분석되지 않는 것이므로 신뢰도 보고와 추가 분석 라우팅만으로는 근본적인 attention 희석 문제가 해결되지 않습니다."
       },
       {
         "label": "C",
-        "text": "Use a second independent Claude instance to re-review the full 18-file set without access to the first review's reasoning context or findings.",
+        "text": "Use a second independent Claude instance to re-review the full 18-file set.",
         "rationale": "독립적인 인스턴스(independent instance)는 self-review 한계를 극복하는 데 유용하지만, 이 상황의 근본 원인은 한 번에 너무 많은 파일을 처리하는 attention 희석입니다. 두 번째 인스턴스도 동일한 18개 파일을 한꺼번에 분석하면 같은 불균등한 커버리지 문제를 겪게 됩니다."
       },
       {
@@ -7758,7 +7826,8 @@
     "status": "approved",
     "review_retries": 1,
     "detected_patterns": [
-      "meta_reference"
+      "meta_reference",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -7884,7 +7953,8 @@
     "review_retries": 1,
     "detected_patterns": [
       "parse",
-      "answer_too_long:repaired"
+      "answer_too_long:repaired",
+      "length_cue:rebalance_failed"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -8076,12 +8146,12 @@
       },
       {
         "label": "B",
-        "text": "Configure the coordinator to cache full document objects in external storage and pass only document IDs to the synthesis agent.",
-        "rationale": "문서 ID만 전달하면 synthesis agent가 실제 문서 내용에 접근할 수 없어 분석을 수행할 수 없습니다. Synthesis agent는 title, publication date, text content가 필요한데, 이 접근 방식은 필요한 정보를 제거하여 다른 문제를 만듭니다."
+        "text": "Cache full document objects in external storage and pass only document IDs to the synthesis agent.",
+        "rationale": "문서 ID만 전달하면 synthesis agent가 실제 문서 내용에 접근할 수 없어 분석을 수행할 수 없습니다. Synthesis agent는 title, publication date, text content가 필요한데, 이 접근 방식은 필요한 정보를 제거하여 작업을 불가능하게 만듭니다."
       },
       {
         "label": "C",
-        "text": "Implement progressive summarization in the synthesis agent to condense earlier document findings as new documents are processed.",
+        "text": "Implement progressive summarization in the synthesis agent to condense earlier document findings as new documents are processed, preserving key facts in a structured case block.",
         "rationale": "Progressive summarization은 수치, 날짜, 제품 사양 같은 transactional facts를 모호한 요약으로 압축할 위험이 있습니다. 근본 원인은 verbose tool output이 컨텍스트에 누적되는 것인데, 이미 누적된 후에 요약하는 것은 토큰을 이미 소비한 뒤의 사후 대응이며 정보 손실 위험도 있습니다."
       },
       {
@@ -8094,7 +8164,9 @@
     "source_excerpt": "Trimming verbose tool outputs to only relevant fields before they accumulate in context (e.g., keeping only return-relevant fields from order lookups)",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -8136,7 +8208,8 @@
     "status": "approved",
     "review_retries": 1,
     "detected_patterns": [
-      "scenario_mismatch"
+      "scenario_mismatch",
+      "length_cue:rebalance_failed"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -8264,7 +8337,8 @@
     "status": "approved",
     "review_retries": 1,
     "detected_patterns": [
-      "multiple_correct"
+      "multiple_correct",
+      "length_cue:rebalance_failed"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -8677,7 +8751,7 @@
       },
       {
         "label": "B",
-        "text": "An error exception terminating the research workflow due to the ArXiv timeout, with the pharmaceutical database zero-match treated as a successful completion.",
+        "text": "An error exception terminating the research workflow due to the ArXiv timeout, with the pharmaceutical database zero-match treated as successful.",
         "rationale": "단일 소스(ArXiv)의 타임아웃으로 전체 워크플로우를 종료하는 것은 단일 실패로 전체를 중단하는(terminating entire workflows on single failures) 안티패턴입니다. PubMed에서 이미 12편의 논문을 확보했으므로, 코디네이터가 부분 결과로 진행하거나 ArXiv만 재시도할 수 있어야 합니다."
       },
       {
@@ -8687,8 +8761,8 @@
       },
       {
         "label": "D",
-        "text": "Combined results showing 12 papers from all sources with detailed logs, treating both the ArXiv timeout and pharmaceutical database query as successfully returning empty results.",
-        "rationale": "타임아웃을 빈 결과로 반환하는 것은 오류를 조용히 억제하는(silently suppressing errors) 안티패턴입니다. 코디네이터는 ArXiv가 일시적 네트워크 문제로 실패했는지, 실제로 관련 논문이 없는지 구분할 수 없어 재시도 기회를 잃게 됩니다."
+        "text": "Combined results showing 12 papers from all sources with detailed execution logs, treating both the ArXiv timeout and pharmaceutical database query as successfully returning empty results to avoid workflow interruption.",
+        "rationale": "타임아웃을 빈 결과로 반환하는 것은 오류를 조용히 억제하는(silently suppressing errors) 안티패턴입니다. 코디네이터는 ArXiv가 일시적 네트워크 문제로 실패했는지, 실제로 관련 논문이 없는지 구분할 수 없어 재시도 기회를 잃게 됩니다. 워크플로우 중단을 피하려는 의도는 좋지만, 접근 실패를 숨기면 복구 결정을 내릴 수 없습니다."
       }
     ],
     "answer": "C",
@@ -8697,7 +8771,8 @@
     "review_retries": 1,
     "detected_patterns": [
       "answer_too_long:repaired",
-      "scenario_mismatch"
+      "scenario_mismatch",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -8844,17 +8919,17 @@
       },
       {
         "label": "B",
-        "text": "Report both situations as errors with identical structure but different error codes, one indicating timeout and another indicating no data found, requiring coordinator intervention for both.",
-        "rationale": "정책 저장소의 빈 결과를 오류로 취급하는 것은 잘못된 접근입니다. 저장소에 개발도상국 관련 문서가 없는 것은 데이터 갭이지 실패가 아니며, 성공적인 쿼리 결과입니다. 이를 오류로 보고하면 coordinator가 불필요한 재시도나 에스컬레이션을 수행하게 되고, 유효한 빈 결과와 실제 접근 실패를 구분할 수 없게 됩니다."
+        "text": "Report both situations as errors with identical structure but different error codes, one indicating timeout and another indicating no data found, with each error including a severity level and requiring coordinator intervention for both.",
+        "rationale": "정책 저장소의 빈 결과를 오류로 취급하는 것은 잘못된 접근입니다. 저장소에 개발도상국 관련 문서가 없는 것은 데이터 갭이지 실패가 아니며, 성공적인 쿼리 결과입니다. 이를 오류로 보고하면 coordinator가 불필요한 재시도나 에스컬레이션을 수행하게 되고, 유효한 빈 결과와 실제 접근 실패를 구분할 수 없게 됩니다. Severity level을 추가해도 근본적인 분류 오류는 해결되지 않습니다."
       },
       {
         "label": "C",
-        "text": "Return both outcomes as successful results with empty lists, allowing the synthesis agent to handle missing data and annotate coverage gaps in the final report.",
+        "text": "Return both outcomes as successful results with empty lists, allowing the synthesis agent to handle missing data.",
         "rationale": "오류를 조용히 억제하고(silently suppressing errors) 빈 결과를 성공으로 반환하는 것은 안티패턴입니다. 타임아웃은 재시도로 해결될 수 있는 일시적 실패인데, 이를 성공으로 위장하면 coordinator가 복구 기회를 잃고 불완전한 연구 결과를 생성하게 됩니다. 접근 실패와 유효한 빈 결과를 구분하지 않으면 적절한 복구 결정이 불가능합니다."
       },
       {
         "label": "D",
-        "text": "Return a generic status indicating partial data unavailability for both situations, allowing the coordinator to apply a uniform recovery strategy across all subagent failures.",
+        "text": "Return a generic status indicating partial data unavailability for both situations, allowing the coordinator to apply a uniform recovery strategy.",
         "rationale": "일반적인 오류 상태(generic error status)는 타임아웃과 유효한 빈 결과 사이의 중요한 차이를 숨겨버립니다. Coordinator는 재시도가 필요한 일시적 접근 실패와 정상적으로 처리해야 하는 빈 결과를 구분할 수 없게 되어, 불필요한 재시도를 하거나 유효한 데이터 갭 정보를 무시하는 잘못된 결정을 내릴 수 있습니다."
       }
     ],
@@ -8863,7 +8938,8 @@
     "status": "approved",
     "review_retries": 1,
     "detected_patterns": [
-      "scenario_mismatch"
+      "scenario_mismatch",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -8905,7 +8981,9 @@
     "source_excerpt": "Having subagents implement local recovery for transient failures and only propagate errors they cannot resolve, including what was attempted and partial results",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalance_failed"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -8964,7 +9042,7 @@
     "options": [
       {
         "label": "A",
-        "text": "Have Claude Code maintain a scratchpad file recording key classes and relationships, then reference the scratchpad in subsequent questions to preserve specific findings.",
+        "text": "Have Claude Code maintain a scratchpad file recording key classes and relationships, then reference the scratchpad in subsequent questions.",
         "rationale": "스크래치패드 파일은 확장된 탐색 세션에서 핵심 발견 사항을 컨텍스트 경계를 넘어 유지하는 역할을 합니다. 에이전트가 발견한 구체적인 클래스(StripePaymentProcessor, RefundCoordinator 등)를 기록하고 이후 질문에서 참조하면, 컨텍스트 저하로 인해 모델이 일반적인 패턴을 언급하는 대신 실제로 발견한 구체적인 클래스를 계속 활용할 수 있습니다."
       },
       {
@@ -8974,12 +9052,12 @@
       },
       {
         "label": "C",
-        "text": "Switch to a Claude model with a larger context window to accommodate the full exploration history and all discovered class definitions.",
+        "text": "Switch to a Claude model with a larger context window to accommodate the full exploration history, all discovered class definitions, and their inheritance hierarchies.",
         "rationale": "더 큰 컨텍스트 윈도우는 더 많은 탐색 내역을 담을 수 있지만, 확장된 세션에서 발생하는 컨텍스트 저하 문제를 해결하지 못합니다. 긴 세션에서는 컨텍스트가 길어질수록 모델이 초기에 발견한 구체적인 클래스보다 일반적인 패턴에 의존하는 경향이 나타나며, 단순히 용량을 늘리는 것으로는 이 현상을 방지할 수 없습니다."
       },
       {
         "label": "D",
-        "text": "Restart the exploration session periodically to clear context, then re-examine the codebase sections to rediscover relevant classes and relationships.",
+        "text": "Restart the exploration session to clear context, then re-examine the codebase sections.",
         "rationale": "세션을 재시작하면 컨텍스트가 초기화되지만, 이전에 발견한 모든 정보를 잃게 되어 같은 탐색을 반복해야 합니다. 이는 비효율적이며, 이전 탐색에서 얻은 구체적인 발견 사항을 보존하는 것이 아니라 버리는 접근법입니다. 컨텍스트 저하 문제를 해결하는 대신 회피하는 방식입니다."
       }
     ],
@@ -8989,7 +9067,8 @@
     "review_retries": 1,
     "detected_patterns": [
       "scenario_mismatch",
-      "answer_too_long:repaired"
+      "answer_too_long:repaired",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -9031,7 +9110,9 @@
     "source_excerpt": "The role of scratchpad files for persisting key findings across context boundaries",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalance_failed"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -9180,22 +9261,22 @@
     "options": [
       {
         "label": "A",
-        "text": "Spawn subagents to investigate each component separately and have the main agent coordinate by reading their final summaries.",
+        "text": "Spawn subagents to investigate each component separately and have the main agent coordinate by reading their summaries.",
         "rationale": "서브에이전트 위임(subagent delegation)은 상세한 탐색 출력을 격리하고 메인 에이전트가 고수준 조정을 유지하는 데 유용하지만, 이 시나리오는 단일 세션에서 발생하는 컨텍스트 저하 문제입니다. 서브에이전트는 주로 병렬 탐색이나 출력 격리에 적합하며, 긴 세션 동안 발견한 구체적 정보를 지속적으로 참조하는 문제에는 스크래치패드가 더 직접적인 해결책입니다."
       },
       {
         "label": "B",
-        "text": "Instruct Claude to maintain a scratchpad.md file recording key findings and reference it when answering subsequent questions about the codebase.",
+        "text": "Instruct Claude to maintain a scratchpad.md file recording key findings and reference it when answering subsequent questions.",
         "rationale": "스크래치패드 파일(scratchpad file)에 주요 발견 사항을 기록하고 후속 질문에서 이를 참조하도록 하면 컨텍스트 경계를 넘어 구체적인 정보(예: OrderProcessor 클래스, RabbitMQ 설정)를 유지할 수 있습니다. 이 방법은 모델이 초반에 발견한 구체적인 클래스와 설정을 나중에도 계속 참조할 수 있게 하여 컨텍스트 저하(context degradation)를 직접적으로 방지합니다."
       },
       {
         "label": "C",
-        "text": "Use /compact periodically during the session to reduce context usage and remove verbose discovery output from earlier exploration.",
+        "text": "Use /compact periodically to reduce context usage and remove verbose discovery output from earlier exploration.",
         "rationale": "/compact은 컨텍스트 사용량을 줄이는 데 도움이 되지만, 압축 과정에서 초반에 발견한 구체적인 정보(클래스명, 설정 등)가 손실될 수 있습니다. 이 방법은 컨텍스트 공간을 확보하지만 주요 발견 사항을 명시적으로 보존하지 않아 모델이 일반적인 패턴으로 회귀하는 문제를 해결하지 못합니다."
       },
       {
         "label": "D",
-        "text": "Design structured state exports with manifests that the coordinator loads on resume to recover key findings after context limits.",
+        "text": "Design structured state exports with manifests that the coordinator loads on resume to recover key findings after context limits are reached.",
         "rationale": "구조화된 상태 지속성(structured state persistence)과 매니페스트는 크래시 복구(crash recovery)나 세션 재개 시 상태를 복원하는 데 사용됩니다. 이 시나리오는 단일 연속 세션 내에서 발생하는 컨텍스트 저하 문제이므로, 세션 중단이나 재시작이 아닌 실시간 참조를 위한 스크래치패드가 더 적합한 해결책입니다."
       }
     ],
@@ -9203,7 +9284,9 @@
     "source_excerpt": "Having agents maintain scratchpad files recording key findings, referencing them for subsequent questions to counteract context degradation",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -9423,7 +9506,8 @@
     "review_retries": 2,
     "detected_patterns": [
       "scenario_mismatch",
-      "scenario_mismatch"
+      "scenario_mismatch",
+      "length_cue:rebalance_failed"
     ],
     "human_checked": false,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -9447,12 +9531,12 @@
       },
       {
         "label": "B",
-        "text": "Route all invoices with ambiguous formatting or contradictory totals to human review before extraction, prioritizing reviewer capacity on problematic source documents.",
+        "text": "Route all invoices with ambiguous formatting or contradictory totals to human review before extraction.",
         "rationale": "소스 문서의 품질에 따라 전체 문서를 라우팅하는 것은 유용하지만, 현재 문제는 추출 후 필드별 신뢰도 점수가 실제 정확도를 제대로 반영하지 못한다는 것입니다. 검증 데이터를 사용하여 필드 수준 신뢰도 점수를 보정하는 것이 추출 결과의 라우팅 결정을 개선하는 직접적인 방법입니다."
       },
       {
         "label": "C",
-        "text": "Raise the confidence threshold to 0.90 for all fields to reduce the error rate in auto-approved extractions before they reach the accounting system.",
+        "text": "Raise the confidence threshold to 0.90 for all fields to reduce the error rate in auto-approved extractions, then monitor downstream payment discrepancies to verify the threshold is effective.",
         "rationale": "임계값을 임의로 높이는 것은 검증 데이터가 보여줄 수 있는 필드별 패턴(예: description은 0.80에서도 정확하지만 unit price는 더 높은 임계값이 필요할 수 있음)을 무시합니다. 레이블된 검증 세트를 활용한 체계적인 보정 없이 모든 필드에 동일한 임계값을 적용하면 정확한 추출까지 불필요하게 검토로 보내 검토자 용량을 낭비합니다."
       },
       {
@@ -9466,7 +9550,8 @@
     "status": "approved",
     "review_retries": 1,
     "detected_patterns": [
-      "scenario_mismatch"
+      "scenario_mismatch",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -9724,7 +9809,9 @@
     "source_excerpt": "How source attribution is lost during summarization steps when findings are compressed without preserving claim-source mappings",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalance_failed"
+    ],
     "human_checked": false,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -9892,7 +9979,8 @@
     "status": "approved",
     "review_retries": 0,
     "detected_patterns": [
-      "answer_too_long:repaired"
+      "answer_too_long:repaired",
+      "length_cue:rebalance_failed"
     ],
     "human_checked": false,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -9916,8 +10004,8 @@
       },
       {
         "label": "B",
-        "text": "Add a coordinator validation step that detects numerical conflicts in subagent outputs and triggers a specialized reconciliation agent to resolve all discrepancies before synthesis begins.",
-        "rationale": "합성 전에 불일치를 해결하려는 시도는 정당한 과학적 논쟁을 인위적으로 제거합니다. 서로 다른 연구 설계나 맥락에서 나온 충돌하는 값들은 독자가 알아야 할 중요한 정보이며, 자동으로 조정하면 이러한 차이의 본질과 의미를 숨기게 됩니다."
+        "text": "Add a coordinator validation step that detects numerical conflicts in subagent outputs and triggers a specialized reconciliation agent with domain-specific heuristics to resolve all discrepancies before synthesis begins.",
+        "rationale": "합성 전에 불일치를 해결하려는 시도는 정당한 과학적 논쟁을 인위적으로 제거합니다. 서로 다른 연구 설계나 맥락에서 나온 충돌하는 값들은 독자가 알아야 할 중요한 정보이며, 자동으로 조정하면 이러한 차이의 본질과 의미를 숨기게 됩니다. 도메인별 휴리스틱을 사용하더라도 정당한 논쟁을 제거하는 문제는 동일합니다."
       },
       {
         "label": "C",
@@ -9926,7 +10014,7 @@
       },
       {
         "label": "D",
-        "text": "Modify the web search agent to filter out sources with conflicting statistics during retrieval and pass only methodologically consistent findings to downstream agents for processing.",
+        "text": "Modify the web search agent to filter out sources with conflicting statistics during retrieval and pass only consistent findings to downstream agents.",
         "rationale": "검색 단계에서 충돌하는 통계를 필터링하면 중요한 정보를 조기에 손실시킵니다. 신뢰할 수 있는 출처들이 서로 다른 결과를 보고하는 것은 해당 주제에 대한 연구 상태를 반영하는 것이며, 이를 제거하면 독자에게 잘못된 합의 인상을 줍니다."
       }
     ],
@@ -9937,7 +10025,8 @@
     "detected_patterns": [
       "meta_reference",
       "scenario_mismatch",
-      "answer_too_long:repaired"
+      "answer_too_long:repaired",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -9966,8 +10055,8 @@
       },
       {
         "label": "C",
-        "text": "Calculate the weighted average of all three values based on source publication recency, returning the result with citations to all three sources.",
-        "rationale": "가중 평균을 계산하는 것은 subagent가 조정 전략을 미리 결정하는 것으로, coordinator가 맥락에 따라 다른 조정 방법(예: 방법론적 차이 고려, 특정 출처 선호)을 선택할 기회를 제거합니다. 충돌하는 원본 값들이 손실되어 최종 보고서에서 데이터 품질에 대한 투명성을 제공할 수 없습니다."
+        "text": "Calculate the weighted average of all three values based on source publication recency and report methodology quality scores, returning the result with citations to all three sources.",
+        "rationale": "가중 평균을 계산하는 것은 subagent가 조정 전략을 미리 결정하는 것으로, coordinator가 맥락에 따라 다른 조정 방법(예: 방법론적 차이 고려, 특정 출처 선호)을 선택할 기회를 제거합니다. 방법론 품질 점수를 subagent가 평가하는 것도 coordinator의 역할을 침해하며, 충돌하는 원본 값들이 손실되어 최종 보고서에서 데이터 품질에 대한 투명성을 제공할 수 없습니다."
       },
       {
         "label": "D",
@@ -9979,7 +10068,9 @@
     "source_excerpt": "Completing document analysis with conflicting values included and explicitly annotated, letting the coordinator decide how to reconcile before passing to synthesis",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -10136,12 +10227,12 @@
       },
       {
         "label": "C",
-        "text": "Monitor the length of the assistant message content and terminate the loop when a response exceeds 500 tokens of text.",
+        "text": "Monitor the length of the assistant message content and terminate when a response exceeds 500 tokens.",
         "rationale": "응답 길이를 완료 지표로 사용하는 것은 잘못된 접근입니다. 긴 응답이 중간 추론 단계일 수 있고, 짧은 응답이 최종 결과일 수 있습니다. 이는 assistant 텍스트 콘텐츠를 완료 지표로 확인하는 안티패턴의 변형으로, agentic loop lifecycle의 올바른 신호인 stop_reason을 무시합니다."
       },
       {
         "label": "D",
-        "text": "Set a maximum iteration limit of 20 calls as the primary loop control and log a warning when this limit is reached.",
+        "text": "Set a maximum iteration limit of 20 calls as the primary loop control mechanism and log a warning when this limit is reached during execution.",
         "rationale": "임의의 반복 횟수 제한을 주요 종료 메커니즘으로 사용하는 것은 명시적인 안티패턴입니다. 이 방식은 복잡한 작업이 완료되기 전에 중단되거나, 간단한 작업에서도 불필요하게 많은 반복을 허용할 수 있습니다. 반복 제한은 안전장치로만 사용해야 하며, 주요 종료 로직은 stop_reason을 기반으로 해야 합니다."
       }
     ],
@@ -10149,7 +10240,9 @@
     "source_excerpt": "The agentic loop lifecycle: sending requests to Claude, inspecting stop_reason (\"tool_use\" vs \"end_turn\"), executing requested tools, and returning results for the next iteration",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -10173,7 +10266,7 @@
       },
       {
         "label": "B",
-        "text": "Update the analyzer's system prompt to instruct it to always request additional context through the coordinator rather than contacting the file-reader subagent directly.",
+        "text": "Update the analyzer's system prompt to instruct it to request additional context through the coordinator.",
         "rationale": "Prompt 기반 지시는 확률적이며, 아키텍처 제약을 강제하지 못합니다. Subagent가 여전히 file-reader를 직접 호출할 수 있는 구조적 경로를 가지고 있다면, prompt만으로는 hub-and-spoke 패턴을 보장할 수 없고 observability와 제어 문제가 재발할 수 있습니다."
       },
       {
@@ -10183,7 +10276,7 @@
       },
       {
         "label": "D",
-        "text": "Add detailed logging statements within each subagent to capture all incoming and outgoing requests, then aggregate these distributed logs into a centralized monitoring dashboard.",
+        "text": "Add detailed logging statements within each subagent to capture all incoming and outgoing requests, then aggregate these distributed logs into a centralized monitoring dashboard with timestamp correlation and request tracing.",
         "rationale": "분산 로깅은 사후 관찰성을 개선할 수 있지만, coordinator를 우회하는 직접 통신 자체는 여전히 허용됩니다. 이는 error handling이 각 subagent에 분산되어 일관성이 떨어지고, coordinator가 정보 흐름을 제어하거나 중재할 수 없다는 근본 문제를 해결하지 못합니다."
       }
     ],
@@ -10191,7 +10284,9 @@
     "source_excerpt": "Hub-and-spoke architecture where a coordinator agent manages all inter-subagent communication, error handling, and information routing",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -10257,25 +10352,27 @@
       },
       {
         "label": "B",
-        "text": "Add a system prompt instruction directing the agent to summarize the conversation and include key details when calling the escalate_to_human tool for any billing dispute.",
-        "rationale": "프롬프트 기반 지침(prompt-based guidance)은 에이전트가 요약을 일관되게 생성하거나 필수 필드(고객 ID, 근본 원인, 금액)를 모두 포함한다는 보장이 없습니다. 구조화된 도구 출력이 더 신뢰할 수 있는 접근 방식입니다."
+        "text": "Add a system prompt instruction directing the agent to summarize the conversation and include key details when calling the escalate_to_human tool for any billing dispute, ensuring consistency across all escalations.",
+        "rationale": "프롬프트 기반 지침(prompt-based guidance)은 에이전트가 요약을 일관되게 생성하거나 필수 필드(고객 ID, 근본 원인, 금액)를 모두 포함한다는 보장이 없습니다. 일관성을 지시하더라도 프롬프트만으로는 구조화된 출력을 보장할 수 없으며, 도구 기반 접근 방식이 더 신뢰할 수 있습니다."
       },
       {
         "label": "C",
-        "text": "Grant human agents read-only access to the Claude conversation API so they can retrieve the full transcript and extract relevant context themselves when needed.",
+        "text": "Grant human agents read-only access to the Claude conversation API so they can retrieve the full transcript when needed.",
         "rationale": "상담원이 긴 대화 기록을 읽고 관련 정보를 직접 추출하도록 하면 핸들 타임이 오히려 증가합니다. 구조화된 요약을 미리 제공하는 것이 훨씬 효율적입니다."
       },
       {
         "label": "D",
         "text": "Implement a prerequisite gate that blocks escalate_to_human calls until the agent has successfully executed get_customer and documented the dispute reason in logs.",
-        "rationale": "프로그램적 전제 조건(programmatic prerequisite)은 도구 호출 순서를 강제하는 데 유용하지만, 이 문제는 순서가 아니라 핸드오프 시 컨텍스트 전달 부족입니다. 로그에 정보를 기록해도 상담원이 쉽게 접근할 수 없습니다."
+        "rationale": "프로그램적 전제 조건(programmatic prerequisite)은 도구 호출 순서를 강제하는 데 유용하지만, 이 시나리오의 문제는 순서가 아니라 핸드오프 시 컨텍스트 전달 부족입니다. 로그에 정보를 기록해도 상담원이 쉽게 접근할 수 없습니다."
       }
     ],
     "answer": "A",
     "source_excerpt": "Compiling structured handoff summaries (customer ID, root cause, refund amount, recommended action) when escalating to human agents who lack access to the conversation transcript",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -10447,7 +10544,9 @@
     "source_excerpt": "The impact of system prompt wording on tool selection: keyword-sensitive instructions can create unintended tool associations",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalance_failed"
+    ],
     "human_checked": false,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -10643,17 +10742,17 @@
       },
       {
         "label": "B",
-        "text": "Create a CLAUDE.md file in each service directory that uses @import to include only the standards documents relevant to that service's architectural responsibilities and data access patterns.",
-        "rationale": "각 서비스 디렉토리에 CLAUDE.md를 배치하고 @import 구문으로 해당 서비스에 필요한 표준 문서만 선택적으로 포함하면, payment 서비스는 security-standards.md와 api-conventions.md만, analytics 서비스는 database-standards.md와 api-conventions.md만 자동으로 로드됩니다. 이는 maintainer의 도메인 지식(각 서비스의 아키텍처 책임)을 활용하여 모듈식 구성을 구현하는 정확한 접근입니다."
+        "text": "Create a CLAUDE.md file in each service directory that uses @import to include only the standards documents relevant to that service's architectural responsibilities.",
+        "rationale": "각 서비스 디렉토리에 CLAUDE.md를 배치하고 @import 구문으로 해당 서비스에 필요한 표준 문서만 선택적으로 포함하면, payment 서비스는 security-standards.md와 api-conventions.md만, analytics 서비스는 database-standards.md와 api-conventions.md만 자동으로 로드됩니다. 이는 maintainer의 도메인 지식을 활용하여 모듈식 구성을 구현하는 정확한 접근입니다."
       },
       {
         "label": "C",
-        "text": "Consolidate all standards into the root CLAUDE.md with instructions for Claude Code to apply only relevant sections based on the service name in the file path.",
+        "text": "Consolidate all standards into the root CLAUDE.md with instructions for Claude Code to apply only relevant sections based on the service name in the file path and the type of code being generated.",
         "rationale": "프롬프트 지시문(prompt instructions)으로 조건부 적용을 구현하려는 시도는 프로그램적 강제(programmatic enforcement)가 필요한 곳에 지시문에 의존하는 일반적인 안티패턴입니다. @import를 사용한 구조적 분리가 더 신뢰할 수 있고 자동으로 올바른 표준을 로드합니다."
       },
       {
         "label": "D",
-        "text": "Place all three standards documents in .claude/rules/ with glob patterns that match file types, so security rules apply to auth files and database rules apply to model files.",
+        "text": "Place all standards in .claude/rules/ with glob patterns matching file types so security rules apply to auth files and database rules to models.",
         "rationale": ".claude/rules/의 glob 패턴은 파일 경로나 확장자 기반으로 규칙을 적용하지만, 이 상황에서는 서비스별 아키텍처 책임(payment 서비스는 데이터베이스 직접 접근 안 함)에 따라 표준을 선택해야 합니다. 파일 타입만으로는 서비스 경계를 구분할 수 없어 부적절한 표준이 적용될 수 있습니다."
       }
     ],
@@ -10662,7 +10761,8 @@
     "status": "approved",
     "review_retries": 1,
     "detected_patterns": [
-      "scenario_mismatch"
+      "scenario_mismatch",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -10899,8 +10999,8 @@
       },
       {
         "label": "B",
-        "text": "Prepend a severity classification prompt that labels each finding as critical, moderate, or minor so developers can filter style issues themselves in the output.",
-        "rationale": "심각도 분류를 추가해도 style 카테고리의 높은 오탐률 자체는 해결되지 않으며, 개발자에게 필터링 부담을 전가할 뿐입니다. 오탐이 많은 카테고리가 정확한 카테고리에 대한 신뢰를 훼손하는 근본 문제를 다루지 않으므로, 개발자들은 여전히 전체 리뷰 시스템을 무시하게 됩니다."
+        "text": "Prepend a severity classification prompt with critical, moderate, and minor labels for each finding, then configure the CI dashboard to let developers filter out minor style issues from the output view.",
+        "rationale": "심각도 분류를 추가하고 대시보드 필터를 제공해도 style 카테고리의 높은 오탐률 자체는 해결되지 않으며, 개발자에게 필터링 부담을 전가할 뿐입니다. 오탐이 많은 카테고리가 정확한 카테고리에 대한 신뢰를 훼손하는 근본 문제를 다루지 않으므로, 개발자들은 여전히 전체 리뷰 시스템을 무시하게 됩니다."
       },
       {
         "label": "C",
@@ -10909,7 +11009,7 @@
       },
       {
         "label": "D",
-        "text": "Add an instruction to the style section asking Claude to only report high-confidence style violations and be conservative about subjective preferences.",
+        "text": "Add an instruction asking Claude to only report high-confidence style violations and be conservative.",
         "rationale": "\"high-confidence\"나 \"be conservative\" 같은 일반적인 지시는 구체적인 범주 기준에 비해 정밀도 개선에 실패합니다. 이런 신뢰도 기반 필터링은 모호하여 오탐 문제를 해결하지 못하며, 팀 컨벤션을 명시적으로 정의하지 않으므로 개발자 신뢰 회복에 효과적이지 않습니다."
       }
     ],
@@ -10917,7 +11017,9 @@
     "source_excerpt": "The impact of false positive rates on developer trust: high false positive categories undermine confidence in accurate categories",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -10941,17 +11043,17 @@
       },
       {
         "label": "B",
-        "text": "Add a post-processing validation step that flags null sample-size fields and re-prompts Claude with the specific paragraph containing population mentions.",
+        "text": "Add a post-processing validation step that flags null sample-size fields and re-prompts Claude with the specific paragraph containing population mentions to retry extraction.",
         "rationale": "재시도 메커니즘은 복잡성을 추가하고 API 호출을 두 배로 늘립니다. 초기 프롬프트에 few-shot 예시를 포함하면 첫 번째 추출에서 완전성을 달성할 수 있어 후처리 재시도가 불필요합니다."
       },
       {
         "label": "C",
-        "text": "Add 3-4 few-shot examples showing successful extraction of sample sizes from informal phrasings and from both dedicated methodology sections and embedded result paragraphs.",
+        "text": "Add 3-4 few-shot examples showing extraction of sample sizes from informal phrasings and from both methodology sections and embedded paragraphs.",
         "rationale": "Few-shot 예시는 추출 작업에서 환각(hallucination)을 줄이는 데 가장 효과적입니다. 비정형 측정값(informal measurements)과 다양한 문서 구조(dedicated sections vs embedded details)를 처리하는 구체적인 예시를 제공하면 모델이 패턴을 일반화하여 null 값 반환을 줄이고 추출 완전성을 높일 수 있습니다."
       },
       {
         "label": "D",
-        "text": "Use a JSON schema with required sample_size field and detailed pattern constraints to enforce extraction of population data from all document sections.",
+        "text": "Use a JSON schema with required sample_size field to enforce extraction of population data from all document sections.",
         "rationale": "JSON schema는 출력 형식을 강제하지만 추출 품질이나 완전성을 보장하지 않습니다. Schema만으로는 모델이 비정형 표현을 인식하거나 비표준 위치에서 정보를 찾도록 가르치지 못하며, 여전히 null 값이나 환각된 데이터를 반환할 수 있습니다."
       }
     ],
@@ -10959,7 +11061,9 @@
     "source_excerpt": "The effectiveness of few-shot examples for reducing hallucination in extraction tasks (e.g., handling informal measurements, varied document structures)",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -11022,17 +11126,17 @@
     "options": [
       {
         "label": "A",
-        "text": "Increase the retry limit to five attempts and add more detailed validation error messages explaining why estimated_hours is required for database insertion.",
+        "text": "Increase the retry limit to five attempts and add more detailed validation error messages explaining why estimated_hours is required for database insertion and how the model should extract it from PR context.",
         "rationale": "더 많은 재시도와 상세한 오류 메시지를 추가해도 원본 문서에 정보가 없으면 문제를 해결할 수 없습니다. 모델은 존재하지 않는 데이터를 추출할 수 없으므로 재시도 횟수를 늘리는 것은 비효율적입니다."
       },
       {
         "label": "B",
-        "text": "Switch from tool use to JSON mode for the extraction schema to give the model more flexibility in interpreting time estimates from context clues.",
+        "text": "Switch from tool use to JSON mode for the extraction schema to give the model more flexibility in interpreting time estimates.",
         "rationale": "JSON mode로 전환해도 원본 문서에 시간 추정 정보가 없다면 문제를 해결할 수 없습니다. tool use는 이미 스키마 구문 오류를 제거하므로, 출력 형식을 변경하는 것은 누락된 정보 문제와 무관합니다."
       },
       {
         "label": "C",
-        "text": "Add a calculated_hours field to the schema that derives estimates from affected_modules size and historical data to supplement missing stated values.",
+        "text": "Add a calculated_hours field to the schema that derives estimates from affected_modules size and historical data.",
         "rationale": "계산된 값을 추가하는 것은 원본 문서에서 정보를 추출하는 것이 아니라 새로운 데이터를 생성하는 것입니다. 이는 추출 작업의 범위를 벗어나며, 재시도 전략의 효과성 문제를 해결하지 못합니다. 정보가 없을 때 재시도는 여전히 비효율적입니다."
       },
       {
@@ -11045,7 +11149,9 @@
     "source_excerpt": "The limits of retry: retries are ineffective when the required information is simply absent from the source document (vs format or structural errors)",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -11199,7 +11305,7 @@
       },
       {
         "label": "B",
-        "text": "Implement automatic retry logic with exponential backoff in check_inventory so transient timeouts are resolved locally before any error reaches the coordinator agent.",
+        "text": "Implement automatic retry logic with exponential backoff in check_inventory so transient timeouts are resolved locally before any error reaches the coordinator.",
         "rationale": "로컬 재시도는 일시적 실패를 처리하는 좋은 방법이지만, 피크 시간대 시스템 부하로 인한 타임아웃은 재시도로 해결되지 않을 가능성이 높습니다. 재시도가 실패한 후에도 코디네이터가 복구 결정을 내리려면 여전히 구조화된 오류 컨텍스트가 필요합니다."
       },
       {
@@ -11209,7 +11315,7 @@
       },
       {
         "label": "D",
-        "text": "Add system prompt instructions that when inventory checks fail, the agent should proactively suggest alternatives like substitutes or expedited shipping based on order context.",
+        "text": "Add system prompt instructions that when inventory checks fail, the agent should proactively suggest alternatives like substitutes or expedited shipping based on the successfully retrieved order context.",
         "rationale": "프롬프트 지시만으로는 에이전트가 어떤 제품을 조회하려 했는지, 왜 실패했는지(일시적 타임아웃 vs 영구적 오류), 어떤 대안이 적절한지 판단할 수 없습니다. 일반적인 오류 메시지는 코디네이터가 지능적인 복구 결정을 내리는 데 필요한 컨텍스트를 숨깁니다."
       }
     ],
@@ -11217,7 +11323,9 @@
     "source_excerpt": "Structured error context (failure type, attempted query, partial results, alternative approaches) as enabling intelligent coordinator recovery decisions",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -11259,7 +11367,9 @@
     "source_excerpt": "Structured state persistence for crash recovery: each agent exports state to a known location, and the coordinator loads a manifest on resume",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalance_failed"
+    ],
     "human_checked": false,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -11391,7 +11501,8 @@
     "status": "approved",
     "review_retries": 1,
     "detected_patterns": [
-      "meta_reference"
+      "meta_reference",
+      "length_cue:rebalance_failed"
     ],
     "human_checked": false,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -11415,17 +11526,17 @@
       },
       {
         "label": "B",
-        "text": "Use Grep to search file contents across the repository for the pattern 'legacy_auth' to find all import statements and references.",
+        "text": "Use Grep to search file contents across the repository for the pattern 'legacy_auth' to find all import statements.",
         "rationale": "Grep은 파일 내용에서 패턴을 검색하는 도구로, 함수 이름, 에러 메시지, import 문 등을 찾는 데 적합합니다. 'legacy_auth' 패턴을 검색하면 모든 import 문과 사용 위치를 빠르게 찾을 수 있으며, 엔지니어가 수정 작업을 계획하는 데 필요한 정보를 제공합니다."
       },
       {
         "label": "C",
-        "text": "Use Glob to match test files with '**/*test*.py', then use Grep on those files to search for legacy_auth patterns.",
+        "text": "Use Glob to match test files with '**/*test*.py', then use Grep on those files to search for legacy_auth patterns in the test suite.",
         "rationale": "에러 메시지가 테스트 파일에서 발생했을 가능성이 있지만, legacy_auth import는 서비스 코드, 유틸리티 모듈, 설정 파일 등 어디에나 있을 수 있습니다. 테스트 파일로만 검색 범위를 제한하면 다른 위치의 import 문을 놓치게 됩니다."
       },
       {
         "label": "D",
-        "text": "Use Bash to run 'find . -name \"*.py\"' to list all Python files, then use Read on each file to locate legacy_auth.",
+        "text": "Use Bash to run 'find . -name \"*.py\"' to list all Python files, then use Read on each file.",
         "rationale": "모든 Python 파일을 순차적으로 읽는 것은 300개 이상의 파일이 있는 대규모 코드베이스에서 매우 비효율적입니다. 파일 내용 검색을 위해 설계된 도구를 사용하는 것이 훨씬 빠르고 효과적입니다."
       }
     ],
@@ -11434,7 +11545,8 @@
     "status": "approved",
     "review_retries": 0,
     "detected_patterns": [
-      "answer_too_long:repaired"
+      "answer_too_long:repaired",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -11540,12 +11652,12 @@
       },
       {
         "label": "B",
-        "text": "Test-driven development ensures the validation library meets performance requirements by including benchmark tests that measure execution time against large payloads before optimization begins.",
-        "rationale": "성능 요구사항을 테스트 스위트에 포함하는 것은 좋은 실천이지만, 이는 테스트 주도 반복의 한 가지 측면일 뿐입니다. 핵심 장점은 예상 동작, 엣지 케이스, 성능 요구사항 모두를 명확하게 정의하고 테스트 실패를 통해 Claude를 가이드하는 전체 접근 방식입니다."
+        "text": "Test-driven development ensures the validation library meets performance requirements by including benchmark tests that measure execution time against large payloads and memory consumption patterns before optimization begins.",
+        "rationale": "성능 요구사항을 테스트 스위트에 포함하는 것은 좋은 실천이지만, 이는 테스트 주도 반복의 한 가지 측면일 뿐입니다. 핵심 장점은 예상 동작, 엣지 케이스, 성능 요구사항 모두를 명확하게 정의하고 테스트 실패를 통해 Claude를 가이드하는 전체 접근 방식입니다. 벤치마크 테스트는 유용하지만 반복적 개선 프로세스의 주요 가치는 아닙니다."
       },
       {
         "label": "C",
-        "text": "Writing tests first allows the team to validate Claude's implementation in CI/CD pipelines automatically, reducing the manual review burden and catching regressions in future iterations.",
+        "text": "Writing tests first allows the team to validate Claude's implementation automatically, reducing manual review burden.",
         "rationale": "자동화된 검증은 테스트 스위트의 중요한 이점이지만, 이 문제는 반복적 개선(iterative refinement) 과정에서 테스트 주도 접근의 장점을 묻고 있습니다. CI/CD 통합은 구현 후의 이점이며, 테스트 실패를 공유하여 Claude를 가이드하는 반복 프로세스 자체의 핵심 가치는 아닙니다."
       },
       {
@@ -11559,7 +11671,8 @@
     "status": "approved",
     "review_retries": 1,
     "detected_patterns": [
-      "meta_reference"
+      "meta_reference",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -11710,12 +11823,12 @@
       },
       {
         "label": "B",
-        "text": "Implement a pre-processing step that detects frustration keywords and routes those requests to a specialized high-priority queue before the agent processes them.",
-        "rationale": "좌절감 키워드 기반 라우팅은 문제의 실제 복잡도를 평가하지 않고 감정에만 반응합니다. 에이전트가 간단한 문제를 빠르게 해결할 수 있는 상황에서도 우선순위 큐로 보내면 오히려 해결 시간이 늘어납니다."
+        "text": "Implement a pre-processing step that detects frustration keywords (\"ridiculous,\" \"upset,\" \"angry\") and routes those requests to a specialized high-priority queue before the agent processes them.",
+        "rationale": "좌절감 키워드 기반 라우팅은 문제의 실제 복잡도를 평가하지 않고 감정에만 반응합니다. 구체적인 키워드를 감지하더라도 에이전트가 간단한 문제를 빠르게 해결할 수 있는 상황에서 우선순위 큐로 보내면 오히려 해결 시간이 늘어납니다."
       },
       {
         "label": "C",
-        "text": "Deploy a sentiment analysis classifier that scores frustration intensity on a scale of 1-10 and escalates only when the score exceeds 7.",
+        "text": "Deploy a sentiment analysis classifier that scores frustration intensity and escalates when the score exceeds a threshold.",
         "rationale": "감정 기반 에스컬레이션은 실제 케이스 복잡도에 대한 신뢰할 수 없는 대리 지표입니다. 고객이 좌절감을 표현하더라도 문제 자체가 간단할 수 있으며, 감정 점수는 에이전트의 해결 능력과 직접적인 상관관계가 없습니다."
       },
       {
@@ -11728,7 +11841,9 @@
     "source_excerpt": "Acknowledging frustration while offering resolution when the issue is within the agent's capability, escalating only if the customer reiterates their preference",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
@@ -11746,12 +11861,12 @@
     "options": [
       {
         "label": "A",
-        "text": "Configure the coordinator to use compact mode after each investigation, compressing verbose output before the next exploration question.",
+        "text": "Configure the coordinator to use compact mode after each investigation, compressing verbose output and reducing token usage before the next exploration question.",
         "rationale": "/compact은 컨텍스트 사용량을 줄이는 데 도움이 되지만, 장황한 탐색 출력이 이미 코디네이터의 컨텍스트에 들어온 후에 적용됩니다. 서브에이전트 위임과 달리 출력을 애초에 격리하지 않으므로, 코디네이터는 여전히 상세한 파일 내용과 의존성 그래프를 처리해야 합니다."
       },
       {
         "label": "B",
-        "text": "Have the coordinator handle all investigations sequentially, recording findings in scratchpad files after each detailed exploration phase.",
+        "text": "Have the coordinator handle all investigations sequentially, recording findings in scratchpad files.",
         "rationale": "스크래치패드 파일은 컨텍스트 경계를 넘어 발견 사항을 유지하는 데 유용하지만, 단일 에이전트가 모든 상세 조사를 처리하면 장황한 출력이 코디네이터의 컨텍스트를 채워 고수준 조율 능력을 저하시킵니다. 이 접근은 출력 격리 문제를 해결하지 못합니다."
       },
       {
@@ -11761,7 +11876,7 @@
       },
       {
         "label": "D",
-        "text": "Spawn subagents to handle each detailed investigation, isolating verbose output while the coordinator maintains high-level architectural understanding.",
+        "text": "Spawn subagents to handle each detailed investigation, isolating verbose output while the coordinator maintains high-level understanding.",
         "rationale": "서브에이전트 위임(subagent delegation)은 상세한 탐색 작업이 생성하는 장황한 출력을 격리하면서 메인 에이전트가 고수준 조율을 유지할 수 있게 합니다. 각 서브에이전트가 특정 질문(데이터베이스 테이블 찾기, 의존성 추적)을 처리하고 요약된 결과만 코디네이터에게 반환하므로, 코디네이터의 컨텍스트는 아키텍처 이해에 집중할 수 있습니다."
       }
     ],
@@ -11770,7 +11885,8 @@
     "status": "approved",
     "review_retries": 0,
     "detected_patterns": [
-      "answer_too_long:repaired"
+      "answer_too_long:repaired",
+      "length_cue:rebalanced"
     ],
     "human_checked": false,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -11878,17 +11994,17 @@
       },
       {
         "label": "B",
-        "text": "Collect labeled validation examples from each vendor and document format, then recalibrate field-level confidence thresholds separately for each segment before expanding automation.",
-        "rationale": "세그먼트별로 신뢰도 임계값을 재보정하는 것은 검토 라우팅을 개선하는 방법이지만, 현재 자동화된 높은 신뢰도 추출 결과의 실제 오류율을 측정하지 않습니다. 확대 전에 먼저 기존 자동화가 모든 세그먼트에서 일관되게 작동하는지 검증해야 합니다."
+        "text": "Collect labeled validation examples from each vendor and document format, then recalibrate field-level confidence thresholds separately for each segment using isotonic regression or Platt scaling before expanding automation.",
+        "rationale": "세그먼트별로 신뢰도 임계값을 재보정하는 것(isotonic regression이나 Platt scaling 사용)은 검토 라우팅을 개선하는 방법이지만, 현재 자동화된 높은 신뢰도 추출 결과의 실제 오류율을 측정하지 않습니다. 확대 전에 먼저 기존 자동화가 모든 세그먼트에서 일관되게 작동하는지 검증해야 합니다."
       },
       {
         "label": "C",
-        "text": "Increase the confidence threshold from 0.90 to 0.95 for automatic approval and route all extractions below the new threshold to human review for validation.",
+        "text": "Increase the confidence threshold from 0.90 to 0.95 for automatic approval and route all extractions below the new threshold to human review.",
         "rationale": "신뢰도 임계값을 높이는 것은 전반적인 오류율을 낮출 수 있지만, 특정 공급업체나 문서 형식에서 높은 신뢰도 점수에도 불구하고 낮은 정확도를 보이는 세그먼트별 문제를 감지하지 못합니다. 이 접근법은 검증 용량만 증가시킬 뿐 일관된 성능을 확인하지 못합니다."
       },
       {
         "label": "D",
-        "text": "Configure the model to output separate confidence scores for each vendor category and document format, then analyze the distribution of scores across segments.",
+        "text": "Configure the model to output separate confidence scores for each vendor category and document format, then analyze the distribution of scores.",
         "rationale": "세그먼트별 신뢰도 점수 분포를 분석하는 것은 모델이 어떤 세그먼트에서 덜 확신하는지 보여주지만, 실제 정확도를 측정하지는 않습니다. 높은 신뢰도 점수가 특정 세그먼트에서 잘못 보정되어 있을 수 있으므로, 레이블된 검증 없이는 일관된 성능을 확인할 수 없습니다."
       }
     ],
@@ -11896,10 +12012,55 @@
     "source_excerpt": "Implementing stratified random sampling of high-confidence extractions for ongoing error rate measurement and novel pattern detection",
     "status": "approved",
     "review_retries": 0,
-    "detected_patterns": [],
+    "detected_patterns": [
+      "length_cue:rebalanced"
+    ],
     "human_checked": false,
     "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "guide_version": "0.2",
     "created_at": "2026-11-04T06:11:28+00:00"
+  },
+  {
+    "quiz_id": "Q-5.2-K2-E",
+    "task_id": "TS-5.2",
+    "domain": 5,
+    "focus_bullet_ids": [
+      "TS-5.2-K2"
+    ],
+    "scenario_id": 1,
+    "stem": "Your customer support resolution agent has been in production for three months. You review escalation logs and find that when customers say things like \"I'm confused about my bill\" or \"This charge doesn't make sense,\" the agent immediately calls escalate_to_human, even though 85% of these cases involve straightforward billing errors that the agent can resolve in one turn using lookup_order and process_adjustment. However, when customers explicitly state \"I want to talk to your manager\" or \"Transfer me to a human agent,\" the agent sometimes responds \"Let me look into your account first\" and investigates before escalating. What should you change to improve escalation behavior?",
+    "options": [
+      {
+        "label": "A",
+        "text": "Add a confirmation step where the agent asks \"Would you like me to investigate this for you, or would you prefer to speak with a human?\" before deciding whether to escalate or resolve.",
+        "rationale": "고객이 이미 명시적으로 인간 상담원을 요청한 경우(\"매니저와 통화하고 싶다\"), 추가 확인 단계는 불필요하며 고객을 무시하는 것처럼 보일 수 있습니다. 반대로 단순히 혼란을 표현한 경우(\"청구서가 이해되지 않는다\")에는 에이전트가 간단한 문제를 해결할 수 있는 역량이 있다면 즉시 해결을 제안하는 것이 더 효율적입니다. 이 접근법은 두 상황 모두에서 최적이 아닙니다."
+      },
+      {
+        "label": "B",
+        "text": "Implement sentiment analysis to detect frustration levels, escalating only when negative sentiment score exceeds 0.80 while handling lower-intensity confusion statements autonomously.",
+        "rationale": "감정 분석 점수는 실제 케이스 복잡도나 명시적 에스컬레이션 요청의 신뢰할 수 없는 대리 지표입니다. \"매니저와 통화하고 싶다\"는 명확한 요청과 \"청구서가 혼란스럽다\"는 표현은 감정 점수가 아니라 고객의 명시적 의도에 따라 구분되어야 합니다. 이 접근법은 문제의 근본 원인을 해결하지 못합니다."
+      },
+      {
+        "label": "C",
+        "text": "Add explicit escalation criteria to the system prompt with few-shot examples showing immediate escalation for direct human requests and autonomous resolution for confusion about straightforward issues.",
+        "rationale": "명시적인 고객 요청(\"매니저와 통화하고 싶다\")과 단순히 혼란을 표현하는 경우(\"청구서가 이해되지 않는다\")를 구분하는 것이 핵심입니다. 시스템 프롬프트에 명확한 에스컬레이션 기준과 few-shot 예시를 추가하면 에이전트가 직접적인 인간 요청은 즉시 에스컬레이션하고, 에이전트 역량 내의 간단한 문제는 자율적으로 해결하도록 학습할 수 있습니다. 이 접근법은 두 상황을 올바르게 처리하는 방법을 직접적으로 가르칩니다."
+      },
+      {
+        "label": "D",
+        "text": "Configure escalate_to_human with a programmatic prerequisite that blocks the call unless the agent has first attempted lookup_order and determined the issue cannot be resolved autonomously.",
+        "rationale": "프로그램적 제약(programmatic prerequisite)은 명시적 고객 요청을 무시하게 만듭니다. 고객이 \"인간 상담원에게 연결해달라\"고 직접 요청한 경우, 먼저 조사를 시도하도록 강제하는 것은 고객의 명시적 의도를 존중하지 않으며 신뢰를 손상시킵니다. 이 접근법은 문제를 악화시킬 수 있습니다."
+      }
+    ],
+    "answer": "C",
+    "source_excerpt": "The distinction between escalating immediately when a customer explicitly demands it versus offering to resolve when the issue is straightforward",
+    "status": "approved",
+    "review_retries": 1,
+    "detected_patterns": [
+      "meta_reference"
+    ],
+    "human_checked": false,
+    "generator_model": "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+    "guide_version": "0.2",
+    "created_at": "2026-11-04T06:42:01+00:00"
   }
 ]

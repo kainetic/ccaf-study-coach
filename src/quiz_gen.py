@@ -178,6 +178,11 @@ LABEL_REF_RES = [
 ]
 MAX_CORRECT_LEN_RATIO = 1.25   # 정답 보기 길이 / 오답 평균 길이 (길이로 정답을 맞히는 표면 단서 방지)
 MAX_CORRECT_VS_LONGEST = 1.15  # 정답 보기 길이 / 가장 긴 오답 길이
+# 승인 후 정답 길이 재조정 (--rebalance-length): 대상 = 정답 > 가장 긴 오답 × 1.05, 목표 = 정답 ≤ 가장 긴 오답 × 0.95
+REBALANCE_SELECT = 1.05
+REBALANCE_TARGET = 0.95
+REBALANCE_MIN = 0.80          # 정답을 너무 줄이면 '가장 짧은 보기 = 정답' 역방향 단서가 생김 (1차 실행 16/23)
+REBALANCE_TRIES = 3            # 구간(0.80~0.95) 맞추기는 한 번에 안 될 수 있어 최대 3회
 META_REF_RE = re.compile(r"(?i)focus item|초점\s*항목|세부\s*항목|task statement|source_excerpt|근거\s*발췌")
 ABOVE_RE = re.compile(r"(?i)\b(?:all|none|both) of (?:the )?(?:above|these|options)\b")
 GUIDE_REF_RE = re.compile(r"(?i)\b(?:exam guide|the guide|task statement)\b|\bTS-?\d\.\d")
@@ -216,6 +221,27 @@ def length_stats(draft: QuizDraft) -> Optional[dict]:
     return {"correct": correct, "avg_wrong": avg, "max_wrong": max(wrong),
             "ratio_avg": correct / avg if avg else 99.0,
             "ratio_max": correct / max(wrong) if max(wrong) else 99.0}
+
+
+def rebalance_length_issues(draft: QuizDraft) -> list[CodeIssue]:
+    """정답 길이 재조정 목표 확인: 0.80 ≤ 정답 ÷ 가장 긴 오답 ≤ 0.95, 정답이 가장 짧은 보기가 아님."""
+    st = length_stats(draft)
+    if st is None:
+        return []
+    out: list[CodeIssue] = []
+    r = st["ratio_max"]
+    if r > REBALANCE_TARGET:
+        out.append(("answer_too_long", f"correct option is still {r:.2f}x the longest distractor "
+                    f"(target {REBALANCE_MIN}-{REBALANCE_TARGET}); make one distractor somewhat longer"))
+    elif r < REBALANCE_MIN:
+        out.append(("answer_too_short", f"correct option is now only {r:.2f}x the longest distractor "
+                    f"(target {REBALANCE_MIN}-{REBALANCE_TARGET}); keep the correct option closer to its original "
+                    "length or make the long distractor shorter"))
+    min_wrong = min(len(o.text) for o in draft.options if o.label != draft.answer)
+    if st["correct"] <= min_wrong:
+        out.append(("answer_too_short", "the correct option is now the shortest option, which is a guessing cue; "
+                    "keep at least one distractor shorter than the correct option"))
+    return out
 
 
 def merge_repair(draft: QuizDraft, repaired: "QuizOptionsRepair") -> tuple[Optional[QuizDraft], str]:
@@ -627,6 +653,23 @@ class Attempt:
 
 
 @dataclass
+class RebalanceResult:
+    quiz_id: str
+    ok: bool
+    item: QuizItem                   # 성공하면 보기가 바뀐 문항, 실패하면 원래 문항
+    calls: int                       # 재조정 호출 수 (검토 제외)
+    reviewer_model: Optional[str]
+    reason: str                      # 실패 사유
+    before: float                    # 정답 / 가장 긴 오답 (재조정 전)
+    after: Optional[float]
+
+
+def correct_vs_longest(item: QuizItem) -> float:
+    lens = {o.label: len(o.text) for o in item.options}
+    return lens[item.answer] / max(v for k, v in lens.items() if k != item.answer)
+
+
+@dataclass
 class SlotResult:
     quiz_id: str
     status: str                      # approved | rejected
@@ -659,6 +702,9 @@ class QuizGenerator:
         self.rep_system = Template(rep_system).substitute(
             max_avg_ratio=MAX_CORRECT_LEN_RATIO, max_longest_ratio=MAX_CORRECT_VS_LONGEST)
         self.retry_tpl = load("quiz_retry")
+        reb_system, self.reb_user = load_pair("quiz_rebalance")     # prompt_version 해시 밖 (생성 프롬프트 아님)
+        self.reb_system = Template(reb_system).substitute(target_ratio=REBALANCE_TARGET,
+                                                         min_ratio=REBALANCE_MIN)
 
     # -- 프롬프트 조립
     def generation_messages(self, slot: ManifestSlot, scenario_id: int, avoid_stems: list[str],
@@ -810,6 +856,57 @@ class QuizGenerator:
         return SlotResult(slot.quiz_id, "rejected", MAX_ATTEMPTS, scenario_id, patterns,
                           history[-1].problems, last_item, repairs, repairs_ok, log,
                           last_gen_model, last_rev_model)
+
+    # -- 승인 문항 정답 길이 재조정 (DESIGN §5-2, --rebalance-length)
+    def rebalance_messages(self, slot: ManifestSlot, scenario_id: int, draft: QuizDraft, problems: list[str]) -> list:
+        st = length_stats(draft)
+        min_wrong = min(len(o.text) for o in draft.options if o.label != draft.answer)
+        mid = (REBALANCE_MIN + REBALANCE_TARGET) / 2          # 목표 구간의 가운데
+        v = build_vars(slot, scenario_id, self.corpus)
+        v.update(item_json=draft.model_dump_json(indent=2), answer=draft.answer,
+                 correct_len=str(st["correct"]), max_wrong_len=str(st["max_wrong"]), min_wrong_len=str(min_wrong),
+                 target_longest_len=str(int(st["correct"] / mid)),
+                 problems=("\n# PROBLEMS WITH YOUR PREVIOUS REVISION (fix all)\n"
+                           + "\n".join(f"- {p}" for p in problems) + "\n") if problems else "")
+        return [SystemMessage(self.reb_system), HumanMessage(self.reb_user.substitute(v))]
+
+    def rebalance_item(self, slot: ManifestSlot, item: QuizItem) -> "RebalanceResult":
+        """정답이 가장 긴 오답보다 5% 넘게 긴 승인 문항의 보기만 다시 쓴다.
+        목표: 0.80 ≤ 정답 ÷ 가장 긴 오답 ≤ 0.95, 그리고 정답이 가장 짧은 보기가 아님 (역방향 단서 방지).
+        stem·answer·source_excerpt는 그대로. 코드 검증 실패 시 1회 더, 통과하면 독립 검토 필수.
+        검토 탈락·검증 실패면 원래 문항을 유지한다 (승인 문항을 잃지 않음)."""
+        draft = QuizDraft(stem=item.stem, options=item.options, answer=item.answer,
+                          source_excerpt=item.source_excerpt)
+        before = length_stats(draft)["ratio_max"]
+        problems: list[str] = []
+        calls = 0
+        for _ in range(REBALANCE_TRIES):
+            calls += 1
+            out, _model = self.pool.invoke("repair", self.rebalance_messages(slot, item.scenario_id, draft, problems))
+            parsed = out.get("parsed")
+            if parsed is None:
+                problems = [f"output was not valid structured output: {out.get('parsing_error')}"]
+                continue
+            fixed, why = merge_repair(draft, parsed)
+            if fixed is None:
+                problems = [why]
+                continue
+            issues = validate_draft(fixed, slot, item.scenario_id, self.corpus)
+            issues += rebalance_length_issues(fixed)
+            ratio = length_stats(fixed)["ratio_max"]
+            if issues:
+                problems = [m for _, m in issues]
+                continue
+            verdict, rev_model = self.review(self.review_messages(slot, item.scenario_id, fixed))
+            if verdict.valid and verdict.detected_pattern is None and not verdict.issues:
+                new = item.model_copy(update={"options": fixed.options,
+                                              "detected_patterns": item.detected_patterns + ["length_cue:rebalanced"]})
+                return RebalanceResult(item.quiz_id, True, new, calls, rev_model, "", before, ratio)
+            pat = verdict.detected_pattern or "other"
+            return RebalanceResult(item.quiz_id, False, item, calls, rev_model,
+                                   f"review:{pat} {(verdict.issues or [''])[0][:160]}", before, ratio)
+        return RebalanceResult(item.quiz_id, False, item, calls, None,
+                               f"code: {problems[0][:160] if problems else '?'}", before, None)
 
     def _item(self, slot: ManifestSlot, scenario_id: int, draft: QuizDraft, status: str,
               attempts: int, patterns: list[str], generator_model: str) -> QuizItem:

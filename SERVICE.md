@@ -51,16 +51,16 @@ Claude 기반 에이전트 시스템을 설계·구축하는 실무 아키텍트
 
 | 단계 | 도구 | 담당 에이전트 | 기능 | 인터페이스 |
 |---|---|---|---|---|
-| 선행 (Day 8) | `build_quiz_pool.py` | (오프라인 스크립트) | 문제 풀 사전 생성(세부 항목 단위, 생성 → 독립 검토 → 재시도)·후처리·커버리지 보충. 오늘 오후 파일럿 10문제, 저녁 전체 생성 | 배치 스크립트 |
-| **P0 (Day 9 오전)** | `search_guide` | concept_tutor | 가이드 하이브리드 검색 (도메인·문서유형 필터, TS 번호 정확 조회) | Python tool (Chroma + BM25) |
-| **P0** | `get_quiz` | quiz_master | 문제 풀에서 조건(도메인·TS·시나리오)에 맞고 안 푼 문제를 정답 없이 반환 | MCP 서버 |
-| **P0** | `submit_answer` | quiz_master | 문제 은행 정답으로 코드 채점 + 풀이 기록 저장 | MCP 서버 |
-| P1 (Day 9 오후) | `get_chunk` | concept_tutor | doc_id로 정확 조회 (search_guide에서 분리) | Python tool |
-| P1 | `get_progress`, `get_weak_domains` | study_coach | 도메인별 정답률, 약점 순위 | MCP 서버 |
-| P1 | `allocate_study_time` | study_coach | 비중·약점·가용 시간 기반 시간 배분 계산 | Python tool (결정적 계산) |
-| P1 | `make_study_plan` | study_coach | 일자별 학습 계획 | LangGraph Plan-Execute 서브그래프 |
+| S1 문제 풀 구축 | `build_quiz_pool.py` | (오프라인 스크립트) | 문제 풀 사전 생성(세부 항목 단위, 생성 → 독립 검토 → 재시도)·후처리·커버리지 보충. 파일럿 10문제로 프롬프트를 조정한 뒤 전체 생성 | 배치 스크립트 |
+| **S2 (=P0)** | `search_guide` | concept_tutor | 가이드 하이브리드 검색 (도메인·문서유형 필터, TS 번호 정확 조회) | Python tool (Chroma + BM25) |
+| **S2 (=P0)** | `get_quiz` | quiz_master | 문제 풀에서 조건(도메인·TS·시나리오)에 맞고 안 푼 문제를 정답 없이 반환 | MCP 서버 |
+| **S2 (=P0)** | `submit_answer` | quiz_master | 문제 은행 정답으로 코드 채점 + 풀이 기록 저장 | MCP 서버 |
+| S3 (=P1) | `get_chunk` | concept_tutor | doc_id로 정확 조회 (search_guide에서 분리) | Python tool |
+| S3 (=P1) | `get_progress`, `get_weak_domains` | study_coach | 도메인별 정답률, 약점 순위 | MCP 서버 |
+| S3 (=P1) | `allocate_study_time` | study_coach | 비중·약점·가용 시간 기반 시간 배분 계산 | Python tool (결정적 계산) |
+| S3 (=P1) | `make_study_plan` | study_coach | 일자별 학습 계획 | LangGraph Plan-Execute 서브그래프 |
 
-P0 완료 기준: "개념 질문 → 풀 출제 → 채점"이 `/query` 3회 호출로 한 바퀴 동작하고 채점 결과가 풀이 기록에 저장됨. 일정이 밀리면 P1의 학습 계획(`allocate_study_time`, `make_study_plan`)부터 뺀다.
+S2(=P0) 완료 기준: "개념 질문 → 풀 출제 → 채점"이 `/query` 3회 호출로 한 바퀴 동작하고 채점 결과가 풀이 기록에 저장됨. S3이 늦어지면 study_coach의 학습 계획(`allocate_study_time`, `make_study_plan`)부터 뺀다. 단계별 범위·완료 기준은 DESIGN §1-1 참조.
 
 **데이터 소스**
 
@@ -78,7 +78,7 @@ LLM: AWS Bedrock Claude Sonnet 4.5 (과정 제공 키), 임베딩: Titan Text Em
 - 난이도별 출제 (단일 난이도)
 - 런타임 실시간 문제 생성 (제거. 문제는 오프라인에서만 생성)
 - 가이드 외 문서(공식 SDK·MCP 문서 등)로 코퍼스 확장
-- 웹 UI (v2, 1차 평가 후 결정), LangSmith/LangFuse 연동·Dockerfile (선택)
+- 웹 UI (선택 항목, 1차 평가 후 결정), LangSmith/LangFuse 연동·Dockerfile (선택 항목)
 
 ## 4. 서비스 정책 (가드레일 요약)
 
@@ -93,8 +93,8 @@ LLM: AWS Bedrock Claude Sonnet 4.5 (과정 제공 키), 임베딩: Titan Text Em
 ## 5. 성공 기준
 
 **완성 기준 (인-아웃 세트, 20건)**
-- round1 (Day 9 종료): 14/20 (70%) 이상
-- round2 (Day 10 개선 후): 17/20 (85%) 이상
+- round1 (S4, 마감 Day 9 종료): 14/20 (70%) 이상
+- round2 (S5 개선 후): 17/20 (85%) 이상
 - guardrail 카테고리: 3/3 (100%) 필수. 하나라도 실패하면 미완성
 
 **RAGAS 목표 (근거 검색 문항 14건)**

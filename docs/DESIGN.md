@@ -1,8 +1,12 @@
-# DESIGN · CCA-F 학습 코치 (설계 v0.4)
+# DESIGN · CCA-F 학습 코치 (설계 v0.5)
 
 > 기준 문서: Claude Certified Architect – Foundations Exam Guide (Version 0.2, 2026-06-30)
 > 과제 규약: [Day 8,9,10] mini PJT 문서 §4 (산출물 규약), §5 (12개 패턴)
 > 이 문서는 Claude Code에 넘기는 구현 기준 문서입니다. SERVICE.md가 "왜/누구를", 이 문서는 "어떻게"를 다룹니다.
+
+**v0.5 변경 사항**
+- §1-1 구현 우선순위와 §12 일정을 **단계(Stage) S0~S6 + 선택 항목**으로 통합. 단계마다 범위·완료 기준·시작 조건을 두고, 날짜는 고정 마감 3개(Day 8 18:00 진도 공유, Day 9 종료 round1_report, Day 10 15:00 제출)만 남김. S2 = P0, S3 = P1 (기존 표기 유지)
+- v0.4.1~v0.4.4: 문제 풀 생성 세부 규칙(코드 검증 세부 패턴, 길이 repair, extra 쌍 선정, fill-gaps 가드·시나리오 재순위, 모델 전환) — §5-2
 
 **v0.4 변경 사항**
 - **런타임 실시간 문제 생성 제거** (v2 목록에서도 삭제). 문제 생성은 오프라인 풀 구축에서만 수행
@@ -31,18 +35,35 @@
 
 ## 1. 범위
 
-### 1-1. 구현 우선순위
+### 1-1. 단계 (Stage) — 구현 우선순위와 일정 통합 (v0.5)
 
-| 단계 | 기한 | 범위 | 완료 기준 |
+진행은 날짜가 아니라 **단계와 완료 기준**으로 관리한다. 날짜로 고정된 것은 아래 "고정 마감" 3개뿐이다. 기존 P0/P1 표기는 S2/S3과 같은 뜻으로 계속 쓴다.
+
+| 단계 | 범위 | 완료 기준 | 시작 조건 |
 |---|---|---|---|
-| **선행** | Day 8 오후 | `ingest.py`(청크 62개 + 세부 항목 240개) · `quiz_gen.py`(생성 → 코드 검증 → 독립 검토 → 재시도) · **파일럿 풀 10문제**(도메인당 2개) | `quiz_pool.json`에 승인 문제 10개 |
-| **선행** | Day 8 저녁 | 파일럿 결과로 프롬프트 조정 후 **풀 전체 생성 시작** (약 40분, 백그라운드) | 기본 슬롯 240개부터 생성 진행 |
-| **P0** | Day 9 오전 | 도구 3개: **`search_guide`**, **`get_quiz`**(MCP), **`submit_answer`**(MCP) · Supervisor + concept_tutor + quiz_master · `/query` (answer, contexts, trace) | "개념 질문 → 풀 출제 → 채점"이 `/query` 3회 호출로 한 바퀴 동작, 채점 결과가 `study_log.json`에 기록 |
-| **P1** | Day 9 오후 (round1 전) | 풀 완성(270문제) + 사람 표본 검토 + 커버리지 부족 항목 보충 · 가드레일 G1~G7 · `get_chunk` · `get_progress`·`get_weak_domains` · study_coach(`allocate_study_time`, `make_study_plan`) · 평가 러너 | 20건 평가 실행 가능 |
-| **v2** | Day 10 오전 (round2 개선 후보) 또는 제출 후 | `reset_progress` HITL · 장기 세션 요약 미들웨어 · 웹 UI | §9-4 참조 |
+| **S0** 기획·코퍼스 | SERVICE.md · `evaluation/test_queries.csv`·`ragas_reference.csv` 확정 · `src/ingest.py`(청크 62개 + 세부 항목 240개 → Chroma) | ingest 검증 통과(62/240, 도메인별 K/S 개수), SERVICE.md·CSV 확정 | 없음 |
+| **S1** 문제 풀 구축 | **전반**: `quiz_gen.py`·프롬프트 · 파일럿 10문제(도메인당 2개)로 프롬프트 조정 · 전체 생성(`--resume`, 기본 240 → 추가 30) · 보충(`--fill-gaps`) (§5-2)<br>**후반**: 사람 표본 검토(층화, 약 35문제) · `evaluation/quiz_pool_report.md` · `scripts/seed_study_log.py`(더미 사용자 기록) | 승인 250개 이상(목표 270), 세부 항목 커버리지 95% 이상, 사람 표본 오류 0~1건, 품질 지표(§9-3) 리포트, `study_log.json` 시드 | S0 완료. 전체 생성은 파일럿 승인 10개 확인 후 |
+| **S2** = P0 한 바퀴 | 도구 3개: **`search_guide`**, **`get_quiz`**(MCP), **`submit_answer`**(MCP) · Supervisor + concept_tutor + quiz_master · `/query` (answer, contexts, trace) · `evaluation/smoke_p0.py` · RAGAS 3건 스모크 | "개념 질문 → 풀 출제 → 채점"이 `/query` 3회 호출로 한 바퀴 동작하고 채점 결과가 `study_log.json`에 기록 (`smoke_p0.py` 통과), RAGAS 3건 실행 | S1 파일럿 승인 10개 (풀 전체 완료를 기다리지 않음) |
+| **S3** = P1 기능 완성 | 가드레일 G1~G7 · `get_chunk` · `get_progress`·`get_weak_domains` · study_coach(`allocate_study_time`, `make_study_plan`) · 평가 러너(`run_eval.py`, `llm_judge.py`) | 20건 평가가 실행 가능 | S2 완료 |
+| **S4** round1 평가 | 20건 평가 + RAGAS → `evaluation/round1_report.md` (통과율·RAGAS·풀 지표) | `round1_report.md` 작성 | S3 완료 (S1 완료 포함 — 풀 지표 기재) |
+| **S5** round2 개선 | §9-4 후보 중 2~3건 개선 → 같은 세트로 재평가 → `evaluation/round2_report.md` | `round2_report.md` 작성 (round1 대비 변화 기록) | S4 완료 |
+| **S6** 제출 정리 | README("활용한 패턴" 포함, §10) · 시연 캡처 · 최종 점검 후 제출 | 제출 | S5 완료, 또는 제출 마감이 임박하면 S5 진행 중이라도 시작 |
+| 선택 (= v2) | `reset_progress` HITL · 장기 세션 요약 미들웨어 · 웹 UI · Dockerfile · LangSmith/LangFuse 연동 | §9-4 참조 | 요청이 있을 때만 (S5 개선 후보로 고르거나 제출 후) |
 
-P0는 파일럿 풀만으로 검증 가능하므로 풀 전체 생성 완료를 기다리지 않음.
-일정이 밀리면 덜어내는 순서: ① study_coach(학습 계획) → 테스트 7번은 round1 실패로 기록 ② 풀 추가 30문제 중 비중 낮은 도메인 몫 ③ 사람 표본을 도메인당 3문제로 축소.
+**진행 규칙**
+- **S1 후반(사람 검토·리포트·시드)과 S2는 병행할 수 있다.** S2는 파일럿 풀만으로 검증할 수 있으므로 풀 완성을 기다리지 않는다.
+- S2가 끝나기 전에는 S3(=P1)·선택 항목을 시작하지 않는다.
+- **S3이 늦어지면 덜어내는 순서**: ① study_coach(`allocate_study_time`, `make_study_plan`)부터 제외 → 테스트 7번은 round1 실패로 기록 ② 사람 표본 검토를 도메인당 3문제로 축소(S1 후반)
+- **S4(round1)는 S3 완료 즉시 실행하고, 어떤 개선 작업보다 먼저 수행한다.** round1은 개선 전 기준선이므로 S5 작업이 섞이면 안 된다.
+- 선택 항목은 요청 전까지 만들지 않는다.
+
+**고정 마감** (날짜로 고정된 것은 이 3개뿐)
+
+| 시각 | 마감 | 해당 단계 |
+|---|---|---|
+| Day 8 18:00 | SERVICE.md · test_queries.csv 진도 공유 | S0 |
+| Day 9 종료 | `round1_report.md` | S4 |
+| Day 10 15:00 | 최종 제출 | S6 |
 
 ### 1-2. 하지 않는 것 (이번 과제 범위 밖)
 - 실제 시험 문항 재현·덤프 제공, 합격 예측
@@ -50,7 +71,7 @@ P0는 파일럿 풀만으로 검증 가능하므로 풀 전체 생성 완료를 
 - 난이도별 출제 (단일 난이도)
 - 가이드 외 문서(공식 SDK·MCP 문서 등) 코퍼스 확장
 - LangSmith/LangFuse 연동 (로컬 trace로 대체, 시간 남으면 선택), Dockerfile (선택)
-- 웹 UI는 v2 (1차 평가 후 결정, §13)
+- 웹 UI는 선택 항목(v2) (1차 평가 후 결정, §13)
 
 ---
 
@@ -262,7 +283,7 @@ class QuizOptionsRepair(BaseModel):     # 길이 repair 출력. options만 받�
 
 class ManifestSlot(BaseModel):          # data/quiz_pool_manifest.json의 슬롯 하나
     quiz_id: str
-    slot_type: Literal["base", "extra", "fill"]
+    slot_type: Literal["base", "extra", "fill", "exception"]   # exception: 항목당 2슬롯 규칙의 명시적 예외
     task_id: str
     domain: int
     focus_bullet_ids: list[str]
@@ -389,14 +410,30 @@ State 확장 (Supervisor 그래프 messages 외):
   - 시나리오 순위 프롬프트는 문항 생성 프롬프트가 아니므로 `prompt_version` 해시에 넣지 않음
   - 이 예외로 생긴 문항은 §5-3의 "풀 배정 규칙상 없는 TS·시나리오 조합"에 해당하지 않음 (`quiz://catalog`가 실제 풀 기준으로 집계)
 - 커버리지 = 승인 문항의 focus_bullet_ids에 한 번이라도 들어간 세부 항목 (추가 슬롯 승인도 인정). 아직 pending 슬롯이 있는 항목은 보충 대상이 아님
+
+**예외 슬롯 (`--exception-slot BULLET_ID:SC`, v0.5)**
+- 기본 + 보충 2슬롯이 모두 탈락해 미커버로 남은 세부 항목에만, 시나리오를 고정한 슬롯 1개를 추가 (`slot_type: "exception"`, quiz_id `Q-x.y-K2-E`, `scenario_candidates=[SC]`라 재시도에도 시나리오 고정). "항목당 최대 2슬롯" 규칙의 **명시적 예외**이며 매니페스트·리포트에 기록
+- 가드: 이미 승인 문항이 있는 항목, 금지 조합(`FORBIDDEN_SCENARIOS`), 같은 quiz_id는 거부. 같은 TS의 승인 문항 지문을 "반복 금지"로 넣음
+- 사례: `Q-5.2-K2-E` (TS-5.2-K2 "고객이 명시적으로 요구하면 즉시 에스컬레이션", SC-1 고정)
+
+**정답 길이 재조정 (`--rebalance-length`, 승인 후 사후 작업, v0.5)**
+- 대상: 승인 문항 중 **정답 > 가장 긴 오답 × 1.05**. 상한을 올리는 대신 **오답 하나가 정답보다 길게**를 목표로 보기만 다시 씀 (`src/prompts/quiz_rebalance.md`, 출력 `QuizOptionsRepair`)
+- **목표 구간: 0.80 ≤ 정답 ÷ 가장 긴 오답 ≤ 0.95, 그리고 정답이 가장 짧은 보기가 아님** (`quiz_gen.rebalance_length_issues`). 1차 실행(상한 0.95만)에서 정답을 과도하게 줄여 23개 중 16개가 "가장 짧은 보기 = 정답" 역방향 단서가 되어 중단·원복 후 구간 규칙으로 재실행
+- 지문·정답 보기(의미)·source_excerpt는 불변. 정답은 조금만 다듬고("왜 좋은지" 설명구는 해설로), 그럴듯한 오답 하나를 구체적 메커니즘·범위로 보강해 가장 길게, 다른 오답 하나는 정답보다 짧게 유지
+- 코드 검증 + 구간 확인 → 실패하면 오류를 붙여 다시 (문항당 최대 3회) → 통과하면 **독립 검토 필수**. 검토 탈락·검증 실패면 **원래 문항을 유지**하고 `length_cue:rebalance_failed`, 성공하면 `length_cue:rebalanced` 기록 (재실행 시 건너뜀)
+- 모델: us Sonnet 4.5 할당량 보존을 위해 제외, global Sonnet 4.5 → us 4.6 → global 4.6 (`MAINT_MODEL_CHAIN`, 예외 슬롯도 같음). 재조정 프롬프트는 생성 프롬프트가 아니므로 `prompt_version` 해시 밖
+- `generator_model`·`created_at`은 원래 값 유지, 검토 모델은 `ManifestSlot.reviewer_model`에 갱신
 - 목표: 세부 항목 커버리지 95% 이상 (240개 중 228개 이상)
 
 **사람 표본 검토 (TS 5.5 층화 표본)**
-- 도메인별로 **재시도 없이 통과한 문제의 10% + 재시도 거친 문제의 20%** 무작위 추출 (약 35문제). 재시도 문제는 오류 가능성이 높아 표본 비율을 높임
+- 도메인별로 **재시도 없이 통과한 문제의 10% + 재시도 거친 문제의 20%** 무작위 추출 (약 35~40문제). 재시도 문제는 오류 가능성이 높아 표본 비율을 높임
+- 층(도메인 × 재시도 유무, 10개)마다 **repair 문항(생성 단계 길이 repair 또는 정답 길이 재조정) 최소 1개**를 먼저 넣음. 보기를 사후에 고친 문항이라 오류 가능성 확인 필요
+- `python scripts/review_sample.py` → `evaluation/human_review_sample.csv` (고정 시드, utf-8-sig). 검토자는 verdict(ok/needs_fix)·error_type·comment 기입. 검토 입력이 있는 CSV는 `--force` 없이 덮어쓰지 않음
+- 결과 집계: `python scripts/pool_report.py`가 리포트 자동 절을 갱신 (수기 절은 보존)
 - 오류 발견 시 해당 문제 `needs_fix`, 같은 유형이 한 도메인에서 2건 이상이면 그 도메인 프롬프트 수정 후 재생성
 - 결과 문서: `evaluation/quiz_pool_report.md` (도메인·시나리오별 승인 수, 세부 항목 커버리지, 승인율, 실패 유형 분포, 정답 위치 분포, 중복 제거 수, 사람 검토 오류율)
 
-**예상 규모 (가정)**: 생성 슬롯 약 320개(재생성 포함), LLM 호출 약 820회, 동시 4개 기준 약 40분. 계산 근거는 `docs/quiz_generation_options.xlsx`. 과정 공용 Bedrock 키의 할당량 제한 가능성이 있어 Day 8 저녁에 시작
+**예상 규모 (가정)**: 생성 슬롯 약 320개(재생성 포함), LLM 호출 약 820회, 동시 4개 기준 약 40분. 계산 근거는 `docs/quiz_generation_options.xlsx`. 과정 공용 Bedrock 키의 할당량 제한 가능성이 있어 S1에서 파일럿 직후 바로 시작 (S2와 병행 가능)
 
 ### 5-3. 퀴즈 출제 (런타임)
 1. `get_quiz(user_id, domain?, task_id?, scenario_id?)` 호출
@@ -481,7 +518,7 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 - 대상: 근거 검색이 있는 문항만 (`evaluation/ragas_reference.csv`의 `ragas=Y`, 14건). 출제·학습 계획·가드레일 차단 문항은 judge로만 평가
 - 지표: context_recall, context_precision, faithfulness, answer_relevancy
 - reference는 가이드 원문 근거로 사람이 작성 (순환 평가 방지)
-- RAGAS LLM/임베딩도 Bedrock 래퍼로 연결. **Day 9 오전에 3건짜리 스모크 테스트**
+- RAGAS LLM/임베딩도 Bedrock 래퍼로 연결. **S2(=P0)에서 3건짜리 스모크 테스트**
 - 주의: 가이드는 영어, 답변은 한국어 → answer_relevancy가 낮게 나올 수 있음. 필요하면 답변에 영어 핵심 용어 병기
 
 ### 9-3. 문제 풀 품질 지표 (round 리포트에 함께 기재)
@@ -491,7 +528,7 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 - 생성 모델별 승인 수·승인율, 승인 문항의 검토 모델 분포 (모델 전환, §5-2). 사람 표본 검토에서는 Sonnet 4.6이 생성한 문항이 있으면 층마다 최소 1개 포함
 - 사람 표본 검토 오류율 (목표 0건, 최대 1건)
 - 정답 위치 분포 (A~D 각 20~30%), 중복 제거 수
-- **정답이 가장 긴 보기 비율** (승인 문항 기준, 동률은 가장 긴 것으로 침. 목표 35% 이하, 우연 수준 25%, 길이 규칙 도입 전 파일럿 80%)
+- **정답이 가장 긴 보기 비율** (승인 문항 기준, 동률은 가장 긴 것으로 침. 목표 35% 이하, 우연 수준 25%, 길이 규칙 도입 전 파일럿 80%). 정의·목표는 그대로 두고, 보조 지표로 **"정답이 가장 긴 오답보다 5% 넘게 긴 비율"**을 함께 기록 (리포트 `evaluation/quiz_pool_report.md`)
 - 런타임 `no_match` 비율 (평가·시연 중 출제 요청 대비)
 
 ### 9-4. round2 개선 후보 (round1 결과 보고 2~3개 선택)
@@ -600,15 +637,7 @@ mini-pjt_{이름}/
 
 ## 12. 일정
 
-| 시점 | 할 일 | 완료 기준 |
-|---|---|---|
-| Day 8 오후 | SERVICE.md, test_queries.csv 확정(18:00 진도 공유) · `ingest.py` · `quiz_gen.py` · **파일럿 풀 10문제** | 청크 62개, 세부 항목 240개, 승인 문제 10개 |
-| Day 8 저녁 | 파일럿 결과로 프롬프트 조정 → **풀 전체 생성 시작** (`--resume`로 이어서 가능) | 기본 슬롯 240개 진행 |
-| Day 9 09~12시 | **P0**: `search_guide` · MCP `get_quiz`·`submit_answer` · Supervisor + 2개 에이전트 · `/query` · `smoke_p0.py` · RAGAS 3건 스모크 테스트 · (생성 미완료 시 `--resume` 병행) | 한 바퀴 동작 (§1-1) |
-| Day 9 13~15시 | `--fill-gaps` · 사람 표본 검토(약 35문제) · `quiz_pool_report.md` · `seed_study_log.py` · 가드레일 | 승인 250개 이상, 커버리지 95% 이상, 표본 오류 0~1건 |
-| Day 9 15~18시 | P1 나머지: `get_chunk`, 진도·약점, study_coach, 평가 러너 | 20건 실행 가능 |
-| Day 9 종료 | round1 평가 → `round1_report.md` | 통과율·RAGAS·풀 지표 기록 |
-| Day 10 오전 | round2 개선 2~3건 → `round2_report.md`, README, 시연 캡처 | 15:00 제출 |
+§1-1 "단계(Stage)"로 통합 (v0.5). 단계별 범위·완료 기준·시작 조건과 고정 마감 3개는 §1-1 참조.
 
 ---
 

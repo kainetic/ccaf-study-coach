@@ -47,8 +47,8 @@ svg.ico { width: 16px; height: 16px; flex: none; stroke: currentColor; fill: non
   border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--muted); font-size: 13px;
 }
 .field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring); }
-.field input { width: 120px; border: 0; outline: 0; background: transparent; color: var(--text); font-size: 14px; padding: 0; }
-.field:has(input.invalid) { border-color: var(--err); }
+.field select { border: 0; outline: 0; background: transparent; color: var(--text); font-size: 14px; font-weight: 500; padding: 0; cursor: pointer; }
+.field select:disabled { cursor: default; opacity: .6; }
 
 /* ---------- 레이아웃 ---------- */
 .app { display: grid; grid-template-rows: 56px 1fr; height: 100vh; height: 100dvh; }

@@ -640,7 +640,9 @@ uid.addEventListener("change", () => {
   loadProgress();
 });
 
-uid.value = store("ccaf_user_id") || "web_demo";
+// 프로필은 선택 메뉴에 있는 값만 (예전 자유 입력으로 저장된 값이 메뉴에 없으면 기본 web_demo)
+const savedUser = store("ccaf_user_id");
+uid.value = [...uid.options].some((o) => o.value === savedUser) ? savedUser : "web_demo";
 showIntro();
 restoreSession();
 loadProgress();

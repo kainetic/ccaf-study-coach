@@ -18,9 +18,12 @@
       </div>
     </div>
     <div class="actions">
-      <label class="field">user_id
-        <input id="uid" list="uids" autocomplete="off" spellcheck="false" aria-label="user_id" placeholder="user_id">
-        <datalist id="uids"><option value="web_demo"><option value="demo_heavy"><option value="demo_new"></datalist>
+      <label class="field" title="풀이 기록을 읽고 쓰는 데모 사용자 (로그인 없음)">프로필
+        <select id="uid" aria-label="데모 사용자 프로필">
+          <option value="web_demo">web_demo · 기본</option>
+          <option value="demo_heavy">demo_heavy · 기록 61회</option>
+          <option value="demo_new">demo_new · 신규</option>
+        </select>
       </label>
       <button class="btn" id="reset" type="button">
         <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>새 대화

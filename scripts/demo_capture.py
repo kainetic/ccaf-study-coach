@@ -71,7 +71,8 @@ def hours(d: dict) -> str:
 def trace_lines(trace: list[dict]) -> list[str]:
     """trace step을 사람이 읽는 한 줄 요약으로 (원본 형식은 /query 응답의 trace)."""
     out = []
-    for s in trace:
+    # 입력 가드를 맨 앞에: LLM 판별은 그래프와 동시에 돌아 trace에는 배분 뒤에 기록되지만, 도구는 판별 통과 후에만 실행된다
+    for s in sorted(trace, key=lambda s: s.get("step") != "guard"):
         step = s.get("step")
         layer = LAYER.get(s.get("layer"), s.get("layer"))
         if step == "guard":
@@ -108,8 +109,14 @@ def trace_lines(trace: list[dict]) -> list[str]:
         elif step == "tools":
             out.append(f"- 호출 도구: {', '.join(s.get('names') or []) or '(없음)'}")
         elif step == "llm":
-            models = ", ".join(f"{m} ×{n}" for m, n in (s.get("models") or {}).items()) or "없음"
-            out.append(f"- LLM 호출 {s.get('calls')}회 (입력 가드 판별 제외) · 토큰 입력 {s.get('input')} / 출력 {s.get('output')} · {models}")
+            calls, models = s.get("calls") or 0, s.get("models") or {}
+            if not calls:
+                out.append("- LLM 호출 0회 (입력 가드 판별 제외)")
+                continue
+            served = ", ".join(f"{m} ×{n}" for m, n in models.items())
+            cancelled = calls - sum(models.values())
+            out.append(f"- LLM 호출 {calls}회 (입력 가드 판별 제외) · 토큰 입력 {s.get('input')} / 출력 {s.get('output')} · {served}"
+                       + (f" · 응답 전 취소 {cancelled}회" if cancelled > 0 else ""))
     return out
 
 

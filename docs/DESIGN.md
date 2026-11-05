@@ -1,4 +1,4 @@
-# DESIGN · CCA-F 학습 코치 (설계 v0.5.9)
+# DESIGN · CCA-F 학습 코치 (설계 v0.6.0)
 
 > 기준 문서: Claude Certified Architect – Foundations Exam Guide (Version 0.2, 2026-06-30)
 > 과제 규약: [Day 8,9,10] mini PJT 문서 §4 (산출물 규약), §5 (12개 패턴)
@@ -37,14 +37,14 @@
 | **S4** round1 평가 | 20건 평가 + RAGAS → `evaluation/round1_report.md` (통과율·RAGAS·풀 지표) | `round1_report.md` 작성 | S3 완료 (S1 완료 포함 — 풀 지표 기재) |
 | **S5** round2 개선 | §9-4 후보 중 2~3건 개선 → 같은 세트로 재평가 → `evaluation/round2_report.md` | `round2_report.md` 작성 (round1 대비 변화 기록) | S4 완료 |
 | **S6** 제출 정리 | README("활용한 패턴" 포함, §10) · 시연 캡처 · 최종 점검 후 제출 | 제출 | S5 완료, 또는 제출 마감이 임박하면 S5 진행 중이라도 시작 |
-| 선택 (= v2) | `reset_progress` HITL · 장기 세션 요약 미들웨어 · 웹 UI · Dockerfile · LangSmith/LangFuse 연동 | §9-4 참조 | 요청이 있을 때만 (S5 개선 후보로 고르거나 제출 후) |
+| 선택 (= v2) | `reset_progress` HITL · 장기 세션 요약 미들웨어(v2-3 구현) · 웹 UI(v2-5 구현) · Dockerfile · LangSmith/LangFuse 연동 | §9-4 참조 | 요청이 있을 때만 (S5 개선 후보로 고르거나 제출 후) |
 
 ### 1-2. 하지 않는 것 (이번 과제 범위 밖)
 - 실제 시험 문항 재현·덤프 제공, 합격 예측
 - **런타임 실시간 문제 생성** (제거. 풀이 부족한 범위는 오프라인 배치로 보충)
 - 난이도별 출제 (단일 난이도)
 - 가이드 외 문서(공식 SDK·MCP 문서 등) 코퍼스 확장
-- 선택 항목(v2): LangSmith/LangFuse 연동(로컬 trace로 대체), Dockerfile, 웹 UI
+- 선택 항목(v2): LangSmith/LangFuse 연동(로컬 trace로 대체), Dockerfile — 하지 않기로 결정. 웹 UI는 v2-5에서 구현(§7)
 
 ---
 
@@ -527,6 +527,8 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 - `contexts`: `search_guide`/`get_chunk` 결과와, 출제 시에는 해당 문제의 TS 청크(정답 단서인 source_excerpt는 넣지 않음)를 콜백으로 수집 (Day 7 `run_eval.py`의 ToolRecorder 방식)
 - `trace`: step 단위 `guard → route(agent) → rewrite → retrieve → get_quiz → submit → progress → allocate → plan → output_check` + 끝에 `tools`(이번 턴 앱 도구 이름, 핸드오프·TutorAnswer 제외 — 평가 판정용)와 `llm`(호출 수·토큰·실제 응답 모델). `output_check`는 G3(concept_tutor)과 G4(최종 답변) 두 종류. Day 7 `local_tracer.py` 확장. 로컬 사본 `logs/trace.jsonl`(커밋 안 함)
 - 서버: FastAPI (Day 6 `api_server.py` 재사용, 경로만 `/query`로 변경)
+- 웹 UI (v2-5): `GET /`가 `src/web/index.html`(바닐라 JS 한 장, 외부 의존성·CDN 없음)을 서빙. `/query`를 그대로 부르며 그래프·가드·도구는 바꾸지 않음. `trace`에 `get_quiz` status=ok가 있으면 A~D 버튼을 보여 주고 누른 글자를 다음 질문으로 보냄(정답은 UI도 모름, 채점은 `submit_answer`). `submit` status=graded 직후 진도 패널 갱신. 기본 user_id는 시드 사용자가 아닌 `web_demo`(커밋 대상 study_log 보호)
+- `GET /progress?user_id=...` (v2-5): `get_progress` MCP 결과를 그대로 반환 (코드 계산, LLM·입력 가드 없음, 읽기 전용). 웹 UI 진도 패널용
 
 ### 7-1. 런타임 모델 전환 (S2, `src/llm.py`)
 - 기본은 고정 모델 `us.anthropic.claude-sonnet-4-5-20250929-v1:0` @ us-east-1. **쓰로틀링·일일 토큰 할당량 소진 등 일시 오류일 때만** `config.RUNTIME_MODEL_CHAIN` 순서로 전환: Sonnet 4.5(global@us-east-1 → us@us-west-2 → global@us-west-2 → global@ap-northeast-2) → Sonnet 4.6(같은 순서). Haiku는 쓰지 않음
@@ -640,7 +642,8 @@ ccaf-study-coach/
 │   ├── tracer.py              # trace 수집
 │   ├── ingest.py              # PDF → 청크 62개 + 세부 항목 240개 → Chroma
 │   ├── quiz_bank_server.py    # MCP 서버 (문제 은행 + 학습 기록)
-│   └── api.py                 # FastAPI /query
+│   ├── api.py                 # FastAPI /query, /progress, 웹 UI 서빙
+│   └── web/index.html         # 웹 UI (v2-5)
 ├── scripts/
 │   ├── build_quiz_pool.py     # 문제 풀 사전 생성 (--pilot, --resume, --fill-gaps, --rebalance-length …)
 │   ├── review_sample.py       # 층화 표본 → 사람 검토 xlsx, --apply로 반영
@@ -683,6 +686,7 @@ ccaf-study-coach/
 
 ## 변경 이력
 
+- v0.6.0 (v2-5): 웹 UI(`src/web/index.html`, `GET /`)와 `GET /progress` 추가. 그래프·가드·프롬프트 변경 없음. LangSmith/LangFuse·Dockerfile은 하지 않기로 결정 (§1-2, §7, §11)
 - v0.5.9 (v2-4): concept_tutor 프롬프트에 "검색 결과에 없는 수치는 예시로도 쓰지 않음" 한 줄 (평가 9번 TTL 예시 수치 대응, 평가 문장은 넣지 않음)
 - v0.5.8 (v2-3): 검색 결과 청크 필터(`trim_hits`, bullet 단위 자르기는 회귀로 철회), 장기 대화 요약 + `case_facts` 보존(`memory.py`, `CoachApp.run`), study_coach 프롬프트에 요약 블록 사실 사용 한 줄 (§4, §5-1, §10)
 - v0.5.7 (v2-2): 입력 가드 2차 LLM 판별을 그래프와 병렬 실행, 앱 도구는 gate에서 판별 통과 대기, 차단 시 그래프 취소 + 이번 턴 메시지 되돌림 (§6)

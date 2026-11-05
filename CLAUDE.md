@@ -8,6 +8,7 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
 - 최종: round2 19/20 → v2-1(GAP_NOTICE) 20/20 → v2-2(가드 병렬) 19/20·개념 평균 26.4→22.4s
   → v2-3(case_facts·요약·청크 필터) 19/20, RAGAS precision 0.825·faithfulness 0.789 (하락은 v2-2부터, 9번 예시 수치 탓)
   → v2-4(튜터 예시 수치 금지 한 줄) 20/20, RAGAS faithfulness 0.889·recall 1.0·precision 0.796, 개념 평균 21.0s.
+  → v2-5 웹 UI(`GET /`·`GET /progress`, 그래프 변경 없음).
   smoke_p0 24/24, smoke_p1 37/37, smoke_memory 9/9. 수치·실패 분석은 evaluation/round*_report.md, quiz_pool_report.md
 - 데이터: 문제 풀 승인 266, study_log 시드 demo_heavy 61회·demo_new 없음 (seed_study_log.py)
 - 원격: https://github.com/kainetic/ccaf-study-coach (private, master). 개선 후보는 round2_report §6
@@ -24,7 +25,7 @@ python scripts/review_sample.py                      # 사람 표본 검토 xlsx
 python scripts/review_sample.py --apply             # 검토 반영: human_checked, 오류 → needs_fix, 리포트 갱신 (--dry-run 가능)
 python scripts/pool_report.py                        # evaluation/quiz_pool_report.md 자동 절 갱신
 python scripts/seed_study_log.py                     # 더미 사용자 demo_heavy·demo_new → data/study_log.json (--force 재생성, --dry-run)
-uvicorn src.api:api --port 8000                      # API 서버
+uvicorn src.api:api --port 8000                      # API 서버 + 웹 UI (http://localhost:8000/, src/web/index.html)
 python evaluation/smoke_p0.py                        # P0 한 바퀴 검증 (--url 실행 중 서버, --keep 기록 남김)
 python evaluation/ragas_smoke.py                     # RAGAS 3건 스모크 → evaluation/ragas_smoke.json
 python evaluation/smoke_p1.py                        # P1 오프라인 검증 (가드 규칙·G3·진도·배분 합계·트리밍·case_facts, LLM 없음)
@@ -55,7 +56,7 @@ MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언�
 - 승인(approved) 상태가 아닌 문제는 출제하지 않는다
 - 런타임에 문제를 생성하지 않는다. quiz_gen은 scripts/build_quiz_pool.py에서만 호출하고 에이전트 도구로 노출하지 않는다
 - 세부 항목 수가 240개가 아니면 ingest 파싱 오류로 보고 멈춘다
-- 선택 항목(v2)은 요청 전까지 만들지 않는다: reset_progress HITL, 요약 미들웨어, 웹 UI, Dockerfile
+- 선택 항목(v2) reset_progress HITL은 요청 전까지 만들지 않는다. LangSmith/LangFuse·Dockerfile은 하지 않기로 결정 (웹 UI는 v2-5 구현)
 - 커밋 금지: data/raw/*.pdf, data/guide_chunks.jsonl, data/guide_bullets.jsonl, chroma_db/, .env, evaluation/review_sample.xlsx
   (data/quiz_pool.json, quiz_pool_manifest.json, study_log.json은 커밋)
 - evaluation/test_queries.csv와 ragas_reference.csv의 기대값은 묻지 않고 바꾸지 않는다

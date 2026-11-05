@@ -77,7 +77,7 @@ LLM: AWS Bedrock Claude Sonnet 4.5 (기본 us Sonnet 4.5, 쓰로틀링·일일 �
 - 난이도별 출제 (단일 난이도)
 - 런타임 실시간 문제 생성 (제거. 문제는 오프라인에서만 생성)
 - 가이드 외 문서(공식 SDK·MCP 문서 등)로 코퍼스 확장
-- 선택 항목(v2): 웹 UI, LangSmith/LangFuse 연동, Dockerfile
+- 선택 항목(v2): LangSmith/LangFuse 연동, Dockerfile (하지 않음). 웹 UI는 v2-5에서 구현
 
 ## 4. 서비스 정책 (가드레일 요약)
 

@@ -89,9 +89,11 @@ python scripts/check_bedrock.py    # LLM·임베딩 연결 확인
 #    공식 시험 가이드 PDF를 data/raw/ccaf_exam_guide.pdf로 저장한 뒤
 python -m src.ingest               # 청크 62 + 세부 항목 240 → data/*.jsonl + ./chroma_db
 
-# 4. API 서버
-uvicorn src.api:api --port 8000
+# 4. API 서버 + 웹 UI
+uvicorn src.api:api --port 8000   # 브라우저에서 http://localhost:8000/
 ```
+
+**웹 UI** (`http://localhost:8000/`, v2-5): 채팅으로 개념 질문·출제·학습 계획을 요청하고, 출제된 문제는 A~D 버튼으로 답합니다. 오른쪽 진도 패널(`GET /progress`)에 정답률·도메인별 막대·커버리지가 나오고 채점 직후 갱신됩니다. 답변마다 trace(경로·도구·근거·응답 시간)를 펼쳐 볼 수 있습니다. 기본 user_id는 `web_demo`입니다(시드 사용자 `demo_heavy`도 고를 수 있지만 풀이가 `data/study_log.json`에 기록됩니다).
 
 ```powershell
 # 개념 질문
@@ -250,7 +252,8 @@ src/
   schemas.py           Pydantic 모델
   tracer.py            trace 수집
   ingest.py            PDF → 청크 62 + 세부 항목 240 → Chroma
-  api.py               FastAPI /query
+  api.py               FastAPI /query, /progress, 웹 UI 서빙
+  web/index.html       웹 UI (v2-5)
 scripts/               build_quiz_pool · review_sample · pool_report · seed_study_log · check_bedrock · demo_capture
 data/                  quiz_pool.json · quiz_pool_manifest.json · study_log.json (+ 미커밋: raw/*.pdf, guide_*.jsonl)
 evaluation/            test_queries.csv · ragas_reference.csv · run_eval · llm_judge · smoke_p0/p1 · ragas_smoke
@@ -266,7 +269,7 @@ docs/                  DESIGN.md · demo/
 
 ## 한계와 다음 단계 (v2)
 
-- `reset_progress` HITL 승인, 웹 UI, Dockerfile, LangSmith/LangFuse 연동은 만들지 않았습니다.
+- `reset_progress` HITL 승인, Dockerfile, LangSmith/LangFuse 연동은 만들지 않았습니다 (웹 UI는 v2-5에서 추가).
 - 시험일을 저장하지 않습니다. 학습 계획은 매번 남은 일수와 하루 시간을 물어서 만듭니다.
 - G4 정정 질문과 개념 질문이 한 메시지에 섞이면 정정 문구만 답합니다.
 - 응답 시간이 목표보다 깁니다(개념 질문 평균 27.6초). 가이드에 근거가 없는 질문에서는 검색을 프롬프트 상한(2회)보다 더 반복하기도 합니다([시연 05](docs/demo/05_scope.md) 턴 2: 검색 4회, 31.6초). 다음 개선 후보는 검색 횟수를 코드로 제한하는 것, 검색 결과 트리밍, LLM 호출 수 줄이기입니다([round2_report.md](evaluation/round2_report.md) §6).

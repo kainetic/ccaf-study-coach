@@ -103,8 +103,9 @@ class GuideBullet(BaseModel):
 - 페이지 머리말("Claude Certification Program  Exam guide") 제거. 페이지 경계에서 끊긴 불릿은 다음 줄과 이어 붙임.
 - 산출물: `data/guide_chunks.jsonl`(62), `data/guide_bullets.jsonl`(240) → 청크만 Chroma 컬렉션 `ccaf_guide` 적재 (Titan v2 임베딩).
 
-### 2-4. 저장 정책 (공개 repo)
+### 2-4. 저장 정책 (private repo)
 - 가이드 PDF 원본(`data/raw/ccaf_exam_guide.pdf`), `guide_chunks.jsonl`, `guide_bullets.jsonl`은 **커밋하지 않음** (`.gitignore`). `data/README.md`에 PDF 배치 위치와 ingest 실행법만 기재.
+- 비공개 저장소여도 collaborator에게 복제되므로 가이드 원문과 그 파생물(`chroma_db/`, `evaluation/review_sample.xlsx` 포함)은 계속 커밋하지 않음 (재배포 방지, ingest로 재생성 가능).
 - **문제 풀 `data/quiz_pool.json`은 커밋함**: 직접 생성한 원본 문제이고 근거 인용은 짧은 발췌만 포함. 평가 재현성 확보 목적.
 - 청크 파일은 미포함으로 확정 (데이터 포함을 요구받을 때만 커밋).
 

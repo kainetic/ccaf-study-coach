@@ -10,25 +10,52 @@
 <body>
 <div class="app">
   <header>
-    <h1>CCA-F 학습 코치</h1>
-    <label>user_id
-      <input id="uid" list="uids" autocomplete="off" spellcheck="false" aria-label="user_id" placeholder="user_id">
-      <datalist id="uids"><option value="web_demo"><option value="demo_heavy"><option value="demo_new"></datalist>
-    </label>
-    <button class="btn" id="reset" type="button">새 대화</button>
+    <div class="brand">
+      <span class="mark" aria-hidden="true">C</span>
+      <div>
+        <h1>CCA-F 학습 코치</h1>
+        <div class="sub">Claude Certified Architect – Foundations</div>
+      </div>
+    </div>
+    <div class="actions">
+      <label class="field">user_id
+        <input id="uid" list="uids" autocomplete="off" spellcheck="false" aria-label="user_id" placeholder="user_id">
+        <datalist id="uids"><option value="web_demo"><option value="demo_heavy"><option value="demo_new"></datalist>
+      </label>
+      <button class="btn" id="reset" type="button">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>새 대화
+      </button>
+      <span class="sep" aria-hidden="true"></span>
+      <button class="btn icon" id="togglePanel" type="button" aria-controls="progressPanel" aria-expanded="true" title="학습 진도 패널 접기/펼치기">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg>
+      </button>
+    </div>
   </header>
   <div class="main">
     <section class="chat">
       <div id="log" aria-live="polite"></div>
       <form id="ask">
-        <textarea id="q" maxlength="2000" placeholder="질문하거나 문제를 요청하세요" title="Enter 전송, Shift+Enter 줄바꿈"></textarea>
-        <button class="btn primary" id="send" type="submit">보내기</button>
+        <div class="composer">
+          <textarea id="q" maxlength="2000" placeholder="질문하거나 문제를 요청하세요" title="Enter 전송, Shift+Enter 줄바꿈"></textarea>
+          <button class="btn primary" id="send" type="submit">
+            보내기<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+        <p class="composer-hint">Enter 전송 · Shift+Enter 줄바꿈 · 문제가 나오면 보기를 누르거나 A~D 키로 답할 수 있어요</p>
       </form>
     </section>
-    <aside id="progressPanel">
-      <h2>진도 <button class="btn" id="refresh" type="button">새로고침</button></h2>
-      <div id="progress"><p class="note">불러오는 중…</p></div>
-      <label class="dev"><input type="checkbox" id="showTrace"> 개발 정보(trace) 표시</label>
+    <aside id="progressPanel" aria-label="학습 진도">
+      <div class="panel-head">
+        <h2>학습 진도</h2>
+        <span class="who" id="panelUser"></span>
+        <button class="btn ghost icon" id="refresh" type="button" title="새로고침" aria-label="진도 새로고침">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5"/></svg>
+        </button>
+      </div>
+      <div class="panel-body" id="progress"><p class="note">불러오는 중…</p></div>
+      <div class="panel-foot">
+        <label class="dev"><input type="checkbox" id="showTrace"> 개발 정보(trace) 표시</label>
+      </div>
     </aside>
   </div>
 </div>

@@ -281,7 +281,7 @@ function setBusy(on) {
   send.disabled = on;
   q.disabled = on;
   uid.disabled = on;
-  document.querySelectorAll(".examples .btn, #progress [data-domain]").forEach((b) => { b.disabled = on; });
+  document.querySelectorAll(".examples button, #progress [data-domain]").forEach((b) => { b.disabled = on; });
 }
 
 function currentUid() {
@@ -351,6 +351,7 @@ function pct(x) { return x == null ? "–" : Math.round(x * 100) + "%"; }
 async function loadProgress() {
   const box = $("progress");
   const user = currentUid();
+  $("panelUser").textContent = user ? `· ${user}` : "";
   if (!user) { box.innerHTML = '<p class="note">user_id 형식이 올바르지 않습니다.</p>'; return; }
   try {
     const res = await fetch("/progress?user_id=" + encodeURIComponent(user));
@@ -363,27 +364,33 @@ async function loadProgress() {
     const doms = p.domains.map((d) => `
       <button type="button" class="dom${weakIds.has(d.domain) ? " weak" : ""}" data-domain="${d.domain}"${dis}
         title="Domain ${d.domain} 연습 문제 풀기">
-        <span class="name"><span>D${d.domain} ${esc(d.name)}${weakIds.has(d.domain) ? '<span class="weak-tag">약점</span>' : ""}</span>
-          <span>${pct(d.accuracy)} · ${d.correct}/${d.attempts}</span></span>
+        <span class="row"><span class="d-name">D${d.domain} ${esc(d.name)}${weakIds.has(d.domain) ? '<span class="weak-tag">약점</span>' : ""}</span>
+          <span class="d-acc">${pct(d.accuracy)}</span></span>
         <span class="track"><span class="fill" style="width:${d.accuracy == null ? 0 : d.accuracy * 100}%"></span></span>
-        <span class="name note"><span>시험 비중 ${pct(d.weight)}</span><span class="go">문제 풀기 →</span></span>
+        <span class="row meta"><span class="weight">시험 비중 ${pct(d.weight)}</span><span>정답 ${d.correct}/${d.attempts}</span>
+          <span class="go">문제 풀기 →</span></span>
       </button>`).join("");
     let weakBox = "";
     if (weak && weak.top.length) {
       const names = weak.top.map((w) => `D${w.domain} (정답률 ${pct(w.accuracy)})`).join(", ");
-      weakBox = `<div class="weak-box">약점 도메인: <b>${esc(names)}</b>
-        <br><button type="button" class="btn primary" id="weakQuiz" data-domain="${weak.top[0].domain}"${dis}>D${weak.top[0].domain} 약점 문제 풀기</button></div>`;
+      weakBox = `<div class="weak-box"><span class="w-title">약점 도메인</span>${esc(names)}
+        <button type="button" class="btn primary" id="weakQuiz" data-domain="${weak.top[0].domain}"${dis}>D${weak.top[0].domain} 약점 문제 풀기</button></div>`;
     } else if (weak) {
       weakBox = `<div class="weak-box note">${esc(weak.message || "약점을 판단할 기록이 부족합니다.")}</div>`;
     }
+    const kpi = (label, value, sub, cls = "") =>
+      `<div class="kpi${cls}"><div class="k-label">${label}</div><div class="k-value">${value}</div><div class="k-sub">${sub}</div></div>`;
     box.innerHTML = `
-      <div class="stat">
-        <div><b>${pct(p.accuracy)}</b><span>정답률 (${p.correct}/${p.attempts})</span></div>
-        <div><b>${p.task_coverage.solved}/${p.task_coverage.total}</b><span>TS 커버리지</span></div>
-        <div><b>${p.bullet_coverage.solved}/${p.bullet_coverage.total}</b><span>세부 항목 커버리지</span></div>
-        <div><b>${p.last_answered_at ? esc(String(p.last_answered_at).slice(0, 10)) : "–"}</b><span>마지막 풀이</span></div>
-      </div>${weakBox}${doms}
-      <p class="note">막대는 도메인별 정답률. 도메인을 누르면 그 도메인 문제를 냅니다. 약점 점수 = 시험 비중 × (1 − 정답률), 시도 3회 이상 도메인만 (서버 계산).</p>`;
+      <div class="kpis">
+        ${kpi("정답률", pct(p.accuracy), `${p.correct}/${p.attempts} 정답`, " primary")}
+        ${kpi("TS 커버리지", `${p.task_coverage.solved}<small>/${p.task_coverage.total}</small>`, "푼 Task Statement")}
+        ${kpi("세부 항목 커버리지", `${p.bullet_coverage.solved}<small>/${p.bullet_coverage.total}</small>`, "다룬 세부 항목")}
+        ${kpi("최근 학습일", p.last_answered_at ? esc(String(p.last_answered_at).slice(5, 10).replace("-", ".")) : "–",
+              p.last_answered_at ? esc(String(p.last_answered_at).slice(0, 4)) + "년" : "기록 없음")}
+      </div>${weakBox}
+      <div class="section-title">도메인별 진도<span>막대 = 정답률 · 회색 칩 = 시험 비중</span></div>
+      ${doms}
+      <p class="note">도메인을 누르면 그 도메인 문제를 냅니다. 약점 점수 = 시험 비중 × (1 − 정답률), 시도 3회 이상 도메인만 (서버 계산).</p>`;
     box.querySelectorAll("[data-domain]").forEach((b) => b.addEventListener("click", () => {
       ask(`Domain ${b.dataset.domain}에서 연습 문제 하나 내줘`);
     }));
@@ -392,21 +399,38 @@ async function loadProgress() {
   }
 }
 
+// 초기 화면 기능 카드: EXAMPLES와 같은 순서. 누르면 예시 질문을 그대로 보낸다 (추천 질문 동작)
+const FEATURES = [
+  { title: "연습 문제", desc: "검토를 마친 문제 풀에서 출제하고 코드로 채점해요.",
+    icon: '<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>' },
+  { title: "개념 Q&A", desc: "시험 가이드 원문을 근거로 개념을 설명해요.",
+    icon: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/>' },
+  { title: "학습 계획", desc: "남은 기간과 하루 공부 시간으로 도메인별 계획을 짜요.",
+    icon: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>' },
+  { title: "약점 분석", desc: "풀이 기록으로 시험 비중 대비 약한 도메인을 찾아요.",
+    icon: '<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/>' },
+];
+
 function showIntro() {
   log.innerHTML = "";
   const el = document.createElement("div");
-  el.className = "msg bot";
-  el.innerHTML = `<p class="intro">CCA-F 시험 가이드 기반 학습 코치입니다. 개념 질문, 연습 문제 출제·채점, 학습 계획, 약점 분석을 도와드려요.</p>`;
+  el.className = "intro-hero";
+  el.innerHTML = `<p class="eyebrow">CCA-F 시험 가이드 기반 학습 코치</p>
+    <h2>무엇을 공부해 볼까요?</h2>
+    <p>개념 질문, 연습 문제 출제·채점, 학습 계획, 약점 분석을 도와드려요. 아래에서 시작하거나 직접 질문해 보세요.</p>`;
   const ex = document.createElement("div");
   ex.className = "examples";
-  for (const text of EXAMPLES) {
+  EXAMPLES.forEach((text, i) => {
+    const f = FEATURES[i];
     const b = document.createElement("button");
     b.type = "button";
-    b.className = "btn";
-    b.textContent = text;
+    b.className = "feature";
+    b.innerHTML = `<span class="f-ico"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${f.icon}</svg></span>
+      <span class="f-title">${esc(f.title)}</span><span class="f-desc">${esc(f.desc)}</span>
+      <span class="f-ex">“${esc(text)}”</span>`;
     b.addEventListener("click", () => ask(text));
     ex.appendChild(b);
-  }
+  });
   el.appendChild(ex);
   log.appendChild(el);
 }
@@ -438,6 +462,20 @@ $("reset").addEventListener("click", () => {
   if (!busy) { newConversation(); q.focus(); }
 });
 $("refresh").addEventListener("click", loadProgress);
+
+// 진도 패널 접기/펼치기 (상태는 브라우저에 기억)
+const togglePanel = $("togglePanel");
+function setPanel(open) {
+  document.body.classList.toggle("panel-collapsed", !open);
+  togglePanel.setAttribute("aria-expanded", String(open));
+  store("ccaf_panel_open", open ? "1" : "0");
+}
+togglePanel.addEventListener("click", () => {
+  const open = document.body.classList.contains("panel-collapsed");
+  setPanel(open);
+  if (open) loadProgress();
+});
+setPanel(store("ccaf_panel_open") !== "0");
 
 // 근거 배지 → 가이드 원문 발췌를 말풍선 안에 펼치고, 같은 배지를 다시 누르면 접는다
 log.addEventListener("click", (e) => {

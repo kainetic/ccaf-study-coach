@@ -12,6 +12,8 @@ const log = $("log"), q = $("q"), send = $("send"), uid = $("uid");
 let threadId = null, busy = false;
 let history = [];               // 이번 대화 기록 (새로고침 복원용, sessionStorage)
 const SESSION_KEY = "ccaf_session", HISTORY_MAX = 60;
+const DEBUG = new URLSearchParams(location.search).get("debug") === "1";   // ?debug=1 → trace 표시 체크박스
+const ACC_MIN = 10;             // 전체 정답률은 이만큼 풀어야 크게 보여 준다 (그 전에는 풀이 수 중심)
 const sources = new Map();      // doc_id → 가이드 원문 (이번 대화에서 받은 contexts). 채점 턴은 출제 턴의 TS 청크를 쓴다
 
 function store(key, value) {
@@ -93,7 +95,7 @@ function restoreSession() {
   history = saved.items;
   threadId = saved.threadId || null;
   for (const it of history) {
-    if (it.r === "u") { disableChoices(); addUser(it.t); }
+    if (it.r === "u") { disableChoices(); addUser(it.t, it.pick); }
     else if (it.r === "b") { for (const c of it.d.contexts || []) sources.set(c.doc_id, c.text); addBot(it.d); }
     else if (it.r === "e") addError(it.t);
   }
@@ -112,10 +114,13 @@ function newConversation() {
 
 function scrollDown() { log.scrollTop = log.scrollHeight; }
 
-function addUser(text) {
+// 보기를 눌러 답하면 "B. 보기 앞부분…" 한 줄로 보여 준다 (서버에는 글자만 보냄)
+function addUser(text, isPick) {
+  log.querySelector(".intro-hero")?.remove();     // 대화가 시작되면 웰컴 화면은 기록에 남기지 않는다
   const el = document.createElement("div");
-  el.className = "msg user";
+  el.className = "msg user" + (isPick ? " pick" : "");
   el.textContent = text;
+  if (isPick) el.title = text;
   log.appendChild(el);
   scrollDown();
 }
@@ -230,7 +235,8 @@ function pick(label) {
   if (!card) return;
   setOptState(card, "picked");
   setQuizState(activeQuiz, "pending");
-  ask(label);
+  const text = (card.querySelector(".o-text") || {}).textContent || "";
+  ask(label, text.trim() ? `${label}. ${text.trim().replace(/\s+/g, " ")}` : null);
 }
 
 // 답 제출이 오류로 끝나면(채점 응답 없음) 다시 고를 수 있게 되돌린다
@@ -347,7 +353,9 @@ function gradeBlock(el, g, submit) {
     <div class="result ${submit.correct ? "ok" : "bad"}" role="status">
       <span class="r-ico" aria-hidden="true">${submit.correct ? "✓" : "✗"}</span><span class="r-text">${esc(g.head)}</span></div>
     <section class="explain"><h4>보기별 해설</h4>${main.map(item).join("")}
-      ${others.length ? `<details class="more"><summary>나머지 보기 해설 ${others.length}개</summary>${others.map(item).join("")}</details>` : ""}
+      ${others.length ? `<div class="more"><button type="button" class="more-toggle" aria-expanded="false">
+        <svg class="ico chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>나머지 보기 해설 ${others.length}개</button>
+        <div class="more-body"><div inert>${others.map(item).join("")}</div></div></div>` : ""}
     </section>` + (g.after.trim() ? `<div class="grade-foot">${renderMarkdown(g.after.trim())}</div>` : "");
 }
 
@@ -375,8 +383,8 @@ function nextActions(el, submit) {
   el.appendChild(row);
 }
 
-// 출제·채점 응답은 메시지 위쪽이 보이게 (긴 해설 끝으로 튀지 않게), 그 외는 맨 아래로
-function scrollToMsg(el) { log.scrollTop = Math.max(0, el.offsetTop - 16); }
+// 출제·채점 응답은 카드 머리(채점은 결과 헤더)가 화면 위에 오게 (긴 해설 끝으로 튀지 않게), 그 외는 맨 아래로
+function scrollToMsg(el) { (el.querySelector(".result") || el).scrollIntoView({ block: "start", behavior: "smooth" }); }
 
 function addBot(data) {
   const el = document.createElement("div");
@@ -416,14 +424,14 @@ function currentUid() {
   return ok ? v : null;
 }
 
-async function ask(question) {
+async function ask(question, display) {
   question = question.trim();
   if (!question || busy) return;
   const user = currentUid();
   if (!user) { addError("user_id는 영문·숫자·_·-만 쓸 수 있습니다 (점 금지, 64자 이하)."); return; }
   disableChoices();
-  addUser(question);
-  record({ r: "u", t: question });
+  addUser(display || question, !!display);
+  record(display ? { r: "u", t: display, pick: true } : { r: "u", t: question });
   setBusy(true);
   // 스트리밍이 없어 실제 진행 단계는 모른다 → 경과 시간에 따른 일반 문구만 보여 준다
   const wait = document.createElement("div");
@@ -456,9 +464,11 @@ async function ask(question) {
     }
     threadId = data.thread_id;
     for (const c of data.contexts || []) sources.set(c.doc_id, c.text);
+    wait.remove();      // 답변 카드로 스크롤하기 전에 치워야 위치가 밀리지 않는다
     addBot(data);
     record({ r: "b", d: { answer: data.answer, trace: data.trace, contexts: data.contexts } });
-    if ((data.trace || []).some((s) => s.step === "submit" && s.status === "graded")) loadProgress();
+    const graded = (data.trace || []).find((s) => s.step === "submit" && s.status === "graded");
+    if (graded) loadProgress(+((graded.quiz_id || "").match(/^Q-(\d)\./) || [])[1] || null);
   } catch (e) {
     const msg = "오류: " + (e.message || "서버에 연결할 수 없습니다.");
     addError(msg);
@@ -474,7 +484,49 @@ async function ask(question) {
 
 function pct(x) { return x == null ? "–" : Math.round(x * 100) + "%"; }
 
-async function loadProgress() {
+// 최근 학습일: 오늘 / 어제 / N일 전(일주일 안) / 11월 5일 (올해가 아니면 연도 포함)
+function relDay(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return null;
+  const now = new Date();
+  const days = Math.round((new Date(now.getFullYear(), now.getMonth(), now.getDate()) -
+                           new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000);
+  const md = `${d.getMonth() + 1}월 ${d.getDate()}일`;
+  const label = days <= 0 ? "오늘" : days === 1 ? "어제" : days < 7 ? `${days}일 전`
+    : d.getFullYear() === now.getFullYear() ? md : `${d.getFullYear()}년 ${md}`;
+  return { label, full: `${d.getFullYear()}년 ${md}` };
+}
+
+// 숫자가 바뀐 항목은 이전 값에서 짧게 카운트한다 (같은 프로필에서 다시 불러올 때만)
+let lastCounts = { user: null, map: {} };
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function num(key, value, suffix = "") {
+  return `<span class="cnt" data-key="${key}" data-to="${value}" data-suffix="${suffix}">${value}${suffix}</span>`;
+}
+function countUp(el, from, to) {
+  const t0 = performance.now(), dur = 700, suffix = el.dataset.suffix;
+  el.classList.add("bump");
+  const step = (t) => {
+    const k = Math.min(1, (t - t0) / dur), v = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3)));
+    el.textContent = v + suffix;
+    if (k < 1) requestAnimationFrame(step); else setTimeout(() => el.classList.remove("bump"), 600);
+  };
+  requestAnimationFrame(step);
+}
+function animateCounts(box, user) {
+  const prev = lastCounts.user === user ? lastCounts.map : null, map = {};
+  box.querySelectorAll(".cnt").forEach((el) => {
+    const key = el.dataset.key, to = +el.dataset.to;
+    map[key] = to;
+    if (prev && prev[key] != null && prev[key] !== to && !reduceMotion) countUp(el, prev[key], to);
+  });
+  lastCounts = { user, map };
+}
+
+const CHEVRON = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+
+// flashDomain: 방금 채점한 문제의 도메인 → 그 행을 잠깐 강조
+async function loadProgress(flashDomain) {
   const box = $("progress");
   const user = currentUid();
   $("panelUser").textContent = user ? `· ${user}` : "";
@@ -488,15 +540,20 @@ async function loadProgress() {
     const weak = p.weak && !p.weak.isError ? p.weak : null;
     const weakIds = new Set(weak ? weak.top.map((w) => w.domain) : []);
     const dis = busy ? " disabled" : "";
-    const doms = p.domains.map((d) => `
+    // 막대 길이 = 시험 비중(가장 큰 도메인이 꽉 참), 채운 부분 = 그 도메인 정답률
+    const maxW = Math.max(...p.domains.map((d) => d.weight)) || 1;
+    const doms = p.domains.map((d) => {
+      const tried = d.attempts > 0 && d.accuracy != null;
+      return `
       <button type="button" class="dom${weakIds.has(d.domain) ? " weak" : ""}" data-domain="${d.domain}"${dis}
-        title="Domain ${d.domain} 연습 문제 풀기">
+        title="Domain ${d.domain} 연습 문제 풀기 · 막대 길이 = 시험 비중 ${pct(d.weight)}, 채운 부분 = 정답률">
         <span class="row"><span class="d-name">D${d.domain} ${esc(d.name)}${weakIds.has(d.domain) ? '<span class="weak-tag">약점</span>' : ""}</span>
-          <span class="d-acc">${pct(d.accuracy)}</span></span>
-        <span class="track"><span class="fill" style="width:${d.accuracy == null ? 0 : d.accuracy * 100}%"></span></span>
-        <span class="row meta"><span class="weight">시험 비중 ${pct(d.weight)}</span><span>정답 ${d.correct}/${d.attempts}</span>
-          <span class="go">문제 풀기 →</span></span>
-      </button>`).join("");
+          ${tried ? `<span class="d-cnt">${d.correct}/${d.attempts}</span><span class="d-acc">${num("d" + d.domain, Math.round(d.accuracy * 100), "%")}</span>`
+                  : '<span class="d-none">아직 안 풂</span>'}</span>
+        <span class="row bar-row"><span class="lane"><span class="track" style="width:${(d.weight / maxW) * 100}%"><span class="fill" style="width:${tried ? d.accuracy * 100 : 0}%"></span></span></span>
+          <span class="d-weight">비중 ${pct(d.weight)}</span><span class="go"><span class="go-text">문제 풀기</span>${CHEVRON}</span></span>
+      </button>`;
+    }).join("");
     let weakBox = "";
     if (weak && weak.top.length) {
       const names = weak.top.map((w) => `D${w.domain} (정답률 ${pct(w.accuracy)})`).join(", ");
@@ -505,22 +562,42 @@ async function loadProgress() {
     } else if (weak) {
       weakBox = `<div class="weak-box note">${esc(weak.message || "약점을 판단할 기록이 부족합니다.")}</div>`;
     }
-    const kpi = (label, value, sub, cls = "") =>
-      `<div class="kpi${cls}"><div class="k-label">${label}</div><div class="k-value">${value}</div><div class="k-sub">${sub}</div></div>`;
+    const kpi = (label, value, sub, cls = "", extra = "") =>
+      `<div class="kpi${cls}"><div class="k-label">${label}</div><div class="k-value">${value}</div>${extra}<div class="k-sub">${sub}</div></div>`;
+    const meter = (c) => `<div class="k-bar"><span style="width:${c.total ? (c.solved / c.total) * 100 : 0}%"></span></div>`;
+    // 기록이 적을 때는 정답률 대신 풀이 수를 보여 준다. 강조색은 진척(풀이 수)·좋은 정답률(70% 이상)에만
+    const first = p.attempts < ACC_MIN
+      ? kpi("풀이 완료", `${num("attempts", p.attempts)}<small>문제</small>`,
+            p.attempts ? `정답률은 ${ACC_MIN}문제부터` : "첫 문제를 풀어 보세요", p.attempts ? " primary" : "")
+      : kpi("정답률", num("acc", Math.round(p.accuracy * 100), "%"), `${p.correct}/${p.attempts} 정답`,
+            p.accuracy >= 0.7 ? " primary" : "");
+    const last = p.last_answered_at ? relDay(p.last_answered_at) : null;
     box.innerHTML = `
       <div class="kpis">
-        ${kpi("정답률", pct(p.accuracy), `${p.correct}/${p.attempts} 정답`, " primary")}
-        ${kpi("TS 커버리지", `${p.task_coverage.solved}<small>/${p.task_coverage.total}</small>`, "푼 Task Statement")}
-        ${kpi("세부 항목 커버리지", `${p.bullet_coverage.solved}<small>/${p.bullet_coverage.total}</small>`, "다룬 세부 항목")}
-        ${kpi("최근 학습일", p.last_answered_at ? esc(String(p.last_answered_at).slice(5, 10).replace("-", ".")) : "–",
-              p.last_answered_at ? esc(String(p.last_answered_at).slice(0, 4)) + "년" : "기록 없음")}
+        ${first}
+        ${kpi("TS 커버리지", `${num("ts", p.task_coverage.solved)}<small>/${p.task_coverage.total}</small>`, "푼 Task Statement", "", meter(p.task_coverage))}
+        ${kpi("세부 항목 커버리지", `${num("bullet", p.bullet_coverage.solved)}<small>/${p.bullet_coverage.total}</small>`, "다룬 세부 항목", "", meter(p.bullet_coverage))}
+        ${last ? kpi("최근 학습일", esc(last.label), esc(last.full)) : kpi("최근 학습일", '<span class="k-none">기록 없음</span>', "&nbsp;")}
       </div>${weakBox}
-      <div class="section-title">도메인별 진도<span>막대 = 정답률 · 회색 칩 = 시험 비중</span></div>
-      ${doms}
-      <p class="note">도메인을 누르면 그 도메인 문제를 냅니다. 약점 점수 = 시험 비중 × (1 − 정답률), 시도 3회 이상 도메인만 (서버 계산).</p>`;
+      <div class="section-title">도메인별 진도
+        <span class="info" tabindex="0" aria-label="도메인별 진도 설명" aria-describedby="domTip">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+          <span class="tip" role="tooltip" id="domTip">막대 길이는 시험 비중, 채운 부분은 정답률이에요. 도메인을 누르면 그 도메인 문제를 냅니다.
+            <span class="tip-sub">약점 점수 = 시험 비중 × (1 − 정답률), 시도 3회 이상 도메인만 (서버 계산)</span></span></span>
+      </div>
+      ${doms}`;
     box.querySelectorAll("[data-domain]").forEach((b) => b.addEventListener("click", () => {
       ask(`Domain ${b.dataset.domain}에서 연습 문제 하나 내줘`);
     }));
+    animateCounts(box, user);
+    const row = flashDomain && box.querySelector(`.dom[data-domain="${flashDomain}"]`);
+    if (row) {
+      // scrollIntoView를 또 쓰면 채팅 쪽 부드러운 스크롤이 끊기므로 패널만 직접 움직인다
+      const r = row.getBoundingClientRect(), b = box.getBoundingClientRect();
+      if (r.top < b.top || r.bottom > b.bottom) box.scrollTo({ top: box.scrollTop + r.top - b.top - 16, behavior: "smooth" });
+      row.classList.add("flash");
+      row.addEventListener("animationend", () => row.classList.remove("flash"), { once: true });
+    }
   } catch (e) {
     box.innerHTML = `<p class="note">진도를 불러오지 못했습니다: ${esc(e.message || "")}</p>`;
   }
@@ -544,7 +621,7 @@ function showIntro() {
   el.className = "intro-hero";
   el.innerHTML = `<p class="eyebrow">CCA-F 시험 가이드 기반 학습 코치</p>
     <h2>무엇을 공부해 볼까요?</h2>
-    <p>개념 질문, 연습 문제 출제·채점, 학습 계획, 약점 분석을 도와드려요. 아래에서 시작하거나 직접 질문해 보세요.</p>`;
+    <p>개념 질문, 연습 문제 출제·채점, 학습 계획, 약점 분석을 도와드려요. 아래 예시를 누르거나 직접 질문해 보세요.</p>`;
   const ex = document.createElement("div");
   ex.className = "examples";
   EXAMPLES.forEach((text, i) => {
@@ -552,9 +629,10 @@ function showIntro() {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "feature";
-    b.innerHTML = `<span class="f-ico"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${f.icon}</svg></span>
-      <span class="f-title">${esc(f.title)}</span><span class="f-desc">${esc(f.desc)}</span>
-      <span class="f-ex">“${esc(text)}”</span>`;
+    b.title = `“${text}” 질문하기`;
+    b.innerHTML = `<span class="f-head"><span class="f-ico"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${f.icon}</svg></span>
+      <span class="f-title">${esc(f.title)}</span></span><span class="f-desc">${esc(f.desc)}</span>
+      <span class="f-ex"><span class="f-ex-text">${esc(text)}</span><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>`;
     b.addEventListener("click", () => ask(text));
     ex.appendChild(b);
   });
@@ -588,7 +666,7 @@ document.addEventListener("keydown", (e) => {
 $("reset").addEventListener("click", () => {
   if (!busy) { newConversation(); q.focus(); }
 });
-$("refresh").addEventListener("click", loadProgress);
+$("refresh").addEventListener("click", () => loadProgress());
 
 // 진도 패널 접기/펼치기 (상태는 브라우저에 기억)
 const togglePanel = $("togglePanel");
@@ -606,6 +684,15 @@ setPanel(store("ccaf_panel_open") !== "0");
 
 // 근거 배지 → 가이드 원문 발췌를 말풍선 안에 펼치고, 같은 배지를 다시 누르면 접는다
 log.addEventListener("click", (e) => {
+  // 채점 카드의 "나머지 보기 해설" 아코디언 (높이 전환은 CSS)
+  const more = e.target.closest(".more-toggle");
+  if (more) {
+    const open = more.getAttribute("aria-expanded") !== "true";
+    more.setAttribute("aria-expanded", String(open));
+    more.parentElement.classList.toggle("open", open);
+    more.nextElementSibling.firstElementChild.inert = !open;
+    return;
+  }
   const btn = e.target.closest("button.cite[data-doc]");
   if (!btn) return;
   const msg = btn.closest(".msg");
@@ -628,8 +715,10 @@ log.addEventListener("click", (e) => {
   btn.setAttribute("aria-expanded", "true");
 });
 
+// trace 체크박스와 카드의 trace 토글은 개발 모드(?debug=1)에서만
+document.body.classList.toggle("debug", DEBUG);
 const showTrace = $("showTrace");
-showTrace.checked = store("ccaf_show_trace") === "1";
+showTrace.checked = DEBUG && store("ccaf_show_trace") === "1";
 document.body.classList.toggle("show-trace", showTrace.checked);
 showTrace.addEventListener("change", () => {
   document.body.classList.toggle("show-trace", showTrace.checked);

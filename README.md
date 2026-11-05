@@ -263,7 +263,7 @@ evaluation/            test_queries.csv · ragas_reference.csv · run_eval · ll
 docs/                  DESIGN.md · demo/
 ```
 
-**커밋하지 않는 것**
+**커밋하지 않는 것** (비공개 저장소여도 유지 — 클론하면 가이드 원문이 재배포되므로. 가이드 파생물은 `python -m src.ingest`로 다시 만듭니다)
 - 가이드 PDF와 그 파생물(`data/guide_chunks.jsonl`, `data/guide_bullets.jsonl`, `chroma_db/`): 가이드 원문이 들어 있습니다.
 - `.env`
 - `evaluation/review_sample.xlsx`: 가이드 원문 시트가 있습니다.

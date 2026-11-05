@@ -140,13 +140,14 @@ round2에서 바꾼 것은 프롬프트 두 가지입니다.
 - Supervisor 오라우팅 보강: 시험 사실 질문과 설계 비교 질문이 general_agent로 가던 문제를 고쳤습니다.
 - concept_tutor 완결성 규칙: 모든 보기를 해설하고, 제약은 항목 단위로 나열하게 했습니다.
 
+**v2-1 (제출 후)**: round2에서 유일하게 실패한 12번(접수 방법)은 "공식 채널 확인 권고"가 빠진 경우였습니다. 답변에 `coverage_gap`(가이드에 없는 부분)이 있으면 G3이 공식 안내 확인 문구(`guards.GAP_NOTICE`)를 코드로 붙이게 바꿨습니다(프롬프트 변경 없음). 같은 세트 재평가 결과는 **20/20**입니다 (traits 69/69, guardrail 3/3, [v2_gap_eval.json](evaluation/results/v2_gap_eval.json)).
+
 알려진 한계도 그대로 남겨 둡니다.
-- 12번(접수 방법)에서 "공식 채널 확인 권고"가 빠져 1건이 실패했습니다.
 - 응답 시간이 목표 15초보다 깁니다.
 - answer_relevancy는 한국어 답변에 영어 병기와 [근거] 표기가 섞인 형식에서는 신뢰도가 낮습니다.
 
 ```powershell
-python evaluation/smoke_p1.py                                   # 오프라인 검증 (LLM 없음) 19/19
+python evaluation/smoke_p1.py                                   # 오프라인 검증 (LLM 없음) 21/21
 python evaluation/smoke_p0.py                                   # 개념 → 출제 → 채점 한 바퀴 18/18
 python evaluation/run_eval.py --label myrun                     # 20건 → evaluation/results/myrun_eval.json
 python evaluation/ragas_smoke.py --from logs/eval/myrun_full.json --out evaluation/ragas_myrun.json

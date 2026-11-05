@@ -5,7 +5,7 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
 설계 세부는 필요할 때 docs/DESIGN.md의 해당 절(§)을 읽을 것. 전체를 미리 읽지 말 것.
 
 ## 현재 단계: S1~S6 완료 · push 완료 (DESIGN §1-1 단계표)
-- 최종: round2 19/20, smoke_p0 18/18, smoke_p1 19/19. 수치·실패 분석은 evaluation/round*_report.md, quiz_pool_report.md
+- 최종: round2 19/20 → v2-1(GAP_NOTICE) 20/20, smoke_p0 18/18, smoke_p1 21/21. 수치·실패 분석은 evaluation/round*_report.md, quiz_pool_report.md
 - 데이터: 문제 풀 승인 266, study_log 시드 demo_heavy 61회·demo_new 없음 (seed_study_log.py)
 - 원격: https://github.com/kainetic/ccaf-study-coach (private, master). 개선 후보는 round2_report §6
 
@@ -80,7 +80,7 @@ MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언�
 - 평가·스모크가 출제하면 study_log에 issued가 쌓임 → run_eval·demo_capture는 임시 사본(CCAF_STUDY_LOG)을 씀.
   smoke_p0는 data/study_log.json을 직접 다시 씀(종료 시 smoke 사용자 삭제, 형식 차이·중단 시 잔존 가능)
   → 실행 전 $env:CCAF_STUDY_LOG에 임시 사본 경로 지정 권장
-- 가드 고정 문구(guards.REFUSALS·G4_CORRECTION·NO_EVIDENCE·OFF_TOPIC)는 run_eval이 문자열로 매칭 → 문구를 바꾸면 평가 기준도 바뀜
+- 가드 고정 문구(guards.REFUSALS·G4_CORRECTION·NO_EVIDENCE·GAP_NOTICE·OFF_TOPIC)는 run_eval이 문자열로 매칭 → 문구를 바꾸면 평가 기준도 바뀜
 
 ## 작업 방식
 - 새 모듈이나 여러 파일에 걸친 작업은 plan mode로 계획을 먼저 보여준다

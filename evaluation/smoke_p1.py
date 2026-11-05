@@ -53,11 +53,16 @@ def g3() -> None:
                          claims=[Claim(claim="tool_use면 계속", doc_id="ts-1.1", excerpt="stop_reason")])
     text, rep = guards.check_tutor_answer(ok_ans, retrieved)
     check(text.endswith("[근거: TS-1.1]") and "TS-9.9" not in text and rep["valid"] == 1, "유효 claim → 코드가 [근거: TS-1.1] (LLM 표기 제거)")
+    check(guards.GAP_NOTICE not in text, "coverage_gap 없음 → GAP_NOTICE 없음")
+    gap_ans = ok_ans.model_copy(update={"coverage_gap": "접수 링크"})
+    text, rep = guards.check_tutor_answer(gap_ans, retrieved)
+    check(guards.GAP_NOTICE in text and text.endswith("[근거: TS-1.1]") and rep["coverage_gap"],
+          "coverage_gap 있음 → GAP_NOTICE 후 [근거: TS-1.1]")
     bad = TutorAnswer(answer_ko="지어낸 답", in_exam_scope="unclear", coverage_gap="합격률",
                       claims=[Claim(claim="x", doc_id="TS-4.4", excerpt="y")])
     text, rep = guards.check_tutor_answer(bad, retrieved)
-    check(text.startswith(guards.NO_EVIDENCE) and rep["fallback"] and rep["dropped"] == ["TS-4.4"],
-          "가져오지 않은 doc_id만 인용 → NO_EVIDENCE")
+    check(text.startswith(guards.NO_EVIDENCE) and guards.GAP_NOTICE in text and rep["fallback"]
+          and rep["dropped"] == ["TS-4.4"], "가져오지 않은 doc_id만 인용 → NO_EVIDENCE (+ coverage_gap이면 GAP_NOTICE)")
     text, rep = guards.check_tutor_answer(None, retrieved)
     check(text == guards.NO_EVIDENCE and not rep["structured"], "구조화 응답 없음 → NO_EVIDENCE")
 

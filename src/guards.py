@@ -4,6 +4,7 @@
   1차 정규식 → 걸리지 않으면 2차 LLM 판별(G1+G2 한 번에). 차단·정정되면 그래프를 부르지 않는다.
 - 출력: check_tutor_answer — G3. concept_tutor의 TutorAnswer에서 이번 턴에 실제로 가져온 doc_id를 가리키는 claim만 유효.
   유효 claim이 0개면 답변 대신 NO_EVIDENCE. 출처 표기 [근거: …]는 코드가 붙인다.
+  coverage_gap이 있으면 GAP_NOTICE(공식 안내 확인 권고)를 코드가 붙인다 (v2, 프롬프트에 맡기지 않음).
 - 출력: output_check — G4 백스톱. 긍정형 사칭·합격 보장 문장을 지우고 고지 문구를 붙인다.
 - G5(시험 무관 질문)는 Supervisor 배분 + general_agent가 OFF_TOPIC 문구로 응대 (src/agent.py, src/agents/general.py).
 - G6·G7(정답 비노출, 승인 문항만·런타임 생성 금지)은 도구가 강제 (src/quiz_bank_server.py, src/agents/quiz_master.py).
@@ -31,6 +32,7 @@ G4_CORRECTION = ("이 도구는 Anthropic 공식 튜터가 아닌 비공식 학�
 G4_NOTICE = "※ 이 도구는 비공식 학습 도구이며 Anthropic과 제휴·보증 관계가 없고, 합격을 보장하지 않습니다."
 NO_EVIDENCE = ("가이드에 근거 없음: 공식 시험 가이드(v0.2)에서 이 질문에 답할 근거를 찾지 못해 추측으로 답하지 않습니다. "
                "시험 개념·범위·형식에 관한 질문으로 다시 물어봐 주세요.")
+GAP_NOTICE = "가이드에 없는 정보(접수 절차·링크·일정 등)는 Anthropic 공식 안내 채널에서 확인하세요."
 OFF_TOPIC = ("이 질문은 CCA-F 시험 학습과 관련이 없어 다루지 않습니다. 시험 개념 질문, 연습 문제 출제·채점, "
              "진도 확인·학습 계획을 도와드릴 수 있습니다.")
 
@@ -153,11 +155,11 @@ def check_tutor_answer(ans: Optional[TutorAnswer], retrieved: dict[str, str]) ->
               "dropped": dropped, "excerpt_verbatim": verbatim, "in_exam_scope": ans.in_exam_scope,
               "coverage_gap": bool(ans.coverage_gap), "fallback": not valid}
     if not valid:
-        gap = f"\n(가이드에 없는 부분: {ans.coverage_gap})" if ans.coverage_gap else ""
+        gap = f"\n(가이드에 없는 부분: {ans.coverage_gap})\n{GAP_NOTICE}" if ans.coverage_gap else ""
         return NO_EVIDENCE + gap, report
     body = SOURCE_LINE.sub("", ans.answer_ko).rstrip()
     if ans.coverage_gap:
-        body += f"\n\n가이드에 없는 부분: {ans.coverage_gap}"
+        body += f"\n\n가이드에 없는 부분: {ans.coverage_gap}\n{GAP_NOTICE}"
     sources = list(dict.fromkeys(valid))
     return f"{body}\n\n[근거: {', '.join(sources)}]", report
 

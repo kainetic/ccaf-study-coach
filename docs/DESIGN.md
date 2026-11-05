@@ -1,4 +1,4 @@
-# DESIGN · CCA-F 학습 코치 (설계 v0.5.5)
+# DESIGN · CCA-F 학습 코치 (설계 v0.5.6)
 
 > 기준 문서: Claude Certified Architect – Foundations Exam Guide (Version 0.2, 2026-06-30)
 > 과제 규약: [Day 8,9,10] mini PJT 문서 §4 (산출물 규약), §5 (12개 패턴)
@@ -490,7 +490,7 @@ S3 구현 메모 (`src/planner.py`):
 |---|---|---|---|
 | G1 | 실제 시험 문항·덤프·기출 요청 거절, 대신 원본 연습 문제 제안 | 입력 | 정규식(`덤프`, `기출`, `실제 (시험)?문제`, `exam dump`, `real questions`) + LLM 판별 |
 | G2 | 프롬프트 인젝션·시스템 프롬프트 요구 차단 | 입력 | Day 5 `guards_input.py` 재사용 |
-| G3 | 출처 없는 단정 금지: 개념 답변은 claims ≥ 1, 아니면 "가이드 근거 없음" 응답으로 대체 | 출력 | `TutorAnswer` 검증 후 분기 |
+| G3 | 출처 없는 단정 금지: 개념 답변은 claims ≥ 1, 아니면 "가이드 근거 없음" 응답으로 대체. `coverage_gap`이 있으면 공식 안내 확인 문구(`GAP_NOTICE`)를 코드가 붙임 | 출력 | `TutorAnswer` 검증 후 분기 |
 | G4 | 공식·제휴 사칭, 합격 보장 표현 금지 (`공식 튜터`, `합격 보장`) | 입력 + 출력 | 입력: 공식·인증·제휴·합격 보장 질문은 고정 정정 문구로 바로 답함(그래프 미호출). 출력: 긍정형 금지 표현 문장 제거 + 고정 고지 (S3 변경) |
 | G5 | 범위 밖 주제(Claude 시험과 무관한 질문)는 한 줄 안내 후 종료 | 입력/라우팅 | Supervisor 배분 기준 + general 응대 |
 | G6 | 채점 전 정답 노출 금지 | 도구 | `get_quiz`는 `QuizPublic`만 반환. 정답은 `submit_answer`에서만 공개 |
@@ -500,7 +500,7 @@ S3 구현 메모 (`src/planner.py`):
 
 S3 구현 메모 (`src/guards.py`, 실행 순서는 `agent.CoachApp.run`):
 - 입력 `input_guard`: 1차 정규식 G1(`덤프`·`기출`·`실제 (시험에 나온) 문제` — "실제 시험 문제처럼" 같은 스타일 요청은 제외 — `exam dump`·`real questions`) → G2(Day 5 INJECTION_PATTERNS) → G4. 걸리지 않으면 2차 LLM `InputCheck` 1회(G1+G2 함께, confidence > 0.7만 차단, 실패 시 통과 + 기록). 차단·정정이면 그래프를 부르지 않음 → 도구 호출 0건
-- 상수: `REFUSALS["G1"]`·`REFUSALS["G2"]`, `G4_CORRECTION`, `G4_NOTICE`, `NO_EVIDENCE`(G3), `OFF_TOPIC`(G5, general_agent 프롬프트에 그대로 삽입)
+- 상수: `REFUSALS["G1"]`·`REFUSALS["G2"]`, `G4_CORRECTION`, `G4_NOTICE`, `NO_EVIDENCE`·`GAP_NOTICE`(G3), `OFF_TOPIC`(G5, general_agent 프롬프트에 그대로 삽입)
 - 출력 `output_check`(G4 백스톱): 문장 단위로 금지 표현이 있고 부정어(아니·않·없·비공식 등)가 없으면 그 문장을 지우고 `G4_NOTICE`를 붙임
 - 차단 사유는 `logs/guard_audit.log`에만 (사용자에게 비노출)
 - 한계: G4 정정 질문과 개념 질문이 한 메시지에 섞이면 정정 문구만 답함
@@ -675,6 +675,7 @@ ccaf-study-coach/
 
 ## 변경 이력
 
+- v0.5.6 (v2-1): G3에서 `coverage_gap`이 있으면 `GAP_NOTICE`(공식 안내 확인)를 코드가 붙임 — round2 남은 실패 12번 대응, 프롬프트 변경 없음
 - v0.5.5 (제출 후 정리, 문서만): 변경 이력 압축, 끝난 일정·진행 규칙·미결정 사항(§12·§13) 삭제, §10은 README 참조로 축소, 자격 증명·venv를 저장소 폴더 기준으로
 - v0.5.4 (S6): §10 매핑을 실제 구현 기준으로 정리, §11 폴더 구조 갱신, README·시연 캡처(`scripts/demo_capture.py`)
 - v0.5.3 (S5 round2): §9-4 #2(오라우팅)·#4(TutorAnswer 완결성) 채택, 프롬프트만 변경

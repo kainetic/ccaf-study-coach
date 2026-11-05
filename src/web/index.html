@@ -68,6 +68,23 @@ header input.invalid { border-color: var(--err); }
 .msg code { background: var(--code); padding: 1px 4px; border-radius: 4px; font-size: 13px; }
 .msg pre code { background: none; padding: 0; }
 .cite { display: inline-block; background: var(--badge); color: var(--badge-text); border-radius: 4px; padding: 0 6px; font-size: 13px; }
+.cite-row { font-size: 13px; color: var(--muted); }
+button.cite { border: 1px solid transparent; cursor: pointer; font: inherit; font-size: 13px; }
+button.cite:hover, button.cite:focus-visible, button.cite[aria-expanded="true"] { border-color: var(--badge-text); outline: none; }
+.source {
+  margin: 8px 0; padding: 10px 12px; border-left: 3px solid var(--badge-text); border-radius: 6px;
+  background: var(--code); font-size: 13px; max-height: 280px; overflow-y: auto; white-space: pre-wrap;
+}
+.source .src-head { font-weight: 700; margin-bottom: 4px; white-space: normal; }
+.source .src-note { color: var(--muted); white-space: normal; }
+.skeleton { width: 100%; }
+.skeleton .bar { height: 10px; border-radius: 5px; background: var(--bar); margin: 8px 0; animation: pulse 1.4s ease-in-out infinite; }
+.skeleton .bar:nth-child(2) { width: 85%; } .skeleton .bar:nth-child(3) { width: 60%; }
+.skeleton .stage { font-size: 14px; color: var(--muted); }
+@keyframes pulse { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .skeleton .bar { animation: none; } }
+body:not(.show-trace) details.trace { display: none; }
+.dev { display: flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 12px; color: var(--muted); cursor: pointer; }
 .choices { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .choices .btn { min-width: 48px; font-weight: 600; }
 .options { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 10px; }
@@ -181,6 +198,7 @@ aside .btn { padding: 2px 8px; font-size: 12px; }
       <h2>진도 <span><button class="btn" id="refresh" type="button">새로고침</button>
         <button class="btn" id="closeProgress" type="button" aria-label="진도 닫기">닫기</button></span></h2>
       <div id="progress"><p class="note">불러오는 중…</p></div>
+      <label class="dev"><input type="checkbox" id="showTrace"> 개발 정보(trace) 표시</label>
     </aside>
   </div>
 </div>
@@ -196,6 +214,7 @@ const EXAMPLES = [
 const $ = (id) => document.getElementById(id);
 const log = $("log"), q = $("q"), send = $("send"), uid = $("uid");
 let threadId = null, busy = false;
+const sources = new Map();      // doc_id → 가이드 원문 (이번 대화에서 받은 contexts). 채점 턴은 출제 턴의 TS 청크를 쓴다
 
 function store(key, value) {
   try { value === undefined ? (value = localStorage.getItem(key)) : localStorage.setItem(key, value); } catch (e) { return null; }
@@ -211,7 +230,13 @@ function inline(s) {
   return s
     .replace(/`([^`]+)`/g, "<code>$1</code>")
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-    .replace(/\[근거:([^\]]+)\]/g, '<span class="cite">근거:$1</span>');
+    .replace(/\[근거:([^\]]+)\]/g, (_, body) => {
+      // TS 번호마다 누르면 가이드 원문 발췌를 펼치는 버튼. TS 번호가 없으면 배지만
+      const ids = body.match(/TS-\d+\.\d+/g);
+      if (!ids) return `<span class="cite">근거:${body}</span>`;
+      return '<span class="cite-row">근거: ' + ids.map((id) =>
+        `<button type="button" class="cite" data-doc="${id}" aria-expanded="false" title="가이드 원문 보기">${id}</button>`).join(" ") + "</span>";
+    });
 }
 
 function renderMarkdown(text) {
@@ -438,10 +463,20 @@ async function ask(question) {
   disableChoices();
   addUser(question);
   setBusy(true);
+  // 스트리밍이 없어 실제 진행 단계는 모른다 → 경과 시간에 따른 일반 문구만 보여 준다
   const wait = document.createElement("div");
-  wait.className = "waiting";
+  wait.className = "msg bot skeleton";
+  wait.setAttribute("role", "status");
+  wait.innerHTML = '<div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="stage"></div>';
+  const stage = wait.querySelector(".stage");
   const t0 = Date.now();
-  const tick = () => { wait.textContent = `답변 생성 중… ${Math.floor((Date.now() - t0) / 1000)}초`; };
+  const tick = () => {
+    const sec = Math.floor((Date.now() - t0) / 1000);
+    const text = sec < 4 ? "질문을 확인하고 있어요"
+      : sec < 30 ? "가이드를 찾아보고 답변을 정리하고 있어요 (보통 10~25초)"
+      : "조금 더 걸리고 있어요. 잠시만 기다려 주세요";
+    stage.textContent = `${text} · ${sec}초`;
+  };
   tick();
   const timer = setInterval(tick, 1000);
   log.appendChild(wait);
@@ -458,6 +493,7 @@ async function ask(question) {
       throw new Error(typeof d === "string" ? d : `요청 실패 (HTTP ${res.status})`);
     }
     threadId = data.thread_id;
+    for (const c of data.contexts || []) sources.set(c.doc_id, c.text);
     addBot(data);
     if ((data.trace || []).some((s) => s.step === "submit" && s.status === "graded")) loadProgress();
   } catch (e) {
@@ -552,16 +588,50 @@ document.addEventListener("keydown", (e) => {
   const label = e.key.toUpperCase();
   if (activeQuiz.cards[label]) { e.preventDefault(); pick(label); }
 });
-$("reset").addEventListener("click", () => { if (!busy) { threadId = null; activeQuiz = null; showIntro(); q.focus(); } });
+$("reset").addEventListener("click", () => {
+  if (!busy) { threadId = null; activeQuiz = null; sources.clear(); showIntro(); q.focus(); }
+});
 $("refresh").addEventListener("click", loadProgress);
 $("toggleProgress").addEventListener("click", () => {
   document.body.classList.contains("sheet-open") ? closeSheet() : (openSheet(), loadProgress());
 });
 $("closeProgress").addEventListener("click", closeSheet);
+
+// 근거 배지 → 가이드 원문 발췌를 말풍선 안에 펼치고, 같은 배지를 다시 누르면 접는다
+log.addEventListener("click", (e) => {
+  const btn = e.target.closest("button.cite[data-doc]");
+  if (!btn) return;
+  const msg = btn.closest(".msg");
+  const id = btn.dataset.doc;
+  const open = msg.querySelector(".source");
+  msg.querySelectorAll("button.cite").forEach((b) => b.setAttribute("aria-expanded", "false"));
+  if (open) {
+    const same = open.dataset.doc === id;
+    open.remove();
+    if (same) return;
+  }
+  const box = document.createElement("div");
+  box.className = "source";
+  box.dataset.doc = id;
+  const text = sources.get(id);
+  box.innerHTML = `<div class="src-head">${esc(id)} · 시험 가이드 원문</div>` + (text
+    ? esc(text)
+    : '<div class="src-note">이 대화에서 받은 검색 결과에 원문이 없습니다. 원문이 필요하면 이 TS를 질문해 보세요.</div>');
+  (btn.closest("p, ul, ol") || btn.closest(".cite-row")).after(box);
+  btn.setAttribute("aria-expanded", "true");
+});
+
+const showTrace = $("showTrace");
+showTrace.checked = store("ccaf_show_trace") === "1";
+document.body.classList.toggle("show-trace", showTrace.checked);
+showTrace.addEventListener("change", () => {
+  document.body.classList.toggle("show-trace", showTrace.checked);
+  store("ccaf_show_trace", showTrace.checked ? "1" : "0");
+});
 $("backdrop").addEventListener("click", closeSheet);
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet(); });
 uid.addEventListener("change", () => {
-  if (currentUid()) { store("ccaf_user_id", uid.value.trim()); threadId = null; showIntro(); }
+  if (currentUid()) { store("ccaf_user_id", uid.value.trim()); threadId = null; activeQuiz = null; sources.clear(); showIntro(); }
   loadProgress();
 });
 

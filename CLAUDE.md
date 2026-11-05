@@ -4,8 +4,8 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
 기획: SERVICE.md · 설계: docs/DESIGN.md · 평가: evaluation/test_queries.csv
 설계 세부는 필요할 때 docs/DESIGN.md의 해당 절(§)을 읽을 것. 전체를 미리 읽지 말 것.
 
-## 상태: 프로젝트 종료 (S0~S6 + 제출 후 개선 v2-1~v2-6 완료, DESIGN §1-1·변경 이력)
-- 회귀 확인 기준: smoke_p0 24/24, smoke_p1 37/37, smoke_memory 9/9.
+## 상태: 프로젝트 종료 (S0~S6 + 제출 후 개선 v2-1~v2-7 완료, DESIGN §1-1·변경 이력)
+- 회귀 확인 기준: smoke_p0 24/24, smoke_p1 44/44, smoke_memory 9/9.
   평가 수치(20건·RAGAS·응답 시간)는 README "평가 결과", 성공 기준 대비는 SERVICE §5 (여기에 다시 적지 않음)
 - 데이터: 문제 풀 승인 266, study_log 시드 demo_heavy 61회·demo_new 기록 없음 (seed_study_log.py)
 - 웹 UI는 자동 스모크 없음 → 브라우저로 확인 (study_log 임시 사본으로 서버 실행, DESIGN §9-1)
@@ -82,13 +82,20 @@ MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언�
 - ragas 0.4.3은 langchain_community.chat_models.vertexai를 import (0.4에서 삭제) → ragas_smoke.py 안의 자리표시 모듈로 우회
 - concept_tutor는 ToolStrategy(TutorAnswer) + after_agent(TutorAnswerGuard)가 마지막 AIMessage를 만든다 → 답변 텍스트를 바꾸려면 프롬프트가 아니라 guards.check_tutor_answer
 - 입력 가드 LLM 판별은 그래프와 병렬 → 새 앱 도구는 첫 줄에 `await guards.wait_input_ok()` 필수
-  (없으면 LLM이 차단하기 전에 도구가 실행됨). 차단 시 CoachApp.run이 그래프 취소 + 이번 턴 메시지 되돌림
+  (없으면 LLM이 차단하기 전에 도구가 실행됨). 차단 시 CoachApp.run이 그래프 취소 + 이번 턴 메시지 되돌림.
+  출제 대기 중 답 한 글자 입력(guards.ANSWER_ONLY)은 LLM 판별을 건너뜀
 - Supervisor pre_model_hook에서 messages를 RemoveMessage로 지우면 내부 그래프에만 적용되고 바깥 thread에는 남음
   → 장기 대화 요약은 CoachApp.run이 그래프 시작 전에 memory.compact + aupdate_state로 처리
 - 평가·스모크가 출제하면 study_log에 issued가 쌓임 → run_eval·demo_capture는 임시 사본(CCAF_STUDY_LOG)을 씀.
   smoke_p0는 data/study_log.json을 직접 다시 씀(종료 시 smoke 사용자 삭제. 중간에 멈추면 smoke 사용자 기록이 남을 수 있음)
   → 실행 전 $env:CCAF_STUDY_LOG에 임시 사본 경로 지정 권장
 - 가드 고정 문구(guards.REFUSALS·G4_CORRECTION·NO_EVIDENCE·GAP_NOTICE·OFF_TOPIC)는 run_eval이 문자열로 매칭 → 문구를 바꾸면 평가 기준도 바뀜
+- create_agent는 한 차례에 실행한 도구가 *전부* return_direct일 때만 종료 → 다른 도구와 같이 불릴 수 있는 return_direct 도구는
+  before_model 미들웨어로 끝낸다 (study_coach.PlanDirectReturn)
+- 하위 에이전트 → Supervisor 엣지는 build_app이 after_agent 조건 분기로 바꿔 둠 (Supervisor 마무리 호출 생략).
+  새 복합 요청 유형을 지원하려면 after_agent에 "Supervisor로 돌아갈 조건"을 추가
+- concept_tutor 첫 검색은 ForceFirstSearch가 질문 원문으로 주입하고, 재작성·하이브리드는 CoachApp.run이 턴 시작 때
+  미리 돌림(retriever.PREFETCH). search_guide의 query 형식(질문 원문)을 바꾸면 선행 검색이 miss가 됨
 
 ## 수정할 때
 - 코드를 고치면 smoke_p1(오프라인)과 smoke_p0를 돌려 결과를 보고한다. 가드·프롬프트·라우팅을 바꿨으면 run_eval 20건도 돌린다

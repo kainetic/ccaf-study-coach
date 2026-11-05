@@ -6,7 +6,7 @@ Claude Certified Architect – Foundations(CCA-F) 시험 준비를 돕는 멀티
 
 - 기획: [SERVICE.md](SERVICE.md)
 - 설계: [docs/DESIGN.md](docs/DESIGN.md)
-- 평가: [round1](evaluation/round1_report.md) → [round2](evaluation/round2_report.md) → 제출 후 개선 v2-1~v2-6 (아래 "평가 결과")
+- 평가: [round1](evaluation/round1_report.md) → [round2](evaluation/round2_report.md) → 제출 후 개선 v2-1~v2-7 (아래 "평가 결과")
 - 시연: [docs/demo/](docs/demo/)
 
 ## 주요 기능
@@ -135,16 +135,17 @@ curl.exe -s localhost:8000/query -H "Content-Type: application/json" `
 
 20건 인-아웃 세트([test_queries.csv](evaluation/test_queries.csv))를 평가합니다. 도구 호출 판정은 trace로, 정답 노출과 고정 문구는 코드 검사로, 기대 특성과 금지 항목은 LLM judge로 확인합니다. 그라운딩 품질은 RAGAS 14건으로 따로 봅니다.
 
-| 지표 | round1 (기준선) | round2 | **최종 (v2-6)** | 목표 |
+| 지표 | round1 (기준선) | round2 | **최종 (v2-7)** | 목표 |
 |---|---|---|---|---|
-| 인-아웃 세트 통과 | 15/20 | 19/20 | **19/20** | 17/20 이상 |
-| positive · negative · edge · guardrail | 7/8 · 2/4 · 3/5 · 3/3 | 8/8 · 3/4 · 5/5 · 3/3 | 7/8 · 4/4 · 5/5 · 3/3 | guardrail 3/3 |
-| RAGAS faithfulness | 0.663 | 0.858 | 0.850 | ≥ 0.85 |
+| 인-아웃 세트 통과 | 15/20 | 19/20 | **20/20** | 17/20 이상 |
+| positive · negative · edge · guardrail | 7/8 · 2/4 · 3/5 · 3/3 | 8/8 · 3/4 · 5/5 · 3/3 | 8/8 · 4/4 · 5/5 · 3/3 | guardrail 3/3 |
+| RAGAS faithfulness | 0.663 | 0.858 | 0.876 | ≥ 0.85 |
 | RAGAS context_recall | 0.786 | 1.000 | 1.000 | ≥ 0.80 |
-| RAGAS context_precision | 0.665 | 0.744 | 0.760 | 기준선 기록 |
-| RAGAS answer_relevancy | 0.456 | 0.446 | 0.462 | 기준선 기록 |
+| RAGAS context_precision | 0.665 | 0.744 | 0.792 | 기준선 기록 |
+| RAGAS answer_relevancy | 0.456 | 0.446 | 0.511 | 기준선 기록 |
 | 출처 표기율 (개념 답변) | 80% | 100% | 100% | 100% |
-| 개념 질문 평균 응답 시간 | 23.8초 | 27.6초 | 20.2초 | 15초 (미달) |
+| 개념 질문 평균 응답 시간 | 23.8초 | 27.6초 | 16.6초 | 15초 (미달) |
+| 출제 응답 시간 (5번) | 11.5초 | – | 4.1초 | 5초 (충족) |
 
 버전별 변경 (round2는 제출본, v2-n은 제출 후 개선):
 
@@ -157,16 +158,17 @@ curl.exe -s localhost:8000/query -H "Content-Type: application/json" `
 | v2-4 | concept_tutor: 검색 결과에 없는 수치는 예시로도 쓰지 않음 (프롬프트 한 줄) | 20/20 | faithfulness 0.889, 9번 3회 연속 PASS · [v2_num_eval.json](evaluation/results/v2_num_eval.json) |
 | v2-5 | 웹 UI, `GET /progress` (그래프·가드·프롬프트 변경 없음) | – | |
 | v2-6 | 런타임 LLM·임베딩을 서울 리전으로 (재색인 없음, 코사인 0.9999) | 19/20 | 4번 실패는 재실행 2/2 PASS. us-east-1 왕복이 없어져 전체 평균 18.7 → 17.3초, 개념 21.7 → 20.2초 · [v2_seoul_eval.json](evaluation/results/v2_seoul_eval.json) |
+| v2-7 | 응답 속도: 학습 계획 return_direct 보정, 에이전트 후 Supervisor 마무리 호출 생략, 재작성·검색 선행 실행, tutor 첫 검색 코드 주입, 계획 LLM은 TS·시간만, 채점 입력 LLM 가드 생략, 서버 예열 (DESIGN §5-1·§6·§7) | 20/20 | 개념 20.2 → 16.6초, 출제 5.8 → 4.1초, 계획 38.7 → 15.6초, 전체 17.3 → 13.5초, LLM 호출 88 → 62회. faithfulness 0.876 · [v2_speed_eval.json](evaluation/results/v2_speed_eval.json) |
 
 결과를 읽을 때 참고할 점:
 - 20건 결과는 같은 코드로도 1건 정도 흔들립니다(judge·생성의 비결정성).
 - 개념 질문 평균 응답 시간은 개념·해설 문항 15건의 평균입니다. round1에서는 그중 3건이 검색 없이 general_agent로 답해 짧게 나왔고, round2부터는 15건 모두 검색을 거칩니다([round2_report](evaluation/round2_report.md) §5).
 - RAGAS는 같은 답변을 다시 채점해도 문항 하나의 faithfulness가 크게 움직여(예: 12번 0.47~0.88) 14건 평균이 ±0.05 정도 흔들립니다. v2-2·v2-3에서 faithfulness가 0.79까지 내려간 것은 9번 답변이 가이드에 없는 "TTL 값(예: 5분)"을 예시로 쓴 탓이었고, v2-4에서 해소했습니다.
-- 최종 열의 RAGAS는 v2-6 답변을 새로 채점한 값입니다. v2-3의 context_precision 0.825와 v2-4의 faithfulness 0.889보다 낮지만, v2-5·v2-6에서는 검색·프롬프트를 바꾸지 않았습니다(v2-6은 리전만 변경). 그래서 이 차이는 답변 생성과 채점의 비결정성으로 봅니다. 다만 context_precision 차이(0.065)는 ±0.05보다 조금 큽니다.
+- 최종 열의 RAGAS는 v2-7 답변을 채점한 값입니다. v2-7 작업 중 TutorAnswer의 claim·excerpt 길이를 줄이는 변경도 시험했는데, faithfulness가 0.829·0.838(같은 답변 2회 채점, 같은 날 v2-6 답변 재채점은 0.848)로 떨어져 되돌렸습니다.
 - RAGAS 결과는 `evaluation/ragas_*.json`(round1·round2·v2_*)에 있습니다.
 
 ```powershell
-python evaluation/smoke_p1.py                                   # 오프라인 검증 (LLM 없음) 37/37
+python evaluation/smoke_p1.py                                   # 오프라인 검증 (LLM 없음) 44/44
 python evaluation/smoke_p0.py                                   # 개념 → 출제 → 채점 한 바퀴 + 늦은 가드 차단 24/24
 python evaluation/smoke_memory.py                               # 긴 대화 5턴: 요약 + case_facts 보존 9/9
 python evaluation/run_eval.py --label myrun                     # 20건 → evaluation/results/myrun_eval.json
@@ -284,10 +286,12 @@ logs/                  trace.jsonl · guard_audit.log · eval/ (미커밋)
 
 ## 한계
 
-- **응답 시간**: 개념 질문 평균 20.2초(목표 15초), 단일 출제 5.8초(목표 5초)로 미달입니다. 가이드에 근거가 없는 질문에서는 검색을 프롬프트 상한(2회)보다 더 반복하기도 합니다(상한은 프롬프트로만 두고 코드로 강제하지 않음). 남은 개선 후보는 검색 횟수를 코드로 제한하는 것과 Supervisor 왕복·LLM 호출 수를 줄이는 것입니다.
+- **응답 시간**: 개념 질문 평균 16.6초로 목표(15초)에 미달입니다(단일 출제 4.1초는 충족). 남은 시간의 대부분은 TutorAnswer 생성(출력 약 900토큰)입니다. 출제·채점 경로에서는 입력 가드 LLM 판별(약 3~4초)이 끝나야 도구가 실행되므로 이 판별이 병목입니다. 가이드에 근거가 없는 질문에서는 검색을 반복하기도 합니다(상한은 프롬프트로만 둠).
 - answer_relevancy는 한국어 답변에 영어 병기와 `[근거]` 표기가 섞인 형식에서는 신뢰도가 낮습니다.
 - G4 정정 질문과 개념 질문이 한 메시지에 섞이면 정정 문구만 답합니다.
 - 시험일과 사용자 프로필(Store 장기 기억)은 저장하지 않습니다. 학습 계획에 필요한 남은 일수·하루 시간은 질문이나 같은 대화의 `case_facts`에서 가져오고, 없으면 묻습니다.
 - 대화 기억은 `InMemorySaver`라서 서버를 다시 시작하면 이어지지 않습니다(풀이 기록은 `study_log.json`에 남음).
-- trace의 `llm` 단계는 그래프 안의 호출만 셉니다. 입력 가드의 LLM 판별 1회(`layer=llm`)는 호출 수와 토큰에 포함되지 않습니다(그래프와 병렬이라 응답 시간에는 거의 더해지지 않음).
+- trace의 `llm` 단계는 그래프 안의 호출과 선행 검색의 재작성 호출을 셉니다. 입력 가드의 LLM 판별 1회(`layer=llm`)는 호출 수와 토큰에 포함되지 않습니다.
+- 하위 에이전트가 끝나면 Supervisor로 돌아가지 않으므로, 복합 요청은 "개념 + 출제"만 이어서 처리합니다(출제 요청 표현을 정규식으로 판정). 다른 조합(예: 진도 + 출제)은 첫 에이전트 답만 나옵니다.
+- 학습 계획의 칸 설명은 가이드 원문 TS 제목(영어)입니다. LLM이 쓰던 한국어 초점 문장은 출력 시간을 줄이려고 뺐습니다.
 - 하지 않기로 한 범위(`reset_progress` HITL, Dockerfile, LangSmith/LangFuse 등)는 [SERVICE.md](SERVICE.md) §3 "이번 과제에서 하지 않는 것"에 있습니다.

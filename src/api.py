@@ -7,6 +7,8 @@
 GET /           웹 UI (src/web/index.html). 스타일·동작은 /static/style.css·app.js (src/web/ 정적 서빙)
 GET /progress   ?user_id=... → get_progress 결과 + weak(get_weak_domains) (코드 계산, LLM 없음. 웹 UI 진도 패널용)
 """
+import asyncio
+import logging
 import re
 import uuid
 from contextlib import asynccontextmanager
@@ -17,7 +19,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from src import config
+from src import config, retriever
 from src.agent import build_app
 from src.tracer import QueryTracer
 
@@ -33,6 +35,10 @@ coach = None
 async def lifespan(app: FastAPI):
     global coach
     coach = await build_app()
+    try:   # 첫 요청 콜드 스타트 제거: 검색 인덱스·Bedrock 연결 예열 (v2-7). 실패해도 서버는 뜬다
+        await asyncio.to_thread(retriever.warm_up)
+    except Exception as e:   # noqa: BLE001
+        logging.getLogger("uvicorn.error").warning("warm_up 실패 (첫 요청이 느릴 수 있음): %s", e)
     try:
         yield
     finally:

@@ -264,7 +264,7 @@ class StudyAllocation(BaseModel):
 class PlanItem(BaseModel):
     task_id: str = Field(description="공부할 TS 번호. 예: TS-2.1")
     hours: float = Field(description="이 TS에 쓸 시간 (0.5 단위)")
-    focus: str = Field(description="무엇을 공부할지 한 줄 (한국어)")
+    focus: Optional[str] = Field(default=None, description="쓰지 않는다 (null). 화면에는 코드가 TS 제목을 붙인다")
 
 
 class DayPlanDraft(BaseModel):

@@ -115,11 +115,15 @@ class PlanState(TypedDict, total=False):
     final: str
 
 
+def _ts_title(tid: str) -> str:
+    """TS 청크 제목 (가이드 Task Statement 문장). 계획의 칸 설명으로 쓴다 (LLM이 초점 문장을 쓰지 않음, v2-7)."""
+    c = retriever.load_chunks().get(tid)
+    return c.title.split(": ", 1)[-1] if c else ""
+
+
 def _ts_line(tid: str, t: dict) -> str:
     acc = f"{t['correct'] / t['attempts']:.0%}" if t["attempts"] else "미시도"
-    c = retriever.load_chunks().get(tid)
-    title = c.title.split(": ", 1)[-1] if c else ""
-    return f"{tid} {title} (시도 {t['attempts']}, 정답률 {acc}, 남은 문제 {t['remaining']})"
+    return f"{tid} {_ts_title(tid)} (시도 {t['attempts']}, 정답률 {acc}, 남은 문제 {t['remaining']})"
 
 
 def _grid_text(grid: list[dict]) -> str:
@@ -127,14 +131,13 @@ def _grid_text(grid: list[dict]) -> str:
 
 
 PLAN_PROMPT = """너는 CCA-F 시험 학습 계획을 짜는 planner다. 일자별 도메인 시간표(grid)는 이미 코드로 정해져 있다.
-각 일차의 각 도메인 칸에 그 도메인의 TS를 배정하고, 무엇에 초점을 둘지 한 줄(한국어)로 적어라.
+각 일차의 각 도메인 칸에 그 도메인의 TS와 시간만 배정하라 (focus는 쓰지 않는다. 설명 문장 없이 task_id·hours만).
 
 [규칙]
 - 일차 수는 {days}일, day는 1~{days}. grid에 있는 (일차, 도메인) 칸만 채운다.
 - 한 칸의 시간은 그 칸의 TS 항목 hours 합과 정확히 같아야 한다. hours는 0.5 단위. 한 칸에 TS는 1~2개.
 - TS는 반드시 그 칸 도메인 소속(TS-<도메인>.x)이어야 한다.
 - 정답률이 낮거나 아직 시도하지 않은 TS를 앞쪽 일차에 먼저, 같은 TS를 너무 자주 반복하지 않는다.
-- focus는 그 TS 제목(가이드 Task Statement) 범위 안에서 확인할 핵심 개념 한 줄. 제목에 없는 주제를 지어내지 않는다.
 
 [도메인별 시간 배분] (합계 {total:.1f}시간)
 {alloc}
@@ -221,7 +224,7 @@ def default_draft(grid: list[dict], tasks: dict) -> list[dict]:
         for d, h in ((int(k), x) for k, x in cell.items()):
             tid = queues[d][pos[d] % len(queues[d])]
             pos[d] += 1
-            items.append({"task_id": tid, "hours": h, "focus": "가이드 Knowledge/Skills 항목 복습 후 연습 문제 풀이"})
+            items.append({"task_id": tid, "hours": h, "focus": None})
         out.append({"day": i, "items": items})
     return out
 
@@ -274,7 +277,7 @@ def format_plan(state: PlanState) -> str:
         parts = []
         for it in items:
             tid = it["task_id"].strip().upper().replace(" ", "-")
-            parts.append(f"{tid} {it['hours']:.1f}h — {it['focus']} (남은 문제 {tasks[tid]['remaining']}개)")
+            parts.append(f"{tid} {it['hours']:.1f}h — {it.get('focus') or _ts_title(tid)} (남은 문제 {tasks[tid]['remaining']}개)")
         ex = _pick_exercise(tasks[main["task_id"].strip().upper().replace(" ", "-")]["domain"], day["day"]) if main else None
         if ex:
             used_ex.add(ex)

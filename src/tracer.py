@@ -65,7 +65,8 @@ class QueryTracer(AsyncCallbackHandler):
 
     async def on_custom_event(self, name: str, data: Any, *, run_id, **kw):
         if name == "rewrite":
-            self.trace.append({"step": "rewrite", "query_en": data["query_en"], "t": self._t()})
+            self.trace.append({"step": "rewrite", "query_en": data["query_en"],
+                               "prefetch": data.get("prefetch", "miss"), "t": self._t()})
         elif name == "retrieve":
             for h in data["hits"]:
                 self._add_context(h["doc_id"], h["text"])

@@ -4,6 +4,7 @@
   다른 모듈은 load_dotenv()를 직접 부르지 말고 이 모듈을 import한다.
 """
 import os
+from functools import lru_cache
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -79,9 +80,12 @@ BULLET_TOTAL = 240          # 세부 항목 수 (ingest가 검증, 진도 커버
 GUIDE_VERSION = "0.2"
 
 
+@lru_cache(maxsize=None)
 def get_llm(model_id: str = MODEL_ID, max_retries: int | None = None, region: str = REGION):
     """Bedrock Claude (temperature 0) 단일 모델. 런타임 에이전트는 이 함수 대신 src.llm.get_runtime_llm()(전환 포함)을 쓴다.
-    max_retries: botocore 내부 재시도 횟수. 모델 전환을 쓰는 곳은 1로 줄여 쓰로틀 시 전환이 바로 일어나게 한다."""
+    max_retries: botocore 내부 재시도 횟수. 모델 전환을 쓰는 곳은 1로 줄여 쓰로틀 시 전환이 바로 일어나게 한다.
+    (모델, 재시도, 리전)마다 인스턴스 하나를 공유한다 — 에이전트들이 같은 boto 클라이언트·연결을 써서
+    첫 호출 지연(클라이언트 생성·TLS 연결)이 한 번만 든다 (v2-7). boto3 클라이언트는 스레드 안전."""
     from langchain_aws import ChatBedrockConverse
 
     kwargs = {}

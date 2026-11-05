@@ -7,16 +7,17 @@ TutorAnswer 구조화 출력(ToolStrategy) + G3.
 - 결과는 name="concept_tutor"인 AIMessage로 마지막에 추가 → Supervisor(last_message)와 agent.turn_answer가 이 메시지를 쓴다.
 """
 import re
+import uuid
 from typing import Any
 
 from langchain.agents import create_agent
-from langchain.agents.middleware import AgentMiddleware
+from langchain.agents.middleware import AgentMiddleware, hook_config
 from langchain.agents.structured_output import ToolStrategy
 from langchain_core.callbacks.manager import adispatch_custom_event
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from langchain_core.messages import AIMessage, ToolMessage
 
 from src import config, retriever
-from src.agents import SubAgentState
+from src.agents import SubAgentState, last_question, this_turn
 from src.guards import check_tutor_answer
 from src.llm import get_runtime_llm
 from src.schemas import TutorAnswer
@@ -29,9 +30,10 @@ DOC_HEADER = re.compile(r"^\[([A-Za-z0-9.\-]+)\] ", re.MULTILINE)
 PROMPT = """너는 Claude Certified Architect – Foundations(CCA-F) 시험 공부를 돕는 개념 튜터다. (비공식 학습 도구)
 
 [순서]
-1. 먼저 search_guide로 공식 시험 가이드를 검색한다. 질문이 문서 번호(TS 1.4, 샘플 1번, 도메인 3, Exercise 2,
-   시험 형식·범위)를 가리키면 get_chunk(doc_id)로 그 청크를 바로 가져와도 된다. 검색은 보통 1회, 많아야 2회.
-2. 검색 결과를 받은 뒤에 TutorAnswer로 답한다. 검색 도구와 TutorAnswer를 같은 차례에 함께 호출하지 않는다.
+1. 질문 원문으로 공식 시험 가이드를 검색한 결과(search_guide)가 먼저 주어진다. 문서 번호(TS 1.4, 샘플 1번, 도메인 3)가
+   있으면 그 청크가 맨 앞에 있다.
+2. 그 결과로 답할 수 있으면 바로 TutorAnswer로 답한다. 근거가 부족할 때만 search_guide(다른 표현·domain·doc_type)나
+   get_chunk(doc_id)를 한 번 더 쓴다. 검색 도구와 TutorAnswer를 같은 차례에 함께 호출하지 않는다.
 
 [TutorAnswer 작성 규칙]
 - answer_ko: 한국어, 핵심 용어 영어 병기(예: 프로그램적 강제(programmatic enforcement)). 결론 먼저, 필요하면 짧은 목록.
@@ -63,21 +65,44 @@ PROMPT = """너는 Claude Certified Architect – Foundations(CCA-F) 시험 공�
   (claims는 제약 항목마다 해당 원문 excerpt를 하나씩)"""
 
 
-def _this_turn(messages: list) -> list:
-    start = max((i for i, m in enumerate(messages) if isinstance(m, HumanMessage)), default=-1)
-    return messages[start + 1:]
-
-
 def retrieved_docs(messages: list) -> dict[str, str]:
     """이번 턴에 search_guide/get_chunk가 돌려준 doc_id → 청크 원문."""
     chunks = retriever.load_chunks()
     out: dict[str, str] = {}
-    for m in _this_turn(messages):
+    for m in this_turn(messages):
         if isinstance(m, ToolMessage) and m.name in SOURCE_TOOLS:
             for did in DOC_HEADER.findall(config.get_text(m)):
                 if did in chunks:
                     out[did] = chunks[did].text
     return out
+
+
+def first_search(messages: list) -> dict | None:
+    """이번 턴에 아직 검색하지 않았으면 질문 원문으로 search_guide 호출을 코드가 넣고 도구 단계로 바로 간다 (v2-7).
+    프롬프트가 "먼저 검색"으로 고정이라 모델의 첫 호출은 검색 결정뿐이었다 → LLM 왕복 1회(약 2초) 절약.
+    질문 원문이 그대로 query라 CoachApp.run의 선행 검색(retriever.PREFETCH)을 그대로 쓴다."""
+    turn = this_turn(messages)
+    searched = any((isinstance(m, ToolMessage) and m.name in SOURCE_TOOLS)
+                   or (isinstance(m, AIMessage) and any(c["name"] in SOURCE_TOOLS for c in m.tool_calls))
+                   for m in turn)
+    question = last_question(messages).strip()
+    if searched or not question:
+        return None
+    call = {"name": "search_guide", "args": {"query": question}, "id": f"tooluse_first_{uuid.uuid4().hex[:16]}",
+            "type": "tool_call"}
+    return {"messages": [AIMessage(content="", tool_calls=[call], name=NAME)], "jump_to": "tools"}
+
+
+class ForceFirstSearch(AgentMiddleware):
+    """before_model: 이번 턴 첫 모델 호출 대신 질문 원문 검색을 먼저 실행한다."""
+
+    @hook_config(can_jump_to=["tools"])
+    def before_model(self, state: dict, runtime: Any) -> dict | None:
+        return first_search(state["messages"])
+
+    @hook_config(can_jump_to=["tools"])
+    async def abefore_model(self, state: dict, runtime: Any) -> dict | None:
+        return first_search(state["messages"])
 
 
 class TutorAnswerGuard(AgentMiddleware):
@@ -95,5 +120,5 @@ class TutorAnswerGuard(AgentMiddleware):
 
 def build_concept_tutor():
     return create_agent(get_runtime_llm(), [search_guide, get_chunk], system_prompt=PROMPT,
-                        response_format=ToolStrategy(TutorAnswer), middleware=[TutorAnswerGuard()],
+                        response_format=ToolStrategy(TutorAnswer), middleware=[ForceFirstSearch(), TutorAnswerGuard()],
                         state_schema=SubAgentState, name=NAME)

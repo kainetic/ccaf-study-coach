@@ -116,6 +116,19 @@ async def wait_input_ok() -> None:
         await asyncio.shield(fut)
 
 
+# 출제된 문제에 대한 답만 담은 입력 ("B", "답은 c", "D요"). 한 글자 답에는 덤프 요청·인젝션이 들어갈 수 없어
+# 출제 대기 중일 때는 2차 LLM 판별을 건너뛴다 (v2-7, 채점 응답 시간). 판정은 CoachApp.run이 pending_quiz_id와 함께 한다.
+ANSWER_ONLY = re.compile(r"^\s*(답은?\s*)?[A-Da-d]\s*(번|요|입니다|이요)?\s*[.!]?\s*$")
+
+
+def is_answer_only(text: str) -> bool:
+    return bool(ANSWER_ONLY.match(text))
+
+
+async def answer_only_pass() -> GuardDecision:
+    return GuardDecision(action="pass", layer="rule", reason="answer_only")
+
+
 async def llm_guard(text: str) -> GuardDecision:
     """2차 LLM 판별 (rule_check를 통과한 입력). 판별이 실패하면 통과로 보고 기록을 남긴다."""
     try:

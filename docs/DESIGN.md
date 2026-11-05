@@ -1,4 +1,4 @@
-# DESIGN · CCA-F 학습 코치 (설계 v0.8, 최종)
+# DESIGN · CCA-F 학습 코치 (설계 v0.9, 최종)
 
 > 기준 문서: Claude Certified Architect – Foundations Exam Guide (Version 0.2, 2026-06-30)
 > 과제 규약: 교육 과정 mini PJT 안내 문서(과정 내부 자료) §4 산출물 규약, §5 12개 패턴. 본문의 "Day N `xxx.py` 재사용"은 같은 과정의 N일차 실습 코드를 가져왔다는 뜻
@@ -26,7 +26,7 @@
 
 ### 1-1. 단계 (Stage)
 
-모든 단계 완료. 제출(S6) 뒤 개선은 v2-1~v2-6으로 부른다(변경 이력).
+모든 단계 완료. 제출(S6) 뒤 개선은 v2-1~v2-7로 부른다(변경 이력).
 
 | 단계 | 범위 | 완료 결과 |
 |---|---|---|
@@ -140,7 +140,7 @@ flowchart TD
 ```
 
 - LangGraph `create_supervisor` (Day 6) 기반. Supervisor는 질문 유형에 따라 **필요한 에이전트만** 호출 (TS 1.2).
-- 복합 질문(개념 + 문제)은 두 에이전트를 순서대로 호출하고 각 답변을 이어 붙임 (§7 `turn_answer`, 별도 종합 단계 없음).
+- 하위 에이전트가 끝나면 Supervisor로 돌아가지 않고 턴을 끝냄(`agent.after_agent`, §7). 복합 질문(개념 + 문제)만 Supervisor로 돌아가 두 에이전트를 순서대로 호출하고 각 답변을 이어 붙임 (§7 `turn_answer`, 별도 종합 단계 없음).
 - handoff 시 필요한 정보(task_id, 도메인, 시나리오)를 명시적으로 전달 (TS 1.3). 채점할 quiz_id는 핸드오프가 아니라 그래프 State의 `pending_quiz_id`로 넘김.
 - 문제 생성 함수(`quiz_gen.py`)는 오프라인 스크립트에서만 호출하고 에이전트 도구로 노출하지 않음. 런타임에는 문제를 만들지 않음.
 
@@ -169,6 +169,7 @@ flowchart TD
 - `get_progress()`, `get_weak_domains(top_k)`: MCP 래퍼, user_id는 config에서 주입
 - `allocate_study_time(days, hours_per_day)`: LLM에게는 두 인자만 보임. 비중(config)·정답률(study_log, MCP get_progress)은 래퍼가 코드로 가져와 계산 → 정답률을 지어낼 수 없음 (§5-5)
 - `make_study_plan(days, hours_per_day)`: **return_direct**. Plan-Execute 서브그래프 결과를 코드가 서식화해 그대로 답변으로 씀
+  - `create_agent`는 한 차례에 실행한 도구가 **전부** return_direct일 때만 끝나므로, 모델이 세 도구를 한 번에 부르면 return_direct가 걸리지 않는다. before_model 미들웨어 `PlanDirectReturn`이 이번 턴 `make_study_plan` 결과를 LLM 없이 마지막 답변으로 두고 끝냄
 
 ### 3-2. MCP 서버: `quiz_bank_server.py` (fastmcp, Day 4 구조 재사용)
 
@@ -320,13 +321,15 @@ class QuizManifest(BaseModel):
 ## 5. 핵심 흐름
 
 ### 5-1. 개념 Q&A
-1. `rewrite_query`: 한국어 질문 → 영어 키워드 질의 (+ TS 번호 감지)
-2. `search_guide` 하이브리드 검색 k=4 (도메인 힌트 있으면 필터)
+1. `rewrite_query`: 한국어 질문 → 영어 키워드 질의 (+ TS 번호 감지). 턴 시작 때 선행 실행
+2. `search_guide` 하이브리드 검색 k=4. 첫 검색은 질문 원문으로 코드가 실행하고, 모델은 필요할 때만 추가 검색(도메인·문서 유형 필터, get_chunk)
 3. `TutorAnswer` 구조화 출력 → G3 검증. 유효한 claim이 없으면 답을 지어내지 않고 `coverage_gap`으로 "가이드에 없음" 안내
 4. 답변 끝에 출처 표기: `[근거: TS-1.4, SQ-01]`
 
 구현 (`src/retriever.py`, `src/agents/concept_tutor.py`, `src/guards.check_tutor_answer`, `src/memory.py`):
 - **검색**: 정확 조회는 정규식(`TS 2.2`·`Task Statement 2.2`·`도메인 3`·`Domain 3`·`D3`·`샘플 1번`·`Sample Question 1`·`시나리오 5`·`Exercise 2`)으로 감지한 청크를 앞에 두고 남은 자리를 하이브리드로 채움. BM25는 영어 토크나이저(가이드가 영어), 가중치 BM25 0.4 · 벡터 0.6, 재작성은 `rewrite_query` LLM 1회(실패 시 원문). rewrite·retrieve 결과는 custom event로 trace에 기록
+- **선행 검색** (`retriever.start_prefetch`·`PREFETCH`): `CoachApp.run`이 1차 규칙 통과 직후 질문 원문으로 재작성 + 필터 없는 하이브리드 검색을 시작(입력 가드 LLM·Supervisor 배분과 동시). `search_guide`는 `wait_input_ok()` 다음에 query가 이번 턴 질문과 같으면 이 결과를 씀(필터가 있으면 재작성 질의만 재사용). trace `rewrite.prefetch` = hit / query_only / miss. 차단되면 취소하고, 결과는 gate 통과 뒤에만 쓰이므로 차단 입력의 검색 결과는 나가지 않음. 채점 입력(§6)에는 하지 않음
+- **첫 검색 주입** (`concept_tutor.ForceFirstSearch`, before_model): 이번 턴에 아직 검색하지 않았으면 모델을 부르지 않고 `search_guide(질문 원문)` 호출을 넣어 도구 단계로 감(프롬프트가 "먼저 검색"으로 고정이라 첫 모델 호출은 검색 결정뿐이었음). 결과를 본 모델은 바로 답하거나 한 번 더 검색
 - **검색 결과 트리밍** (`retriever.trim_hits`) — 청크 단위 필터: 1순위 hit, 정확 조회 hit, task_statement가 아닌 청크(샘플 문항·범위·개요 등)는 그대로. 2순위 이하 `task_statement` 청크는 영어 검색어와 키워드(일반어 제외)가 겹치는 bullet이 하나라도 있으면 전문, 없으면 뺀다. 청크 안의 bullet은 자르지 않음(bullet 단위로 자르면 답에 필요한 bullet까지 빠짐)
 - **TutorAnswer + G3**: `create_agent(response_format=ToolStrategy(TutorAnswer))` + after_agent 미들웨어 `TutorAnswerGuard`. claim은 **이번 턴에 search_guide/get_chunk가 실제로 돌려준 doc_id를 가리킬 때만 유효**(대소문자 무시). 유효 claim 0개(또는 구조화 응답 없음)면 고정 문구 `NO_EVIDENCE`(+coverage_gap). 아니면 answer_ko + "가이드에 없는 부분: …"(coverage_gap) + `GAP_NOTICE`(coverage_gap이 있을 때) + 코드가 만든 `[근거: …]`(answer_ko의 LLM 표기는 지움). excerpt 원문 일치 수는 trace `output_check`에만 기록(강제 안 함). 결과는 `name="concept_tutor"` AIMessage로 마지막에 붙여 Supervisor last_message·turn_answer가 사용
 - **장기 대화 요약** (`memory.compact`, `CoachApp.run`): 턴 시작 전 thread 메시지가 `config.SUMMARY_TRIGGER_MESSAGES`(40)를 넘으면 최근 `SUMMARY_KEEP_TURNS`(3)개 턴은 그대로 두고 그 앞을 LLM 1회로 한국어 10줄 이내 요약 → `SystemMessage`([이전 대화 요약] + [핵심 사실 — case_facts, 코드 보존]) 하나로 바꿔 바깥 그래프 상태에 `aupdate_state`로 적용(`RemoveMessage(REMOVE_ALL)`). 자르는 지점은 사용자 입력 경계라 도구 호출 쌍이 끊기지 않음. 요약 LLM은 입력 가드 판별과 동시에 돌고, 실패하면 원래 메시지 유지. Supervisor `pre_model_hook`으로 지우면 내부 그래프에만 적용되고 바깥 thread에는 옛 메시지가 남아서 그래프 밖에서 처리. 하위 에이전트도 같은 messages를 받으므로 study_coach는 요약 블록의 일수·시간을 쓰고 다시 묻지 않음. 가드 차단 턴은 `_rollback`이 messages·case_facts를 통째로 복원. 검증: `evaluation/smoke_memory.py`
@@ -473,7 +476,7 @@ class QuizManifest(BaseModel):
 구현 (`src/planner.py`):
 - 배분: 몫 ∝ 시험 비중 × 약점 계수(`quiz_bank_server.weakness_factor` — 출제 가중 §5-3과 같은 식: 시도 3회 이상 max(0.2, 1 − 정답률), 미만 1.0), 0.5시간 단위 최대 잔여법 → **합계 = 일수 × 하루 시간** 항상 일치. demo_heavy 10일×2시간 → D1 4.0 · D2 5.5 · D3 2.0 · D4 3.5 · D5 5.0 = 20h. LLM 인자는 days·hours_per_day만 (weights·accuracy는 내부 인자)
 - 일자별 도메인 시간표(grid)도 코드: 도메인 시간을 1시간 블록(+0.5 나머지)으로 나눠 기간 전체에 고르게 펼침
-- plan(LLM, `StudyPlanDraft`): grid의 각 (일차, 도메인) 칸에 TS·시간·초점 배정 (TS 제목·정답률·남은 문제 수 제공, 약한 TS 우선)
+- plan(LLM, `StudyPlanDraft`): grid의 각 (일차, 도메인) 칸에 TS·시간만 배정 (TS 제목·정답률·남은 문제 수 제공, 약한 TS 우선). 칸 설명은 LLM이 쓰지 않고 finalize가 TS 제목(가이드 원문)을 붙임 — 출력 토큰 감소, 지어낸 초점 문장 없음
 - execute(코드): TS 유효성·칸 시간 합 검증 → replan: 위반 목록을 주고 LLM 수정 1회 → 그래도 어긋나면 결정적 기본 배정(정답률 낮은 TS부터)
 - finalize(코드 서식화): 약점 근거표 → 배분표(합계) → 일자별 계획(남은 문제 수) → 연결 Exercise(EX 청크의 "Domains reinforced" 파싱)
 
@@ -498,6 +501,8 @@ class QuizManifest(BaseModel):
   - 앱 도구 8개는 첫 줄 `guards.wait_input_ok()`에서 판별 통과를 기다림(`INPUT_GATE` ContextVar의 Future). 판별 전에는 Supervisor 배분·하위 에이전트 LLM까지만 진행
   - LLM이 차단하면 그래프 task를 취소(도구는 gate에서 멈춰 실행 0건), 이번 턴에 thread에 추가된 메시지를 `RemoveMessage`로 되돌리고(`CoachApp._rollback`), trace는 guard 단계만 남김(`tracer.discard_graph_run`) → 차단 문항은 여전히 도구 호출 0건
   - 새 앱 도구를 추가하면 반드시 첫 줄에 `wait_input_ok()`를 둔다
+  - **채점 입력은 LLM 판별 생략**: 출제 대기 중(`pending_quiz_id` 있음)이고 입력이 답 한 글자 형식(`guards.ANSWER_ONLY`: "B", "답은 c", "D요")이면 2차 LLM 판별 대신 바로 통과(`layer=rule`, reason `answer_only`). 한 글자 답에는 덤프 요청·인젝션이 들어갈 수 없음
+  - 선행 검색(§5-1)은 판별과 동시에 돌지만 앱 도구가 아니고 부작용이 없으며, 결과는 gate 통과 뒤 `search_guide`에서만 쓰임
 - 상수: `REFUSALS["G1"]`·`REFUSALS["G2"]`, `G4_CORRECTION`, `G4_NOTICE`, `NO_EVIDENCE`·`GAP_NOTICE`(G3), `OFF_TOPIC`(G5, general_agent 프롬프트에 그대로 삽입)
 - 출력 `output_check`(G4 백스톱): 문장 단위로 금지 표현이 있고 부정어(아니·않·없·비공식 등)가 없으면 그 문장을 지우고 `G4_NOTICE`를 붙임
 - 차단 사유는 `logs/guard_audit.log`에만 (사용자에게 비노출)
@@ -513,11 +518,12 @@ Body: {"question": "...", "user_id": "..."?, "thread_id": "..."?}   # 뒤 2개�
 Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "trace": [...], "thread_id": "..."}
 ```
 - `thread_id`: 요청에 없으면 새로 만들어 돌려줌. 같은 thread_id로 이어 부르면 출제 → 채점이 이어짐 (checkpointer `InMemorySaver`, 서버 재시작 시 초기화). `user_id`는 `^[A-Za-z0-9_-]+$`
-- `answer` 구성: 이번 턴의 하위 에이전트 최종 답변 + quiz_master return_direct 도구 결과를 순서대로 이어 붙임 (`agent.turn_answer`). Supervisor는 처리가 끝나면 "완료"만 출력하고 그 메시지는 쓰지 않음 → 문항 원문 보존, 재작성 없음
+- `answer` 구성: 이번 턴의 하위 에이전트 최종 답변 + quiz_master return_direct 도구 결과를 순서대로 이어 붙임 (`agent.turn_answer`). Supervisor는 답변을 쓰지 않음 → 문항 원문 보존, 재작성 없음
+- **에이전트 후 종료** (`agent.after_agent`): `create_supervisor`가 돌려준 builder에서 하위 에이전트 → Supervisor 고정 엣지를 조건 분기로 바꿈. 질문에 출제 요청(`QUIZ_INTENT`)이 있는데 이번 턴에 quiz_master가 아직 안 돌았으면 Supervisor로, 아니면 바로 종료(Supervisor "완료" LLM 호출 생략). thread는 handoff-back 메시지로 끝나고 다음 턴 입력이 그 뒤에 붙음
 - Supervisor 동시 핸드오프 금지: Bedrock Converse는 parallel_tool_calls 끄기를 지원하지 않으므로 `post_model_hook`(`agent.single_handoff`)이 첫 핸드오프만 남김 (복합 요청은 concept_tutor → quiz_master 순서로 이어서 처리)
 - `contexts`: `search_guide`/`get_chunk` 결과와, 출제 시에는 해당 문제의 TS 청크(정답 단서인 source_excerpt는 넣지 않음)를 콜백으로 수집 (Day 7 `run_eval.py`의 ToolRecorder 방식)
 - `trace`: step 단위 `guard → route(agent) → rewrite → retrieve → get_quiz → submit → progress → allocate → plan → output_check` + 끝에 `tools`(이번 턴 앱 도구 이름, 핸드오프·TutorAnswer 제외 — 평가 판정용)와 `llm`(호출 수·토큰·실제 응답 모델). `output_check`는 G3(concept_tutor)과 G4(최종 답변) 두 종류. Day 7 `local_tracer.py` 확장. 로컬 사본 `logs/trace.jsonl`(커밋 안 함)
-- 서버: FastAPI (Day 6 `api_server.py` 재사용, 경로만 `/query`로 변경)
+- 서버: FastAPI (Day 6 `api_server.py` 재사용, 경로만 `/query`로 변경). 시작 때 `retriever.warm_up()`으로 청크·BM25·Chroma를 열고 임베딩·재작성 LLM 1회씩 호출해 첫 요청의 콜드 스타트를 없앰. `config.get_llm`은 (모델, 재시도, 리전)마다 인스턴스를 공유해 모든 에이전트가 같은 Bedrock 클라이언트·연결을 씀
 - 웹 UI: `GET /`가 `src/web/index.html`(바닐라 JS, 외부 의존성·CDN 없음)을 서빙하고 `style.css`·`app.js`는 `/static` 마운트. 화면 세부(카드·배너·문구·애니메이션)는 `src/web/`이 기준이고, 설계 원칙은 다음과 같다
   - 백엔드는 `/query`·`/progress`만 쓰고 그래프·가드·도구는 바꾸지 않음. 화면은 표시만 바꾸고 계산(정답률·약점·커버리지)은 서버 값 그대로
   - **정답은 UI도 모름**: `trace`의 `get_quiz` status=ok면 `format_quiz` 텍스트를 파싱해 문제 카드·보기 카드(클릭·키보드 A~D)로 보여 주고 고른 글자만 다음 질문으로 보냄. 채점 후 정답 글자는 `format_grade` 답변 문구에서 읽어 결과 배너·보기 표시·보기별 해설을 그림. 파싱에 실패하면 원문 마크다운
@@ -575,7 +581,7 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 - 도구 판정은 trace `tools` step. forbidden은 코드 검사(출제 문항의 정답이 "정답: X"로 노출됐는지, guardrail 문항은 note의 G1·G2·G4에 해당하는 고정 문구가 답변에 그대로 있는지) + judge
 - judge 입력: 질문·답변·trace 요약(경로·도구·출제·약점·배분 수치, 가이드 원문 없음) → `JudgeVerdict`(traits·forbidden 항목별 ok + 사유). 빠뜨린 항목은 실패로 둠. `JUDGE_VERSION`으로 루브릭 버전 구분, judge 실제 모델 기록
 - 산출물: `evaluation/results/<label>_eval.json`(커밋: 판정·사유·도구·doc_id·지연·호출 수, 답변 본문·가이드 원문 없음) + `logs/eval/<label>_full.json`(비커밋: 답변·contexts, RAGAS 재사용)
-- 오프라인 스모크 `evaluation/smoke_p1.py` (37항목, LLM 없음): 가드 규칙, G3 분기, get_chunk 정규화, 진도·약점, 배분 합계, 기본 일정, 검색 결과 트리밍, case_facts 추출
+- 오프라인 스모크 `evaluation/smoke_p1.py` (44항목, LLM 없음): 가드 규칙, G3 분기, get_chunk 정규화, 진도·약점, 배분 합계, 기본 일정·TS 제목 서식, 검색 결과 트리밍, case_facts 추출, 응답 속도 경로(채점 입력 판정·에이전트 후 종료 분기·첫 검색 주입·계획 return 보정·선행 검색 재사용)
 - 긴 대화 스모크 `evaluation/smoke_memory.py` (5턴, 9항목, Bedrock): 요약 발생 + case_facts 보존, study_log 임시 사본 사용
 - 웹 UI(§7)는 자동 스모크 없음. 화면 확인은 `CCAF_STUDY_LOG`를 임시 사본으로 지정해 서버를 띄우고(출제·채점 기록이 커밋 대상 study_log에 쌓이지 않게) 1280·1440·1920 너비, 세 프로필(`web_demo`·`demo_heavy`·`demo_new`)로 본다. 2026-11-05 전체 점검 통과 (위 웹 UI 설계 원칙 항목별 동작, 가로 넘침 없음, 콘솔 오류 없음)
 
@@ -626,6 +632,7 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 
 ## 변경 이력
 
+- v0.9 (v2-7, 응답 속도): 학습 계획 return_direct 보정(`PlanDirectReturn`, §3-1), 에이전트 후 Supervisor 마무리 호출 생략(`after_agent`, §3·§7), 재작성·검색 선행 실행과 tutor 첫 검색 코드 주입(§5-1), 계획 LLM은 TS·시간만(§5-5), 채점 입력 LLM 가드 생략(§6), 서버 예열·LLM 인스턴스 공유(§7). 20/20, 개념 16.6초·출제 4.1초·계획 15.6초, faithfulness 0.876. claim·excerpt 길이 제한은 faithfulness 하락으로 되돌림
 - v0.8 (프로젝트 종료 정리): 문서 간 중복·모순 정리(폴더 구조는 README, 성공 기준·결과는 SERVICE §5, 커밋 금지 기준은 `.gitignore`·§2-4, `no_match` 처리를 "대체 조합 출제"로 통일, 핸드오프 quiz_id·복합 질문·case_facts·학습 계획 입력), 풀 소진은 조건 없는 출제 기준으로 판정, §7 웹 UI를 설계 원칙 중심으로, §9-3을 지표 정의로 축소, §10·§11 통합, 미구현 `reset_progress` 행·개발 경위 문장 삭제, 미사용 코드(`guards.input_guard`, `llm.served_stats`) 삭제, 변경 이력 압축
 - v0.6.x (제출 후 개선 v2-1~v2-6): G3 `GAP_NOTICE`(v2-1), 입력 가드 LLM 판별 병렬화(v2-2, §6), 검색 결과 청크 필터·장기 대화 요약·`case_facts`(v2-3, §5-1), 예시 수치 금지 한 줄(v2-4), 웹 UI·`GET /progress`(v2-5, §7), 런타임 LLM·임베딩 서울 리전(v2-6, §7-1). LangSmith/LangFuse·Dockerfile은 하지 않기로 결정. 버전별 결과는 README "평가 결과"
 - v0.5.x (S2~S6): 런타임 모델 전환(§7-1), quiz_master MCP 래퍼 + return_direct, 가드레일·`TutorAnswer` + G3, study_coach, 평가 러너, round2 프롬프트 개선(§9-4 #2·#4), README·시연 캡처

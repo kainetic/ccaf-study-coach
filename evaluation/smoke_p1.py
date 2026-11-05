@@ -6,7 +6,8 @@
 - get_chunk 정규화
 - get_progress·get_weak_domains: demo_heavy 약점 D2 > D5, demo_new 데이터 부족
 - allocate_study_time: 합계 = 일수 × 시간 (demo_heavy·demo_new·여러 형태), 시간표 일별 합 = 하루 시간
-- 기본 일정(replan fallback)이 시간표 검증을 통과
+- 기본 일정(replan fallback)이 시간표 검증을 통과, focus 없는 계획 서식(TS 제목)
+- 응답 속도 경로(v2-7): 채점 입력 가드 생략 판정, 에이전트 후 종료 분기, 첫 검색 주입, 계획 return 보정, 선행 검색 재사용
 풀이 기록(data/study_log.json)은 읽기만 한다.
 """
 import asyncio
@@ -110,6 +111,60 @@ def allocation(bank: QuizBank) -> None:
     check(planner.validate_request(0, 2) and planner.validate_request(10, 0.7), "잘못된 일수·시간 → 검증 메시지")
     check(set(planner.exercise_domains()) == {"EX-1", "EX-2", "EX-3", "EX-4"}
           and all(doms for _, doms in planner.exercise_domains().values()), "Exercise ↔ 도메인 연결 4개 파싱")
+    prog = bank.get_progress("demo_heavy")
+    g = [{str(k): v for k, v in d.items()} for d in planner.day_grid(heavy)]
+    text = planner.format_plan({"alloc": heavy.model_dump(), "tasks": prog["tasks"], "draft": planner.default_draft(g, prog["tasks"]),
+                                "weak": bank.get_weak_domains("demo_heavy", 2)})
+    first = retriever.load_chunks()["TS-2.1"].title.split(": ", 1)[-1]
+    check("None" not in text and "10일차" in text and any(planner._ts_title(t) in text for t in prog["tasks"]),
+          f"focus 없는 계획 → 칸 설명은 TS 제목 (예: TS-2.1 {first[:30]}…)")
+
+
+def speed_paths() -> None:
+    """v2-7 응답 속도 경로 (LLM 없음): 채점 입력 가드 생략, 에이전트 후 종료 분기, 첫 검색 주입, 계획 return 보정, 선행 검색 재사용."""
+    from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+    from langgraph.graph import END
+
+    from src import agent
+    from src.agents import concept_tutor, study_coach
+
+    print("[speed] 가드 생략 · 종료 분기 · 첫 검색 · 계획 return · 선행 검색")
+    yes, no = ["B", "답은 c", "D요", "a."], ["B야 왜?", "A랑 B 차이", "답 알려줘"]
+    check(all(guards.is_answer_only(s) for s in yes) and not any(guards.is_answer_only(s) for s in no),
+          f"채점 입력 판정: {yes} 만 LLM 판별 생략 대상")
+    rows = {r["id"]: r["input"] for r in
+            csv.DictReader((config.ROOT / "evaluation" / "test_queries.csv").open(encoding="utf-8-sig"))}
+    check(agent.QUIZ_INTENT.search(rows["13"]) and agent.QUIZ_INTENT.search(rows["5"])
+          and not agent.QUIZ_INTENT.search(rows["16"]), "출제 요청 판정: 13·5번 있음, 16번(샘플 해설) 없음")
+    q13 = HumanMessage(rows["13"])
+    tutor = AIMessage("개념 답변", name="concept_tutor")
+    check(agent.after_agent({"messages": [q13, tutor]}) == "supervisor"
+          and agent.after_agent({"messages": [q13, tutor, AIMessage("", name="quiz_master")]}) == END
+          and agent.after_agent({"messages": [HumanMessage(rows["1"]), tutor]}) == END,
+          "에이전트 후: 복합 요청은 Supervisor로, 나머지는 바로 종료")
+    first = concept_tutor.first_search([HumanMessage(rows["1"])])
+    call = first["messages"][0].tool_calls[0] if first else {}
+    done = [HumanMessage(rows["1"]), AIMessage("", tool_calls=[{**call}]),
+            ToolMessage("[TS-1.1] x", tool_call_id=call.get("id", "x"), name="search_guide")]
+    check(first and first["jump_to"] == "tools" and call["name"] == "search_guide" and call["args"] == {"query": rows["1"]}
+          and concept_tutor.first_search(done) is None, "concept_tutor 첫 차례: 질문 원문 search_guide 주입, 검색 뒤에는 모델로")
+    plan = study_coach.plan_reply([HumanMessage(rows["7"]), ToolMessage("PLAN", tool_call_id="p", name="make_study_plan")])
+    check(plan and plan["jump_to"] == "end" and plan["messages"][0].content == "PLAN"
+          and study_coach.plan_reply([HumanMessage(rows["7"])]) is None,
+          "make_study_plan 결과가 있으면 LLM 없이 그 텍스트로 종료 (도구 동시 호출 시 return_direct 보정)")
+
+    async def prefetch_modes():
+        async def done_task():
+            return "agentic loop stop_reason", ["TS-1.1", "D1"]
+        pre = retriever.Prefetch(rows["1"], asyncio.create_task(done_task()))
+        token = retriever.PREFETCH.set(pre)
+        try:
+            return [(await retriever.prefetched(q, d, t))[2]
+                    for q, d, t in ((rows["1"], None, None), (rows["1"], 1, None), ("다른 질문", None, None))]
+        finally:
+            retriever.PREFETCH.reset(token)
+    modes = asyncio.run(prefetch_modes())
+    check(modes == ["hit", "query_only", "miss"], f"선행 검색 재사용: 같은 질문 hit · 필터 query_only · 다른 질의 miss {modes}")
 
 
 def input_gate() -> None:
@@ -208,6 +263,7 @@ def main() -> int:
     g3()
     chunks()
     allocation(progress())
+    speed_paths()
     n_ok = sum(ok for ok, _ in results)
     print(f"\n===== smoke_p1: {n_ok}/{len(results)} PASS =====")
     for ok, msg in results:

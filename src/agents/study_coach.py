@@ -6,15 +6,19 @@
   LLM에게 정답률 인자를 받지 않는다 (기록을 지어낼 수 없음)
 - make_study_plan(days, hours_per_day): Plan-Execute 서브그래프(src/planner.py). return_direct — 코드가 서식화한 계획
   (약점 근거·배분 합계·일자별 계획·Exercise)을 그대로 답변으로 쓴다 (agent.turn_answer)
+  다른 도구와 같은 차례에 불리면 return_direct가 걸리지 않으므로 PlanDirectReturn이 코드로 끝낸다
 """
 import json
+from typing import Any
 
 from langchain.agents import create_agent
+from langchain.agents.middleware import AgentMiddleware, hook_config
 from langchain.tools import ToolRuntime, tool
 from langchain_core.callbacks.manager import adispatch_custom_event
+from langchain_core.messages import AIMessage, ToolMessage
 
-from src import guards, planner
-from src.agents import SubAgentState
+from src import config, guards, planner
+from src.agents import SubAgentState, this_turn
 from src.llm import get_runtime_llm
 from src.quiz_client import QuizBankClient
 
@@ -121,6 +125,29 @@ PROMPT = """너는 CCA-F 학습 코치(비공식 학습 도구)의 진도·약�
 - 정답률이나 시간 배분을 직접 계산하거나 추정하지 않는다. 합격을 보장하는 표현을 쓰지 않는다."""
 
 
+def plan_reply(messages: list) -> dict | None:
+    """이번 턴에 make_study_plan 결과가 있으면 LLM 없이 그 텍스트를 마지막 답변으로 두고 끝낸다.
+    create_agent는 한 차례에 실행한 도구가 *전부* return_direct일 때만 종료하므로, 모델이 get_weak_domains·
+    allocate_study_time과 make_study_plan을 같은 차례에 부르면 return_direct가 걸리지 않고 모델이 계획을 다시 쓴다
+    (응답 +15초, 코드 서식 훼손). 그 경우를 코드로 끝낸다."""
+    for m in reversed(this_turn(messages)):
+        if isinstance(m, ToolMessage) and m.name == "make_study_plan":
+            return {"messages": [AIMessage(content=config.get_text(m), name="study_coach")], "jump_to": "end"}
+    return None
+
+
+class PlanDirectReturn(AgentMiddleware):
+    """before_model: make_study_plan 결과가 나왔으면 모델을 다시 부르지 않는다 (return_direct 보정)."""
+
+    @hook_config(can_jump_to=["end"])
+    def before_model(self, state: dict, runtime: Any) -> dict | None:
+        return plan_reply(state["messages"])
+
+    @hook_config(can_jump_to=["end"])
+    async def abefore_model(self, state: dict, runtime: Any) -> dict | None:
+        return plan_reply(state["messages"])
+
+
 def build_study_coach(bank: QuizBankClient):
     return create_agent(get_runtime_llm(), make_coach_tools(bank), system_prompt=PROMPT,
-                        state_schema=SubAgentState, name="study_coach")
+                        middleware=[PlanDirectReturn()], state_schema=SubAgentState, name="study_coach")

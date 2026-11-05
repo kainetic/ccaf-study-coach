@@ -3,7 +3,9 @@
 Day 2 hybrid.py(BM25 + 벡터 EnsembleRetriever), extra_multiquery.py(LLM 질의 재작성) 재사용.
 가이드는 영어, 질문은 한국어라 BM25 전에 영어 키워드 질의로 바꾼다. 토크나이저도 영어용(kiwipiepy 대신).
 """
+import asyncio
 import re
+from contextvars import ContextVar
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Optional
@@ -125,10 +127,11 @@ def _rewriter():
     return get_runtime_llm()
 
 
-def rewrite_query(question: str) -> str:
+def rewrite_query(question: str, callbacks: Optional[list] = None) -> str:
     """한국어 질문 → 영어 검색 질의 (LLM 1회). 실패하면 원문을 그대로 쓴다."""
     try:
-        q = config.get_text(_rewriter().invoke(REWRITE_PROMPT.format(question=question))).strip()
+        cfg = {"callbacks": callbacks} if callbacks else None
+        q = config.get_text(_rewriter().invoke(REWRITE_PROMPT.format(question=question), cfg)).strip()
         return q.splitlines()[0].strip().strip('"') if q else question
     except Exception:   # noqa: BLE001 — 검색은 원문으로라도 계속한다
         return question
@@ -170,17 +173,66 @@ def hybrid_ids(query_en: str, domain: Optional[int] = None, doc_type: Optional[s
     return out[:k]
 
 
-def search(question: str, domain: Optional[int] = None, doc_type: Optional[str] = None,
-           k: int = K) -> tuple[str, list[Hit]]:
-    """반환: (영어 재작성 질의, 결과). 정확 조회 청크를 앞에 두고 남는 자리를 하이브리드 결과로 채운다."""
+def search(question: str, domain: Optional[int] = None, doc_type: Optional[str] = None, k: int = K,
+           query_en: Optional[str] = None, hybrid: Optional[list[str]] = None) -> tuple[str, list[Hit]]:
+    """반환: (영어 재작성 질의, 결과). 정확 조회 청크를 앞에 두고 남는 자리를 하이브리드 결과로 채운다.
+    query_en·hybrid를 주면(선행 검색 결과) 재작성·하이브리드 검색을 다시 하지 않는다."""
     chunks = load_chunks()
     exact = [d for d in exact_ids(question) if _filter_ok(chunks[d], domain, doc_type)]
-    query_en = rewrite_query(question)
+    query_en = query_en or rewrite_query(question)
     hits = [Hit(d, chunks[d].title, chunks[d].doc_type, chunks[d].text, "exact") for d in exact[:k]]
     if len(hits) < k:
-        for d in hybrid_ids(query_en, domain, doc_type, k=k):
+        for d in (hybrid if hybrid is not None else hybrid_ids(query_en, domain, doc_type, k=k)):
             if d not in exact:
                 hits.append(Hit(d, chunks[d].title, chunks[d].doc_type, chunks[d].text, "hybrid"))
             if len(hits) >= k:
                 break
     return query_en, hits
+
+
+# ---------------------------------------------------------------- 선행 검색 (v2-7)
+
+@dataclass
+class Prefetch:
+    """턴 시작 때 질문 원문으로 미리 돌리는 재작성·하이브리드 검색 (입력 가드 LLM·Supervisor 배분과 동시에).
+    결과는 search_guide가 wait_input_ok() 뒤에만 꺼내 쓰므로 차단된 입력의 검색 결과는 사용자·LLM에 나가지 않는다."""
+    question: str
+    task: asyncio.Task            # → (query_en, 필터 없는 hybrid doc_id 순위)
+
+
+# CoachApp.run이 넣고 그래프 task가 복사해 간다 (guards.INPUT_GATE와 같은 방식)
+PREFETCH: ContextVar[Optional[Prefetch]] = ContextVar("search_prefetch", default=None)
+
+
+def start_prefetch(question: str, callbacks: Optional[list] = None) -> Prefetch:
+    async def run() -> tuple[str, list[str]]:
+        query_en = await asyncio.to_thread(rewrite_query, question, callbacks)
+        return query_en, await asyncio.to_thread(hybrid_ids, query_en)
+    task = asyncio.create_task(run())
+    # 쓰지 않고 끝난 선행 검색의 예외가 "never retrieved" 경고로 남지 않게 꺼내 둔다 (search_guide는 실패 시 일반 경로)
+    task.add_done_callback(lambda t: t.cancelled() or t.exception())
+    return Prefetch(question.strip(), task)
+
+
+async def prefetched(query: str, domain: Optional[int], doc_type: Optional[str]) -> tuple[Optional[str], Optional[list[str]], str]:
+    """search_guide용: 이번 턴 질문과 같은 query면 선행 결과를 돌려준다. 반환 (query_en, hybrid, "hit"|"query_only"|"miss").
+    필터(domain·doc_type)가 있으면 재작성 질의만 재사용하고 하이브리드는 필터를 걸어 다시 한다."""
+    pre = PREFETCH.get()
+    if pre is None or query.strip() != pre.question:
+        return None, None, "miss"
+    try:
+        query_en, ids = await asyncio.shield(pre.task)
+    except Exception:   # noqa: BLE001 — 선행 검색 실패는 일반 경로로
+        return None, None, "miss"
+    if domain is None and doc_type is None:
+        return query_en, ids, "hit"
+    return query_en, None, "query_only"
+
+
+def warm_up() -> None:
+    """서버 시작 예열: 청크·BM25·Chroma를 열고 임베딩 1회·재작성 LLM 1회로 Bedrock 연결을 만들어 둔다.
+    첫 요청의 지연(콜드 스타트)을 없앤다. 실패해도 서버 시작은 계속한다."""
+    load_chunks()
+    _bm25(None, None)
+    hybrid_ids("agentic loop stop_reason")
+    rewrite_query("에이전트 루프 종료 조건")

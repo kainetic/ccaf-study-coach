@@ -27,9 +27,12 @@ async def search_guide(query: str, domain: Optional[int] = None, doc_type: Optio
     예: search_guide("agentic loop에서 stop_reason으로 종료 판단") / search_guide("샘플 1번 정답 이유", doc_type="sample_question")
     """
     await guards.wait_input_ok()
-    query_en, hits = await asyncio.to_thread(retriever.search, query, domain, doc_type)
+    # 질문 원문 검색이면 턴 시작 때 미리 돌린 재작성·하이브리드 결과를 쓴다 (retriever.PREFETCH, v2-7)
+    pre_en, pre_ids, prefetch = await retriever.prefetched(query, domain, doc_type)
+    query_en, hits = await asyncio.to_thread(retriever.search, query, domain, doc_type,
+                                             query_en=pre_en, hybrid=pre_ids)
     hits = retriever.trim_hits(hits, query_en)     # 2순위 이하 TS 청크 중 검색어와 무관한 것은 뺀다 (TS 5.1)
-    await adispatch_custom_event("rewrite", {"query": query, "query_en": query_en})
+    await adispatch_custom_event("rewrite", {"query": query, "query_en": query_en, "prefetch": prefetch})
     await adispatch_custom_event("retrieve", {"hits": [{"doc_id": h.doc_id, "how": h.how, "text": h.text} for h in hits]})
     if not hits:
         return "검색 결과 없음 — 가이드에서 근거를 찾지 못했다고 답하라 (지어내지 말 것)."

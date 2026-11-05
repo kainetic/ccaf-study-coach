@@ -3,23 +3,27 @@
 MCP 도구를 비동기로 쓰므로 build_app은 async이고 실행은 ainvoke. 사용이 끝나면 close()로 MCP 세션을 닫는다.
 에이전트: concept_tutor(search_guide, get_chunk) · quiz_master(get_quiz, submit_answer)
          · study_coach(get_progress, get_weak_domains, allocate_study_time, make_study_plan) · general_agent.
-한 턴 실행은 CoachApp.run: rule_check(G1·G2·G4) → [llm_guard(G1·G2) ∥ Supervisor 그래프, 도구는 gate 대기]
+한 턴 실행은 CoachApp.run: rule_check(G1·G2·G4) → [llm_guard(G1·G2) ∥ 선행 검색 ∥ Supervisor 그래프, 도구는 gate 대기]
   → turn_answer → output_check(G4 백스톱).
 G3는 concept_tutor 안(TutorAnswerGuard), G5는 Supervisor 배분 + general_agent.
 긴 thread는 CoachApp.run이 그래프 시작 전에 요약(memory.compact)하고 case_facts를 보존한다.
+하위 에이전트가 끝나면 Supervisor로 돌아가지 않고 끝낸다(after_agent). 복합 요청(개념 + 출제)만 Supervisor로 돌아간다.
 """
 import asyncio
 import contextlib
+import re
 from dataclasses import dataclass
 from typing import NotRequired, Optional
 
 from langchain_core.messages import AIMessage, HumanMessage, RemoveMessage, ToolMessage
 from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.graph import END
 from langgraph.graph.message import REMOVE_ALL_MESSAGES
 from langgraph.prebuilt.chat_agent_executor import AgentState
 from langgraph_supervisor import create_supervisor
 
-from src import config, guards, memory
+from src import config, guards, memory, retriever
+from src.agents import last_question, this_turn
 from src.agents.concept_tutor import build_concept_tutor
 from src.agents.general import build_general_agent
 from src.agents.quiz_master import DIRECT_TOOLS as QUIZ_DIRECT, build_quiz_master
@@ -80,6 +84,21 @@ def single_handoff(state: dict) -> dict:
     return {"messages": [trimmed]}
 
 
+# 출제 요청 표현. 하위 에이전트가 끝난 뒤 이 요청이 남아 있으면 Supervisor로 돌아가 quiz_master에게 넘긴다.
+QUIZ_INTENT = re.compile(r"(문제|퀴즈|문항|quiz).{0,12}(내|줘|출제|풀어|하나|더)", re.I)
+
+
+def after_agent(state: dict) -> str:
+    """하위 에이전트가 돌아온 뒤: 남은 일이 없으면 Supervisor를 다시 부르지 않고 끝낸다 (v2-7, 마무리 LLM 호출 생략).
+    Supervisor의 마무리 답("완료")은 원래 답변에 쓰지 않았다(turn_answer). 질문에 출제 요청이 있는데 이번 턴에
+    quiz_master가 아직 돌지 않았으면(개념 + 출제 복합 요청, 평가 13번) Supervisor로 돌아간다."""
+    messages = state["messages"]
+    ran = {m.name for m in this_turn(messages) if isinstance(m, AIMessage) and m.name in AGENTS}
+    if "quiz_master" not in ran and QUIZ_INTENT.search(last_question(messages)):
+        return "supervisor"
+    return END
+
+
 @dataclass
 class CoachApp:
     graph: object
@@ -104,7 +123,10 @@ class CoachApp:
         prev = before.values or {}
         # 요약에 묻히면 안 되는 사실은 코드가 따로 보존한다 (memory.extract_facts, TS 5.1)
         facts = memory.extract_facts(question, prev.get("case_facts"))
-        guard_task = asyncio.create_task(guards.llm_guard(question))
+        # 출제 대기 중의 답 입력("B")은 LLM 판별을 건너뛰고, 나머지는 판별·선행 검색을 그래프와 동시에 시작한다 (v2-7)
+        answer_only = bool(prev.get("pending_quiz_id")) and guards.is_answer_only(question)
+        guard_task = asyncio.create_task(guards.answer_only_pass() if answer_only else guards.llm_guard(question))
+        prefetch = None if answer_only else retriever.start_prefetch(question, callbacks=[tracer])
         graph_task = None
         try:
             # 긴 thread는 그래프 시작 전에 요약 (요약 LLM은 입력 가드 판별과 동시에 돈다)
@@ -117,27 +139,37 @@ class CoachApp:
                 tracer.add_step({"step": "summarize", **info})
             gate = asyncio.get_running_loop().create_future()
             token = guards.INPUT_GATE.set(gate)
+            token_pre = retriever.PREFETCH.set(prefetch)
             try:
                 graph_task = asyncio.create_task(
                     self.graph.ainvoke({"messages": [HumanMessage(question)], "case_facts": facts}, cfg))
             finally:
+                retriever.PREFETCH.reset(token_pre)
                 guards.INPUT_GATE.reset(token)
             d = await guard_task
         except BaseException:          # run 자체가 취소되거나 요약 적용이 실패하면 남은 task를 정리한다
             guard_task.cancel()
             if graph_task is not None:
                 graph_task.cancel()
+            if prefetch is not None:
+                prefetch.task.cancel()
             raise
         tracer.add_step({"step": "guard", "action": d.action, "rule": d.rule, "layer": d.layer})
         if d.action != "pass":
             graph_task.cancel()
+            if prefetch is not None:
+                prefetch.task.cancel()
             with contextlib.suppress(BaseException):
                 await graph_task
             await self._rollback(cfg, before)
             tracer.discard_graph_run()
             return guards.guard_reply(d)
         gate.set_result(True)
-        result = await graph_task
+        try:
+            result = await graph_task
+        finally:
+            if prefetch is not None and not prefetch.task.done():
+                prefetch.task.cancel()      # 개념 질문이 아니어서 쓰지 않은 선행 검색
         answer, report = guards.output_check(turn_answer(result["messages"]))
         tracer.add_step({"step": "output_check", **report})
         return answer
@@ -168,6 +200,10 @@ async def build_app() -> CoachApp:
         output_mode="last_message",
         post_model_hook=single_handoff,
     )
+    # 하위 에이전트 → Supervisor 고정 엣지를 after_agent 분기로 바꾼다 (create_supervisor는 미컴파일 builder를 돌려줌)
+    for name in AGENTS:
+        supervisor.edges.discard((name, "supervisor"))
+        supervisor.add_conditional_edges(name, after_agent, ["supervisor", END])
     return CoachApp(supervisor.compile(checkpointer=InMemorySaver()), bank)
 
 

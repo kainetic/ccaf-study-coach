@@ -1,7 +1,9 @@
 """가드레일 G1~G5 (DESIGN §6). Day 5 guards_input.py(규칙 + LLM 판별), guards_refusal.py(고정 문구 + 내부 기록) 재사용.
 
 - 입력: input_guard — G1(실제 문항·덤프 요청), G2(프롬프트 인젝션)는 차단, G4(공식·제휴·합격 보장 질문)는 고정 정정 문구.
-  1차 정규식 → 걸리지 않으면 2차 LLM 판별(G1+G2 한 번에). 차단·정정되면 그래프를 부르지 않는다.
+  1차 정규식(rule_check) → 걸리면 그래프를 부르지 않는다. 통과하면 2차 LLM 판별(llm_guard, G1+G2 한 번에)을
+  그래프와 동시에 돌린다(v2, 응답 시간). 앱 도구는 첫 줄에서 wait_input_ok()로 판별 통과를 기다리므로
+  LLM이 차단하면 도구는 한 번도 실행되지 않고, CoachApp.run이 그래프를 취소하고 이번 턴 메시지를 되돌린다.
 - 출력: check_tutor_answer — G3. concept_tutor의 TutorAnswer에서 이번 턴에 실제로 가져온 doc_id를 가리키는 claim만 유효.
   유효 claim이 0개면 답변 대신 NO_EVIDENCE. 출처 표기 [근거: …]는 코드가 붙인다.
   coverage_gap이 있으면 GAP_NOTICE(공식 안내 확인 권고)를 코드가 붙인다 (v2, 프롬프트에 맡기지 않음).
@@ -11,8 +13,10 @@
 
 고정 문구는 상수로 두고 평가(evaluation/run_eval.py)에서 문자열로 매칭한다. 차단 사유는 logs/guard_audit.log에만 남긴다.
 """
+import asyncio
 import re
 import time
+from contextvars import ContextVar
 from typing import Optional
 
 from src import config
@@ -100,11 +104,29 @@ async def llm_check(text: str) -> InputCheck:
 
 
 async def input_guard(text: str) -> GuardDecision:
-    """1차 규칙 → 2차 LLM. LLM 판별이 실패하면 규칙 결과(통과)만 쓰고 기록을 남긴다."""
+    """1차 규칙 → 2차 LLM을 차례로 (스크립트·단독 확인용). CoachApp.run은 두 단계를 나눠 LLM을 그래프와 병렬로 돌린다."""
     d = rule_check(text)
     if d.action != "pass":
         audit(d)
         return d
+    return await llm_guard(text)
+
+
+# 2차 판별 결과를 기다리는 gate. CoachApp.run이 Future를 넣고 그래프 task를 띄운다 (task가 context를 복사).
+INPUT_GATE: ContextVar[Optional[asyncio.Future]] = ContextVar("input_gate", default=None)
+
+
+async def wait_input_ok() -> None:
+    """앱 도구 첫 줄에서 호출. 입력 가드 LLM 판별이 통과할 때까지 기다린다.
+    차단되면 CoachApp.run이 그래프 task를 취소하므로 여기서 CancelledError로 끝난다 (도구 본문은 실행되지 않음).
+    gate가 없으면(스크립트에서 도구를 직접 부를 때) 바로 통과한다."""
+    fut = INPUT_GATE.get()
+    if fut is not None:
+        await asyncio.shield(fut)
+
+
+async def llm_guard(text: str) -> GuardDecision:
+    """2차 LLM 판별 (rule_check를 통과한 입력). 판별이 실패하면 통과로 보고 기록을 남긴다."""
     try:
         r = await llm_check(text)
     except Exception as e:   # noqa: BLE001

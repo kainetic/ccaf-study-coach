@@ -9,6 +9,7 @@
 - 기본 일정(replan fallback)이 시간표 검증을 통과
 풀이 기록(data/study_log.json)은 읽기만 한다.
 """
+import asyncio
 import csv
 import sys
 from pathlib import Path
@@ -111,9 +112,31 @@ def allocation(bank: QuizBank) -> None:
           and all(doms for _, doms in planner.exercise_domains().values()), "Exercise ↔ 도메인 연결 4개 파싱")
 
 
+def input_gate() -> None:
+    """v2: 입력 가드 LLM이 그래프와 병렬 → 앱 도구는 wait_input_ok()에서 판별 통과를 기다린다."""
+    print("[gate] 입력 가드 대기")
+
+    async def run() -> tuple[bool, bool, bool]:
+        await asyncio.wait_for(guards.wait_input_ok(), 1)          # gate 없음 → 즉시 통과
+        fut = asyncio.get_running_loop().create_future()
+        token = guards.INPUT_GATE.set(fut)
+        task = asyncio.create_task(guards.wait_input_ok())          # task가 context(gate)를 복사
+        guards.INPUT_GATE.reset(token)
+        await asyncio.sleep(0.05)
+        waiting = not task.done()
+        fut.set_result(True)
+        await asyncio.wait_for(task, 1)
+        return True, waiting, task.done()
+
+    no_gate, waiting, released = asyncio.run(run())
+    check(no_gate, "gate 없음(스크립트 직접 호출) → 즉시 통과")
+    check(waiting and released, "gate 미결이면 도구가 대기, 판별 통과(set_result) 후 진행")
+
+
 def main() -> int:
     sys.stdout.reconfigure(errors="replace")
     guard_rules()
+    input_gate()
     g3()
     chunks()
     allocation(progress())

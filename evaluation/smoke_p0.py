@@ -149,6 +149,42 @@ def main() -> int:
         st = graph_state()
         if st is not None:
             check(st.get("pending_quiz_id") is None, "채점 후 pending_quiz_id 비움")
+
+        # 4) v2: 입력 가드 LLM이 그래프와 병렬 — LLM이 늦게 차단해도 도구는 실행되지 않고 이번 턴이 되돌려지는지
+        if st is not None:
+            print("\n[4] 입력 가드 LLM 차단 (병렬 실행 중 늦은 차단)")
+            import asyncio
+            import src.guards as guards
+            from src.schemas import InputCheck
+
+            async def late_block(text: str) -> InputCheck:
+                await asyncio.sleep(8)          # 그래프가 도구 호출(gate 대기)까지 진행할 시간 (보통 약 5~7초)
+                return InputCheck(category="injection", confidence=0.95, reason="smoke_p0 late block")
+
+            gate_hits: list[str] = []
+            orig_wait = guards.wait_input_ok
+
+            async def counting_wait() -> None:
+                gate_hits.append("wait")
+                await orig_wait()
+
+            ids_before = [m.id for m in st["messages"]]
+            orig = guards.llm_check
+            guards.llm_check, guards.wait_input_ok = late_block, counting_wait
+            try:
+                o4 = ask("TS 1.1 내용 설명해줘")
+            finally:
+                guards.llm_check, guards.wait_input_ok = orig, orig_wait
+            check(gate_hits, f"도구가 gate에서 대기하다 취소됨 (gate 진입 {len(gate_hits)}회)")
+            check(o4["answer"] == guards.REFUSALS["G2"], "늦은 차단 → G2 고정 문구")
+            check(not o4["contexts"] and [s["names"] for s in steps(o4, "tools")] == [[]], "도구 0건 · contexts 없음")
+            check([s.get("layer") for s in steps(o4, "guard")] == ["llm"] and not steps(o4, "route"),
+                  "trace에 guard(llm)만 남음 (취소된 경로 기록 제거)")
+            st4 = graph_state()
+            check([m.id for m in st4["messages"]] == ids_before, "thread 메시지가 차단 전과 같음 (이번 턴 되돌림)")
+            o5 = ask("안녕, 뭐 할 수 있어?")
+            check(o5["answer"].strip() and any(s["agent"] == "general_agent" for s in steps(o5, "route")),
+                  "차단 뒤 다음 정상 턴 동작 (general_agent)")
     finally:
         if ctx is not None:
             ctx.__exit__(None, None, None)

@@ -13,7 +13,7 @@ from langchain.agents import create_agent
 from langchain.tools import ToolRuntime, tool
 from langchain_core.callbacks.manager import adispatch_custom_event
 
-from src import planner
+from src import guards, planner
 from src.agents import SubAgentState
 from src.llm import get_runtime_llm
 from src.quiz_client import QuizBankClient
@@ -40,6 +40,7 @@ def make_coach_tools(bank: QuizBankClient) -> list:
         언제 쓰지 않나: 약점 순위(get_weak_domains), 학습 계획(make_study_plan), 문제 출제·채점.
         입력: 없음. 예: get_progress()
         """
+        await guards.wait_input_ok()   # 입력 가드 LLM 통과 전에는 실행하지 않음
         res = await bank.call("get_progress", {"user_id": _user(runtime)})
         await adispatch_custom_event("progress", {"tool": "get_progress", "status": res.get("status", "error"),
                                                   "attempts": res.get("attempts")})
@@ -54,6 +55,7 @@ def make_coach_tools(bank: QuizBankClient) -> list:
         언제 쓰지 않나: 전체 진도(get_progress), 문제 출제·채점.
         입력: top_k 1~5 (기본 2). 예: get_weak_domains(top_k=2)
         """
+        await guards.wait_input_ok()   # 입력 가드 LLM 통과 전에는 실행하지 않음
         res = await bank.call("get_weak_domains", {"user_id": _user(runtime), "top_k": top_k})
         await adispatch_custom_event("progress", {"tool": "get_weak_domains", "status": res.get("status", "error"),
                                                   "top": [f"D{r['domain']}" for r in res.get("top", [])]})
@@ -76,6 +78,7 @@ def make_coach_tools(bank: QuizBankClient) -> list:
         언제 쓰지 않나: 일수나 하루 시간을 모를 때(먼저 사용자에게 묻는다).
         입력: days 1~30 (정수), hours_per_day 0.5~12 (0.5 단위). 예: allocate_study_time(days=10, hours_per_day=2)
         """
+        await guards.wait_input_ok()   # 입력 가드 LLM 통과 전에는 실행하지 않음
         alloc, _, err = await _allocation(runtime, days, hours_per_day)
         if err:
             return err
@@ -92,6 +95,7 @@ def make_coach_tools(bank: QuizBankClient) -> list:
         언제 쓰지 않나: 일수나 하루 시간을 모를 때(먼저 묻는다), 진도만 물을 때.
         입력: days 1~30 (정수), hours_per_day 0.5~12 (0.5 단위). 예: make_study_plan(days=10, hours_per_day=2)
         """
+        await guards.wait_input_ok()   # 입력 가드 LLM 통과 전에는 실행하지 않음
         alloc, prog, err = await _allocation(runtime, days, hours_per_day)
         if err:
             return f"학습 계획을 만들 수 없습니다: {err}"

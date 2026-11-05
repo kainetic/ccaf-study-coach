@@ -53,6 +53,13 @@ class QueryTracer(AsyncCallbackHandler):
     def add_step(self, step: dict) -> None:
         self.trace.append({**step, "t": self._t()})
 
+    def discard_graph_run(self) -> None:
+        """입력 가드 LLM이 차단해 그래프를 취소했을 때: guard 단계만 남기고 경로·도구·contexts를 지운다
+        (도구는 gate에서 멈춰 실행되지 않았다). LLM 호출 수·토큰은 비용 기록으로 남긴다."""
+        self.trace = [s for s in self.trace if s.get("step") == "guard"]
+        self.tools.clear()
+        self.contexts.clear()
+
     async def on_tool_end(self, output, *, run_id, **kw):
         self._starts.pop(run_id, None)
 

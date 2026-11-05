@@ -3,13 +3,16 @@
 MCP 도구를 비동기로 쓰므로 build_app은 async이고 실행은 ainvoke. 사용이 끝나면 close()로 MCP 세션을 닫는다.
 에이전트: concept_tutor(search_guide, get_chunk) · quiz_master(get_quiz, submit_answer)
          · study_coach(get_progress, get_weak_domains, allocate_study_time, make_study_plan) · general_agent.
-한 턴 실행은 CoachApp.run: input_guard(G1·G2·G4) → Supervisor 그래프 → turn_answer → output_check(G4 백스톱).
+한 턴 실행은 CoachApp.run: rule_check(G1·G2·G4) → [llm_guard(G1·G2) ∥ Supervisor 그래프, 도구는 gate 대기]
+  → turn_answer → output_check(G4 백스톱).
 G3는 concept_tutor 안(TutorAnswerGuard), G5는 Supervisor 배분 + general_agent.
 """
+import asyncio
+import contextlib
 from dataclasses import dataclass
 from typing import NotRequired, Optional
 
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from langchain_core.messages import AIMessage, HumanMessage, RemoveMessage, ToolMessage
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.prebuilt.chat_agent_executor import AgentState
 from langgraph_supervisor import create_supervisor
@@ -83,17 +86,52 @@ class CoachApp:
         await self.bank.close()
 
     async def run(self, question: str, user_id: str, thread_id: str, tracer) -> str:
-        """한 턴: 입력 가드 → 그래프 → 답변 조립 → 출력 검사. 차단·정정이면 그래프를 부르지 않는다 (도구 호출 0건)."""
-        d = await guards.input_guard(question)
-        tracer.add_step({"step": "guard", "action": d.action, "rule": d.rule, "layer": d.layer})
+        """한 턴: 입력 가드 → 그래프 → 답변 조립 → 출력 검사.
+        - 1차 규칙에 걸리면 그래프를 부르지 않는다 (도구 호출 0건).
+        - 규칙을 통과하면 2차 LLM 판별과 그래프를 동시에 시작한다 (v2, 응답 시간). 앱 도구는 guards.wait_input_ok()에서
+          판별 통과를 기다리므로, LLM이 차단하면 도구는 실행되지 않고 그래프를 취소한 뒤 이번 턴 메시지를 되돌린다."""
+        d = guards.rule_check(question)
         if d.action != "pass":
+            guards.audit(d)
+            tracer.add_step({"step": "guard", "action": d.action, "rule": d.rule, "layer": d.layer})
             return guards.guard_reply(d)
         cfg = {"configurable": {"thread_id": thread_id, "user_id": user_id},
                "callbacks": [tracer], "recursion_limit": RECURSION_LIMIT}
-        result = await self.graph.ainvoke({"messages": [HumanMessage(question)]}, cfg)
+        before = await self.graph.aget_state(cfg)
+        gate = asyncio.get_running_loop().create_future()
+        token = guards.INPUT_GATE.set(gate)
+        try:
+            graph_task = asyncio.create_task(self.graph.ainvoke({"messages": [HumanMessage(question)]}, cfg))
+        finally:
+            guards.INPUT_GATE.reset(token)
+        try:
+            d = await guards.llm_guard(question)
+        except BaseException:          # run 자체가 취소되면 그래프도 남기지 않는다
+            graph_task.cancel()
+            raise
+        tracer.add_step({"step": "guard", "action": d.action, "rule": d.rule, "layer": d.layer})
+        if d.action != "pass":
+            graph_task.cancel()
+            with contextlib.suppress(BaseException):
+                await graph_task
+            await self._rollback(cfg, before)
+            tracer.discard_graph_run()
+            return guards.guard_reply(d)
+        gate.set_result(True)
+        result = await graph_task
         answer, report = guards.output_check(turn_answer(result["messages"]))
         tracer.add_step({"step": "output_check", **report})
         return answer
+
+    async def _rollback(self, cfg: dict, before) -> None:
+        """차단된 턴에 thread에 추가된 메시지를 지운다 (다음 턴이 차단된 입력을 보지 않게).
+        도구는 실행되지 않았으므로 pending_quiz_id 등 다른 상태는 그대로다."""
+        keep = {m.id for m in (before.values or {}).get("messages", [])}
+        now = await self.graph.aget_state(cfg)
+        added = [m for m in (now.values or {}).get("messages", []) if m.id not in keep]
+        if added:
+            await self.graph.aupdate_state(cfg, {"messages": [RemoveMessage(id=m.id) for m in added]},
+                                           as_node="supervisor")
 
 
 async def build_app() -> CoachApp:

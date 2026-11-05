@@ -17,7 +17,7 @@ from langchain_core.callbacks.manager import adispatch_custom_event
 from langchain_core.messages import ToolMessage
 from langgraph.types import Command
 
-from src import retriever
+from src import guards, retriever
 from src.agents import SubAgentState
 from src.llm import get_runtime_llm
 from src.quiz_client import QuizBankClient
@@ -107,6 +107,7 @@ def make_quiz_tools(bank: QuizBankClient) -> list:
         풀에 없는 조합이면 도구가 그 사실을 밝히고 같은 범위의 대체 문제를 낸다.
         예: get_quiz(domain=1) / get_quiz(task_id="TS-1.7", scenario_id=5)
         """
+        await guards.wait_input_ok()   # 입력 가드 LLM 통과 전에는 실행하지 않음
         return await issue(runtime, {"domain": domain, "task_id": task_id, "scenario_id": scenario_id})
 
     @tool(return_direct=True)
@@ -117,6 +118,7 @@ def make_quiz_tools(bank: QuizBankClient) -> list:
         언제 쓰지 않나: 문제를 아직 내지 않았을 때, 정답을 먼저 알려 달라는 요청(채점 전에는 공개하지 않음).
         입력: choice "A" | "B" | "C" | "D"
         """
+        await guards.wait_input_ok()   # 입력 가드 LLM 통과 전에는 실행하지 않음
         quiz_id = (runtime.state or {}).get("pending_quiz_id")
         if not quiz_id:
             await adispatch_custom_event("submit", {"status": "no_pending"})

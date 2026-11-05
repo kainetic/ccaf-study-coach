@@ -54,6 +54,7 @@ flowchart LR
 | general_agent | 없음 | 인사, 기능 안내, 무관한 주제 안내(G5) |
 
 - **런타임 LLM**: `src/llm.py`의 `FallbackChatModel`. 쓰로틀링 같은 일시 오류가 나면 Sonnet 4.5의 다른 프로필·리전 → Sonnet 4.6 순으로 전환합니다.
+- **입력 가드 LLM 판별은 그래프와 병렬로 돕니다 (v2-2).** 규칙 검사에 걸리면 그래프를 부르지 않습니다. 규칙을 통과하면 LLM 판별과 그래프를 함께 시작하되, 모든 앱 도구는 판별이 통과할 때까지 기다립니다. LLM이 차단하면 그래프를 취소하고 이번 턴 메시지를 되돌리므로, 차단된 요청에서는 도구가 한 번도 실행되지 않습니다.
 - **문제는 런타임에 만들지 않습니다.** 오프라인에서 미리 생성하고 검토한 풀에서만 출제하고, 풀에 없는 조합이면 대체 문제를 제안합니다.
 
 ## 빠른 시작 (Windows PowerShell)
@@ -142,13 +143,15 @@ round2에서 바꾼 것은 프롬프트 두 가지입니다.
 
 **v2-1 (제출 후)**: round2에서 유일하게 실패한 12번(접수 방법)은 "공식 채널 확인 권고"가 빠진 경우였습니다. 답변에 `coverage_gap`(가이드에 없는 부분)이 있으면 G3이 공식 안내 확인 문구(`guards.GAP_NOTICE`)를 코드로 붙이게 바꿨습니다(프롬프트 변경 없음). 같은 세트 재평가 결과는 **20/20**입니다 (traits 69/69, guardrail 3/3, [v2_gap_eval.json](evaluation/results/v2_gap_eval.json)).
 
+**v2-2 (응답 시간)**: 입력 가드 LLM 판별을 그래프와 병렬로 돌리고, 앱 도구는 판별 통과까지 기다리게 했습니다. 개념 질문 평균 응답 시간이 **26.4초 → 22.4초**로 줄었습니다(경로가 concept_tutor인 14건, 전체 평균 22.9 → 19.8초). 같은 세트 결과는 19/20입니다([v2_latency_eval.json](evaluation/results/v2_latency_eval.json)). 실패한 9번은 답변에 "TTL 값(예: 5분)" 같은 예시 수치를 넣어 금지 항목에 걸린 경우로, 가드 실행 순서와는 무관한 답변 생성 변동입니다. 목표 15초에는 아직 못 미칩니다(가장 큰 비중은 답변 생성 약 12.6초).
+
 알려진 한계도 그대로 남겨 둡니다.
 - 응답 시간이 목표 15초보다 깁니다.
 - answer_relevancy는 한국어 답변에 영어 병기와 [근거] 표기가 섞인 형식에서는 신뢰도가 낮습니다.
 
 ```powershell
-python evaluation/smoke_p1.py                                   # 오프라인 검증 (LLM 없음) 21/21
-python evaluation/smoke_p0.py                                   # 개념 → 출제 → 채점 한 바퀴 18/18
+python evaluation/smoke_p1.py                                   # 오프라인 검증 (LLM 없음) 23/23
+python evaluation/smoke_p0.py                                   # 개념 → 출제 → 채점 한 바퀴 + 늦은 가드 차단 24/24
 python evaluation/run_eval.py --label myrun                     # 20건 → evaluation/results/myrun_eval.json
 python evaluation/ragas_smoke.py --from logs/eval/myrun_full.json --out evaluation/ragas_myrun.json
 ```
@@ -228,7 +231,7 @@ DESIGN에 적었지만 구현하지 않은 것도 있습니다. TS 5.1 핵심 �
 src/
   config.py            .env 로드, 모델·경로 상수, 모델 전환 체인
   llm.py               런타임 LLM (쓰로틀링 시 전환)
-  agent.py             Supervisor 조립, CoachApp.run (입력 가드 → 그래프 → 출력 검사)
+  agent.py             Supervisor 조립, CoachApp.run (입력 가드 규칙 → LLM 판별 ∥ 그래프 → 출력 검사)
   agents/              concept_tutor · quiz_master · study_coach · general
   tools.py             search_guide, get_chunk
   retriever.py         정확 조회 + rewrite_query + BM25·벡터 하이브리드
@@ -261,4 +264,4 @@ docs/                  DESIGN.md · demo/
 - 시험일을 저장하지 않습니다. 학습 계획은 매번 남은 일수와 하루 시간을 물어서 만듭니다.
 - G4 정정 질문과 개념 질문이 한 메시지에 섞이면 정정 문구만 답합니다.
 - 응답 시간이 목표보다 깁니다(개념 질문 평균 27.6초). 가이드에 근거가 없는 질문에서는 검색을 프롬프트 상한(2회)보다 더 반복하기도 합니다([시연 05](docs/demo/05_scope.md) 턴 2: 검색 4회, 31.6초). 다음 개선 후보는 검색 횟수를 코드로 제한하는 것, 검색 결과 트리밍, LLM 호출 수 줄이기입니다([round2_report.md](evaluation/round2_report.md) §6).
-- trace의 `llm` 단계는 그래프 안의 호출만 셉니다. 입력 가드의 LLM 판별 1회(`layer=llm`)는 호출 수와 토큰에 포함되지 않습니다(응답 시간에는 포함).
+- trace의 `llm` 단계는 그래프 안의 호출만 셉니다. 입력 가드의 LLM 판별 1회(`layer=llm`)는 호출 수와 토큰에 포함되지 않습니다(v2-2부터 그래프와 병렬이라 응답 시간에는 거의 더해지지 않음).

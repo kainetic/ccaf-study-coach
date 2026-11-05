@@ -5,7 +5,7 @@ from typing import Literal, Optional
 from langchain_core.callbacks.manager import adispatch_custom_event
 from langchain_core.tools import tool
 
-from src import retriever
+from src import guards, retriever
 
 DocTypeArg = Literal["overview", "domain", "scenario", "task_statement", "sample_question", "exercise", "scope"]
 
@@ -26,6 +26,7 @@ async def search_guide(query: str, domain: Optional[int] = None, doc_type: Optio
 
     예: search_guide("agentic loop에서 stop_reason으로 종료 판단") / search_guide("샘플 1번 정답 이유", doc_type="sample_question")
     """
+    await guards.wait_input_ok()
     query_en, hits = await asyncio.to_thread(retriever.search, query, domain, doc_type)
     await adispatch_custom_event("rewrite", {"query": query, "query_en": query_en})
     await adispatch_custom_event("retrieve", {"hits": [{"doc_id": h.doc_id, "how": h.how, "text": h.text} for h in hits]})
@@ -48,6 +49,7 @@ async def get_chunk(doc_id: str) -> str:
 
     예: get_chunk("SQ-01") / get_chunk("OV-details") / get_chunk("TS-1.7")
     """
+    await guards.wait_input_ok()
     did = retriever.normalize_doc_id(doc_id)
     if did is None:
         return (f"알 수 없는 doc_id: {doc_id!r}. 형식: TS-1.4, SQ-01, D3, SC-5, EX-2, OV-details, OV-candidate, "

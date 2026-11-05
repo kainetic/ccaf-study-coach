@@ -1,4 +1,4 @@
-# DESIGN · CCA-F 학습 코치 (설계 v0.5.6)
+# DESIGN · CCA-F 학습 코치 (설계 v0.5.7)
 
 > 기준 문서: Claude Certified Architect – Foundations Exam Guide (Version 0.2, 2026-06-30)
 > 과제 규약: [Day 8,9,10] mini PJT 문서 §4 (산출물 규약), §5 (12개 패턴)
@@ -499,7 +499,10 @@ S3 구현 메모 (`src/planner.py`):
 고정 거절 문구는 Day 5 `guards_refusal.py` 방식으로 상수화 (평가 시 문자열 매칭 가능하게).
 
 S3 구현 메모 (`src/guards.py`, 실행 순서는 `agent.CoachApp.run`):
-- 입력 `input_guard`: 1차 정규식 G1(`덤프`·`기출`·`실제 (시험에 나온) 문제` — "실제 시험 문제처럼" 같은 스타일 요청은 제외 — `exam dump`·`real questions`) → G2(Day 5 INJECTION_PATTERNS) → G4. 걸리지 않으면 2차 LLM `InputCheck` 1회(G1+G2 함께, confidence > 0.7만 차단, 실패 시 통과 + 기록). 차단·정정이면 그래프를 부르지 않음 → 도구 호출 0건
+- 입력 `input_guard`: 1차 정규식 G1(`덤프`·`기출`·`실제 (시험에 나온) 문제` — "실제 시험 문제처럼" 같은 스타일 요청은 제외 — `exam dump`·`real questions`) → G2(Day 5 INJECTION_PATTERNS) → G4. 1차 규칙에 걸리면 그래프를 부르지 않음 → 도구 호출 0건. 걸리지 않으면 2차 LLM `InputCheck` 1회(G1+G2 함께, confidence > 0.7만 차단, 실패 시 통과 + 기록)를 **그래프와 동시에** 시작 (v2-2, 응답 시간 약 -5초)
+  - 앱 도구 8개는 첫 줄 `guards.wait_input_ok()`에서 판별 통과를 기다림(`INPUT_GATE` ContextVar의 Future). 판별 전에는 Supervisor 배분·하위 에이전트 LLM까지만 진행
+  - LLM이 차단하면 그래프 task를 취소(도구는 gate에서 멈춰 실행 0건), 이번 턴에 thread에 추가된 메시지를 `RemoveMessage`로 되돌리고(`CoachApp._rollback`), trace는 guard 단계만 남김(`tracer.discard_graph_run`) → 차단 문항은 여전히 도구 호출 0건
+  - 새 앱 도구를 추가하면 반드시 첫 줄에 `wait_input_ok()`를 둔다
 - 상수: `REFUSALS["G1"]`·`REFUSALS["G2"]`, `G4_CORRECTION`, `G4_NOTICE`, `NO_EVIDENCE`·`GAP_NOTICE`(G3), `OFF_TOPIC`(G5, general_agent 프롬프트에 그대로 삽입)
 - 출력 `output_check`(G4 백스톱): 문장 단위로 금지 표현이 있고 부정어(아니·않·없·비공식 등)가 없으면 그 문장을 지우고 `G4_NOTICE`를 붙임
 - 차단 사유는 `logs/guard_audit.log`에만 (사용자에게 비노출)
@@ -675,6 +678,7 @@ ccaf-study-coach/
 
 ## 변경 이력
 
+- v0.5.7 (v2-2): 입력 가드 2차 LLM 판별을 그래프와 병렬 실행, 앱 도구는 gate에서 판별 통과 대기, 차단 시 그래프 취소 + 이번 턴 메시지 되돌림 (§6)
 - v0.5.6 (v2-1): G3에서 `coverage_gap`이 있으면 `GAP_NOTICE`(공식 안내 확인)를 코드가 붙임 — round2 남은 실패 12번 대응, 프롬프트 변경 없음
 - v0.5.5 (제출 후 정리, 문서만): 변경 이력 압축, 끝난 일정·진행 규칙·미결정 사항(§12·§13) 삭제, §10은 README 참조로 축소, 자격 증명·venv를 저장소 폴더 기준으로
 - v0.5.4 (S6): §10 매핑을 실제 구현 기준으로 정리, §11 폴더 구조 갱신, README·시연 캡처(`scripts/demo_capture.py`)

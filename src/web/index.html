@@ -11,18 +11,21 @@
   --bg: #f6f7f9; --panel: #ffffff; --text: #1d2330; --muted: #5d6677; --border: #dde1e8;
   --accent: #3b5bdb; --accent-text: #ffffff; --user: #e7ecfb; --bot: #ffffff;
   --code: #f1f3f6; --ok: #2b8a3e; --err: #c92a2a; --bar: #d8deea; --badge: #e6f4ea; --badge-text: #22663a;
+  --ok-bg: #ebf7ee; --err-bg: #fdecec;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #14171c; --panel: #1c2027; --text: #e4e7ec; --muted: #9aa3b2; --border: #2e343e;
     --accent: #7c95f0; --accent-text: #10131a; --user: #26304a; --bot: #1c2027;
     --code: #252a33; --ok: #69db7c; --err: #ff8787; --bar: #2e343e; --badge: #1f3a2a; --badge-text: #8ce99a;
+    --ok-bg: #1d3325; --err-bg: #3a2023;
   }
 }
 :root[data-theme="dark"] {
   --bg: #14171c; --panel: #1c2027; --text: #e4e7ec; --muted: #9aa3b2; --border: #2e343e;
   --accent: #7c95f0; --accent-text: #10131a; --user: #26304a; --bot: #1c2027;
   --code: #252a33; --ok: #69db7c; --err: #ff8787; --bar: #2e343e; --badge: #1f3a2a; --badge-text: #8ce99a;
+    --ok-bg: #1d3325; --err-bg: #3a2023;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }
@@ -67,6 +70,32 @@ header input.invalid { border-color: var(--err); }
 .cite { display: inline-block; background: var(--badge); color: var(--badge-text); border-radius: 4px; padding: 0 6px; font-size: 13px; }
 .choices { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .choices .btn { min-width: 48px; font-weight: 600; }
+.options { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 10px; }
+.opt {
+  display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left;
+  padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg); cursor: pointer; line-height: 1.5;
+}
+.opt:hover:not(:disabled), .opt:focus-visible { border-color: var(--accent); outline: none; }
+.opt:disabled { cursor: default; }
+.opt .key {
+  flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+  border: 1px solid var(--border); font-weight: 700; font-size: 13px; background: var(--panel);
+}
+.opt.picked { border-color: var(--accent); }
+.opt.picked .key { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+.opt.right { border-color: var(--ok); background: var(--ok-bg); }
+.opt.right .key { background: var(--ok); color: var(--panel); border-color: var(--ok); }
+.opt.wrong { border-color: var(--err); background: var(--err-bg); }
+.opt.wrong .key { background: var(--err); color: var(--panel); border-color: var(--err); }
+.opt-hint { font-size: 13px; color: var(--muted); margin: 0 0 4px; }
+.verdict { font-weight: 700; margin: -10px -14px 10px; padding: 8px 14px; border-radius: 10px 10px 0 0; }
+.msg.graded-ok { border-color: var(--ok); }
+.msg.graded-ok .verdict { background: var(--ok-bg); color: var(--ok); }
+.msg.graded-bad { border-color: var(--err); }
+.msg.graded-bad .verdict { background: var(--err-bg); color: var(--err); }
+.next { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.next .btn { font-size: 14px; border-radius: 16px; }
 details.trace { margin-top: 8px; font-size: 13px; color: var(--muted); }
 details.trace summary { cursor: pointer; }
 details.trace ul { margin: 4px 0 0; padding-left: 18px; }
@@ -230,33 +259,128 @@ function traceSummary(data) {
   return el;
 }
 
-function quizLabels(answer) {
-  const found = [...answer.matchAll(/^([A-F])\.\s/gm)].map((m) => m[1]);
-  return found.length >= 2 ? [...new Set(found)] : ["A", "B", "C", "D"];
+// 출제 답변을 문항 앞부분 · 보기(A~F) · 뒷부분으로 나눈다. 보기가 2개 미만이면 null (일반 렌더링)
+function splitQuiz(answer) {
+  const lines = answer.split(/\r?\n/);
+  const idx = [], options = [];
+  lines.forEach((line, i) => {
+    const m = line.match(/^\s*([A-F])[.)]\s+(.*)$/);
+    if (m) { idx.push(i); options.push({ label: m[1], text: m[2] }); }
+  });
+  if (options.length < 2) return null;
+  return { before: lines.slice(0, idx[0]).join("\n"), options,
+           after: lines.slice(idx[idx.length - 1] + 1).join("\n") };
 }
 
+let activeQuiz = null;          // 답을 기다리는 문항 카드 묶음 {cards}
+
 function disableChoices() {
-  document.querySelectorAll(".choices .btn").forEach((b) => { b.disabled = true; });
+  document.querySelectorAll(".choices .btn, .opt").forEach((b) => { b.disabled = true; });
+}
+
+function pick(label) {
+  if (!activeQuiz || busy) return;
+  const card = activeQuiz.cards[label];
+  if (!card) return;
+  card.classList.add("picked");
+  ask(label);
+}
+
+function quizBlock(el, answer) {
+  const q = splitQuiz(answer);
+  if (!q) {      // 보기를 못 찾으면 예전처럼 A~D 버튼
+    el.innerHTML = renderMarkdown(answer);
+    const row = document.createElement("div");
+    row.className = "choices";
+    const cards = {};
+    for (const label of ["A", "B", "C", "D"]) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "btn";
+      b.textContent = label;
+      b.addEventListener("click", () => pick(label));
+      row.appendChild(b);
+      cards[label] = b;
+    }
+    el.appendChild(row);
+    return cards;
+  }
+  el.innerHTML = renderMarkdown(q.before);
+  const hint = document.createElement("p");
+  hint.className = "opt-hint";
+  hint.textContent = "보기를 눌러 답하세요 · 키보드 " + q.options.map((o) => o.label).join("/");
+  el.appendChild(hint);
+  const box = document.createElement("div");
+  box.className = "options";
+  const cards = {};
+  for (const o of q.options) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "opt";
+    b.innerHTML = `<span class="key">${o.label}</span><span>${inline(esc(o.text))}</span>`;
+    b.addEventListener("click", () => pick(o.label));
+    box.appendChild(b);
+    cards[o.label] = b;
+  }
+  el.appendChild(box);
+  // "답을 A~D 중 하나로 알려 주세요" 안내는 카드 힌트와 겹치므로 뺀다
+  const rest = q.after.split(/\r?\n/).filter((l) => !/^\s*답을\s*[A-F]~[A-F]/.test(l)).join("\n");
+  if (rest.trim()) el.insertAdjacentHTML("beforeend", renderMarkdown(rest));
+  return cards;
+}
+
+// 채점 결과: 말풍선 머리줄 + 직전 문항 카드에 내 선택(정답/오답)과 정답 표시
+function markGraded(el, submit, answer) {
+  el.classList.add(submit.correct ? "graded-ok" : "graded-bad");
+  const head = document.createElement("div");
+  head.className = "verdict";
+  head.textContent = submit.correct ? `✓ 정답 (선택 ${submit.choice})` : `✗ 오답 (선택 ${submit.choice})`;
+  el.prepend(head);
+  if (!activeQuiz) return;
+  const correct = (answer.match(/정답\s*[:：]\s*([A-F])/) || [])[1];
+  const mine = activeQuiz.cards[submit.choice];
+  if (mine) { mine.classList.remove("picked"); mine.classList.add(submit.correct ? "right" : "wrong"); }
+  if (correct && activeQuiz.cards[correct]) activeQuiz.cards[correct].classList.add("right");
+}
+
+// 채점 후 다음 행동 칩 (quiz_id "Q-2.4-K3" → TS-2.4, Domain 2)
+function nextActions(el, submit) {
+  const m = (submit.quiz_id || "").match(/^Q-(\d)\.(\d+)/);
+  const items = [];
+  if (m) {
+    items.push([`Domain ${m[1]} 문제 하나 더`, `Domain ${m[1]}에서 연습 문제 하나 더 내줘`]);
+    items.push(["다른 도메인 문제", `Domain ${m[1]} 말고 다른 도메인에서 연습 문제 하나 내줘`]);
+    items.push([`TS ${m[1]}.${m[2]} 개념 설명`, `TS ${m[1]}.${m[2]} 핵심 개념을 설명해줘`]);
+  } else {
+    items.push(["다음 문제", "연습 문제 하나 더 내줘"]);
+  }
+  const row = document.createElement("div");
+  row.className = "next";
+  for (const [label, question] of items) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn";
+    b.textContent = label;
+    b.addEventListener("click", () => ask(question));
+    row.appendChild(b);
+  }
+  el.appendChild(row);
 }
 
 function addBot(data) {
   const el = document.createElement("div");
   el.className = "msg bot";
-  el.innerHTML = renderMarkdown(data.answer || "");
+  const answer = data.answer || "";
   const trace = data.trace || [];
-  if (trace.some((s) => s.step === "get_quiz" && s.status === "ok")) {
-    const row = document.createElement("div");
-    row.className = "choices";
-    for (const label of quizLabels(data.answer || "")) {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "btn";
-      b.textContent = label;
-      b.addEventListener("click", () => ask(label));
-      row.appendChild(b);
-    }
-    el.appendChild(row);
+  const submit = trace.find((s) => s.step === "submit" && s.status === "graded");
+  const quizOk = trace.some((s) => s.step === "get_quiz" && s.status === "ok");
+  if (quizOk) {
+    el.dataset.quiz = "1";
+  } else {
+    el.innerHTML = renderMarkdown(answer);
   }
+  if (submit) { markGraded(el, submit, answer); nextActions(el, submit); }
+  activeQuiz = quizOk ? { cards: quizBlock(el, answer) } : null;
   el.appendChild(traceSummary(data));
   log.appendChild(el);
   scrollDown();
@@ -374,7 +498,14 @@ $("ask").addEventListener("submit", (e) => {
 q.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("ask").requestSubmit(); }
 });
-$("reset").addEventListener("click", () => { if (!busy) { threadId = null; showIntro(); q.focus(); } });
+// 답을 기다리는 문항이 있으면 입력창 밖에서 A~F 키로 고른다
+document.addEventListener("keydown", (e) => {
+  if (!activeQuiz || busy || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (/^(TEXTAREA|INPUT)$/.test(document.activeElement.tagName)) return;
+  const label = e.key.toUpperCase();
+  if (activeQuiz.cards[label]) { e.preventDefault(); pick(label); }
+});
+$("reset").addEventListener("click", () => { if (!busy) { threadId = null; activeQuiz = null; showIntro(); q.focus(); } });
 $("refresh").addEventListener("click", loadProgress);
 uid.addEventListener("change", () => {
   if (currentUid()) { store("ccaf_user_id", uid.value.trim()); threadId = null; showIntro(); }

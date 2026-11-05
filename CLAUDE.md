@@ -17,30 +17,30 @@ python scripts/check_bedrock.py                      # Bedrock LLM·임베딩 �
 python scripts/check_bedrock.py --quiz-chain         # 문제 풀 생성 모델 체인(QUIZ_GEN_MODEL_CHAIN) 4개 각각 접근 확인
 python -m src.ingest --dry-run                       # 파싱·62/240 검증만
 python -m src.ingest                                 # 가이드 PDF → guide_chunks.jsonl(62) + guide_bullets.jsonl(240) → Chroma
-python scripts/build_quiz_pool.py --resume           # 문제 풀 생성 (매니페스트 기준 이어서). 다른 모드(--pilot·--fill-gaps·
-                                                     # --rebalance-length·--exception-slot·--reset-stale·--concurrency)는 --help, DESIGN §5-2
-python scripts/review_sample.py                      # 사람 표본 검토 xlsx + 결과 CSV (층화, repair 문항 층마다 1개 이상)
+python scripts/build_quiz_pool.py --resume           # 문제 풀 생성 (매니페스트 기준 이어서). 다른 모드는 --help, DESIGN §5-2
+python scripts/review_sample.py                      # 사람 표본 검토 xlsx + 결과 CSV (도메인별 층화)
 python scripts/review_sample.py --apply             # 검토 반영: human_checked, 오류 → needs_fix, 리포트 갱신 (--dry-run 가능)
 python scripts/pool_report.py                        # evaluation/quiz_pool_report.md 자동 절 갱신
 python scripts/seed_study_log.py                     # 더미 사용자 demo_heavy·demo_new → data/study_log.json (--force 재생성, --dry-run)
 uvicorn src.api:api --port 8000                      # API 서버 + 웹 UI (http://localhost:8000/, src/web/index.html)
 python evaluation/smoke_p0.py                        # P0 한 바퀴 검증 (--url 실행 중 서버, --keep 기록 남김)
-python evaluation/ragas_smoke.py                     # RAGAS 3건 스모크 → evaluation/ragas_smoke.json
+python evaluation/ragas_smoke.py                     # RAGAS 3건 스모크 → evaluation/ragas_smoke.json (커밋된 기준선을 덮어씀)
 python evaluation/smoke_p1.py                        # P1 오프라인 검증 (가드 규칙·G3·진도·배분 합계·트리밍·case_facts, LLM 없음)
 python evaluation/smoke_memory.py                    # 긴 대화 5턴: 요약 + case_facts 보존 (Bedrock, study_log 임시 사본)
-python evaluation/run_eval.py --label round1         # 20건 평가 → evaluation/results/round1_eval.json + logs/eval/round1_full.json (--ids 7,13)
-python evaluation/ragas_smoke.py --from logs/eval/round1_full.json --out evaluation/ragas_round1.json   # 같은 답변으로 RAGAS 14건
+python evaluation/run_eval.py --label myrun          # 20건 평가 → evaluation/results/myrun_eval.json + logs/eval/myrun_full.json (--ids 7,13)
+python evaluation/ragas_smoke.py --from logs/eval/myrun_full.json --out evaluation/ragas_myrun.json   # 같은 답변으로 RAGAS 14건
+                                                     # 라벨에 round1·round2·v2_* 등 커밋된 이름을 쓰면 결과 파일을 덮어씀
 python scripts/demo_capture.py                       # 시연 캡처 → docs/demo/*.md (--only 02,04, 실제 Bedrock 호출, study_log 임시 사본)
 MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언트가 sys.executable로 stdio 자식 프로세스로 띄움.
 
 ## 고정값
-- LLM: ChatBedrockConverse, model "global.anthropic.claude-sonnet-4-5-20250929-v1:0", region "ap-northeast-2"(서울, v2-6), temperature 0
+- LLM: ChatBedrockConverse, model "global.anthropic.claude-sonnet-4-5-20250929-v1:0", region "ap-northeast-2"(서울), temperature 0
   (서울에는 Sonnet 4.5 apac 프로필이 없어 global 프로필. 문제 풀 생성만 QUIZ_GEN_MODEL_ID us Sonnet 4.5 @ QUIZ_GEN_REGION us-east-1)
   - 예외: 쓰로틀링·일일 할당량 소진 등 일시 오류일 때만 모델 전환 (Haiku 미사용)
     - 문제 풀 생성(오프라인 quiz_gen): config.QUIZ_GEN_MODEL_CHAIN (Sonnet 4.5/4.6 × us/global, DESIGN §5-2)
     - 런타임 에이전트: src/llm.py FallbackChatModel, config.RUNTIME_MODEL_CHAIN (Sonnet 4.5 다른 프로필·리전
       → Sonnet 4.6, 서울 먼저 → us-east-1·us-west-2, DESIGN §7-1). LLM은 config.get_llm()이 아니라 get_runtime_llm()
-- 임베딩: BedrockEmbeddings "amazon.titan-embed-text-v2:0", region은 REGION(서울). us-east-1 벡터와 코사인 0.9999라 재색인 안 함
+- 임베딩: BedrockEmbeddings "amazon.titan-embed-text-v2:0", region은 REGION(서울)
 - Chroma: persist ./chroma_db, collection "ccaf_guide"
 - 자격 증명: 저장소 폴더(프로젝트 루트)의 .env를 사용 (.gitignore에 포함, 커밋 금지).
   src/config.py 한 곳에서만 load_dotenv(ROOT / ".env")로 로드하고,
@@ -55,10 +55,9 @@ MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언�
 - 승인(approved) 상태가 아닌 문제는 출제하지 않는다
 - 런타임에 문제를 생성하지 않는다. quiz_gen은 scripts/build_quiz_pool.py에서만 호출하고 에이전트 도구로 노출하지 않는다
 - 세부 항목 수가 240개가 아니면 ingest 파싱 오류로 보고 멈춘다
-- 선택 항목(v2) reset_progress HITL은 요청 전까지 만들지 않는다. LangSmith/LangFuse·Dockerfile은 하지 않기로 결정 (웹 UI는 v2-5 구현)
-- 커밋 금지: data/raw/*.pdf, data/guide_chunks.jsonl, data/guide_bullets.jsonl, chroma_db/, .env, evaluation/review_sample.xlsx
-  (data/quiz_pool.json, quiz_pool_manifest.json, study_log.json은 커밋)
-  저장소가 private이어도 유지 — 가이드 원문 재배포 방지, ingest로 재생성 가능 (DESIGN §2-4 저장 정책)
+- reset_progress HITL은 요청 전까지 만들지 않는다. LangSmith/LangFuse·Dockerfile은 하지 않기로 결정
+- 커밋 금지: 가이드 원문과 파생물(data/raw/*.pdf, data/guide_*.jsonl, chroma_db/, evaluation/review_sample.xlsx), .env, logs/.
+  기준은 .gitignore, 이유는 DESIGN §2-4 (저장소가 private이어도 유지). data/quiz_pool.json·quiz_pool_manifest.json·study_log.json은 커밋
 - evaluation/test_queries.csv와 ragas_reference.csv의 기대값은 묻지 않고 바꾸지 않는다
 - 설계와 다르게 구현해야 하면 먼저 말하고, 합의되면 docs/DESIGN.md를 같이 고친다
 
@@ -82,7 +81,7 @@ MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언�
 - output_mode="last_message"는 하위 에이전트의 마지막 메시지만 올림 → 출제·채점은 return_direct 도구 결과를 답변으로 씀 (agent.turn_answer)
 - ragas 0.4.3은 langchain_community.chat_models.vertexai를 import (0.4에서 삭제) → ragas_smoke.py 안의 자리표시 모듈로 우회
 - concept_tutor는 ToolStrategy(TutorAnswer) + after_agent(TutorAnswerGuard)가 마지막 AIMessage를 만든다 → 답변 텍스트를 바꾸려면 프롬프트가 아니라 guards.check_tutor_answer
-- 입력 가드 LLM 판별은 그래프와 병렬(v2-2) → 새 앱 도구는 첫 줄에 `await guards.wait_input_ok()` 필수
+- 입력 가드 LLM 판별은 그래프와 병렬 → 새 앱 도구는 첫 줄에 `await guards.wait_input_ok()` 필수
   (없으면 LLM이 차단하기 전에 도구가 실행됨). 차단 시 CoachApp.run이 그래프 취소 + 이번 턴 메시지 되돌림
 - Supervisor pre_model_hook에서 messages를 RemoveMessage로 지우면 내부 그래프에만 적용되고 바깥 thread에는 남음
   → 장기 대화 요약은 CoachApp.run이 그래프 시작 전에 memory.compact + aupdate_state로 처리
@@ -91,6 +90,6 @@ MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언�
   → 실행 전 $env:CCAF_STUDY_LOG에 임시 사본 경로 지정 권장
 - 가드 고정 문구(guards.REFUSALS·G4_CORRECTION·NO_EVIDENCE·GAP_NOTICE·OFF_TOPIC)는 run_eval이 문자열로 매칭 → 문구를 바꾸면 평가 기준도 바뀜
 
-## 작업 방식
-- 새 모듈이나 여러 파일에 걸친 작업은 plan mode로 계획을 먼저 보여준다
-- 한 단계가 끝나면 해당 스모크 테스트를 돌리고 결과를 보고한다
+## 수정할 때
+- 코드를 고치면 smoke_p1(오프라인)과 smoke_p0를 돌려 결과를 보고한다. 가드·프롬프트·라우팅을 바꿨으면 run_eval 20건도 돌린다
+- 여러 파일에 걸친 변경은 계획을 먼저 보여준다

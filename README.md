@@ -27,7 +27,7 @@ flowchart LR
     U([사용자]) -->|POST /query| API[FastAPI<br/>src/api.py]
     API --> IG{입력 가드<br/>G1·G2·G4}
     IG -->|차단·정정<br/>고정 문구| API
-    IG -->|통과| SUP[Supervisor<br/>single_handoff]
+    IG -->|"통과 (LLM 판별은<br/>그래프와 병렬)"| SUP[Supervisor<br/>single_handoff]
     SUP --> CT[concept_tutor]
     SUP --> QM[quiz_master]
     SUP --> SC[study_coach]
@@ -81,8 +81,10 @@ Python 3.14에서 개발하고 검증했습니다.
 python -m venv .venv; .venv\Scripts\activate
 pip install -r requirements.txt
 
-# 2. 자격 증명: Bedrock 접근이 가능한 AWS 자격 증명을 .env에 둔다 (값은 저장소에 커밋하지 않음)
-#    src/config.py의 ENV_PATH는 저장소 폴더의 .env를 읽는다 (위 예시면 C:\work\ccaf-study-coach\.env, .gitignore에 포함)
+# 2. 자격 증명: 저장소 폴더에 .env를 만들고 Bedrock 접근이 가능한 AWS 키를 둔다 (.gitignore에 포함, 커밋하지 않음)
+#      AWS_ACCESS_KEY_ID=...
+#      AWS_SECRET_ACCESS_KEY=...
+#    리전은 src/config.py에 고정돼 있어 .env에 넣지 않아도 된다. .env가 없으면 경로를 포함한 오류로 바로 종료
 python scripts/check_bedrock.py    # LLM·임베딩 연결 확인
 
 # 3. 가이드 색인 (가이드 PDF와 파생물은 저장소에 없음 → data/README.md)
@@ -93,7 +95,13 @@ python -m src.ingest               # 청크 62 + 세부 항목 240 → data/*.js
 uvicorn src.api:api --port 8000   # 브라우저에서 http://localhost:8000/
 ```
 
-**웹 UI** (`http://localhost:8000/`): 채팅으로 개념 질문·출제·학습 계획을 요청하고, 출제된 문제는 번호·Domain·TS 배지가 달린 문제 카드로 나오고(마지막 질문 문장은 Question 박스로 구분), 보기 카드를 누르거나 키보드 A~D로 답합니다. 채점 후에는 정답/오답 배너, 보기 카드의 ✓ 정답·✗ 내 선택 표시, 보기별 해설(정답·내 선택은 펼침, 나머지는 접힘)과 다음 행동 버튼(같은 도메인·다른 도메인·개념 설명)이 나옵니다. 오른쪽 진도 패널(`GET /progress`)에 정답률·도메인별 막대·커버리지가 나오고 채점 직후 갱신됩니다. 약점 도메인(서버의 `get_weak_domains` 판정)은 붉게 강조되고, 도메인을 누르면 그 도메인 문제가 나옵니다. 진도 패널은 헤더 오른쪽 버튼으로 접고 펼칠 수 있습니다. 데스크톱 브라우저·라이트 모드 기준이며 모바일 화면과 다크 모드는 지원하지 않습니다. 한글 문장은 어절 단위로 줄바꿈합니다(`word-break: keep-all`). 답변 끝의 근거 배지(`TS-x.y`)를 누르면 시험 가이드 원문 발췌가 펼쳐집니다. trace(경로·도구·근거·응답 시간)는 기본으로 숨겨 두었고, 개발 모드(`http://localhost:8000/?debug=1`)에서 진도 패널 아래 "개발 정보(trace) 표시"를 켜면 답변마다 볼 수 있습니다. 새로고침해도 같은 탭에서는 대화가 남습니다(서버를 다시 시작하면 풀던 문제는 이어지지 않음). 헤더의 프로필 메뉴에서 `web_demo`(기본)·`demo_heavy`(기록 61회)·`demo_new`(신규) 중 하나를 고르면 바로 적용됩니다(자유 입력은 없음). 고른 프로필로 푼 문제는 `data/study_log.json`에 기록되니, 기록을 남기지 않으려면 임시 사본으로 서버를 띄우세요(아래 "study_log 보호"). 웹 UI는 자동 스모크가 없어 브라우저로 확인합니다([DESIGN.md](docs/DESIGN.md) §9-1, 2026-11-05 점검 통과).
+**웹 UI** (`http://localhost:8000/`, 데스크톱 브라우저·라이트 모드 전용. 화면 설계는 [DESIGN.md](docs/DESIGN.md) §7)
+- **출제·채점**: 채팅으로 개념 질문·출제·학습 계획을 요청합니다. 문제는 Domain·TS 배지가 달린 카드로 나오고, 보기 카드를 누르거나 키보드 A~D로 답합니다. 채점 후에는 정답/오답 배너, 보기별 해설, 다음 행동 버튼(같은 도메인·다른 도메인·개념 설명)이 나옵니다.
+- **근거**: 답변 끝의 근거 배지(`TS-x.y`)를 누르면 시험 가이드 원문 발췌가 펼쳐집니다.
+- **진도 패널**: 오른쪽 패널(`GET /progress`)에 정답률·도메인별 막대·커버리지가 나오고 채점 직후 갱신됩니다. 약점 도메인은 붉게 강조되고, 도메인을 누르면 그 도메인 문제가 나옵니다.
+- **프로필·기록**: 헤더의 프로필 메뉴에서 `web_demo`(기본)·`demo_heavy`(기록 61회)·`demo_new`(신규)를 고릅니다. 푼 문제는 `data/study_log.json`에 기록되므로, 기록을 남기지 않으려면 임시 사본으로 서버를 띄우세요(아래 "study_log 보호"). 새로고침해도 같은 탭에서는 대화가 남지만, 서버를 다시 시작하면 풀던 문제는 이어지지 않습니다.
+- **개발 모드**: `http://localhost:8000/?debug=1`에서 진도 패널 아래 "개발 정보(trace) 표시"를 켜면 답변마다 경로·도구·근거·응답 시간을 볼 수 있습니다.
+- 웹 UI는 자동 스모크가 없어 브라우저로 확인합니다(DESIGN §9-1).
 
 ```powershell
 # 개념 질문
@@ -145,14 +153,15 @@ curl.exe -s localhost:8000/query -H "Content-Type: application/json" `
 |---|---|---|---|
 | round2 | Supervisor 배분 기준 재작성(시험 사실·설계 비교 질문의 오라우팅), concept_tutor 완결성 규칙(모든 보기 해설, 제약 항목 단위 나열). 프롬프트만 변경 | 19/20 | 12번 실패: 공식 채널 확인 권고 누락 · [round2_report](evaluation/round2_report.md) |
 | v2-1 | 답변에 `coverage_gap`이 있으면 G3이 공식 안내 확인 문구(`guards.GAP_NOTICE`)를 코드로 붙임 | 20/20 | [v2_gap_eval.json](evaluation/results/v2_gap_eval.json) |
-| v2-2 | 입력 가드 LLM 판별을 그래프와 병렬로, 앱 도구는 판별 통과까지 대기 | 19/20 | 개념 평균 26.4 → 22.4초. 9번 실패(아래) · [v2_latency_eval.json](evaluation/results/v2_latency_eval.json) |
+| v2-2 | 입력 가드 LLM 판별을 그래프와 병렬로, 앱 도구는 판별 통과까지 대기 | 19/20 | 개념 평균 27.3 → 23.2초(v2-1 대비). 9번 실패(아래) · [v2_latency_eval.json](evaluation/results/v2_latency_eval.json) |
 | v2-3 | 긴 대화 요약 + `case_facts` 보존, `search_guide` 2순위 이하 무관 TS 청크 제외 | 19/20 | context_precision 0.744 → 0.825. 9번 같은 원인 · [v2_trim_eval.json](evaluation/results/v2_trim_eval.json) |
 | v2-4 | concept_tutor: 검색 결과에 없는 수치는 예시로도 쓰지 않음 (프롬프트 한 줄) | 20/20 | faithfulness 0.889, 9번 3회 연속 PASS · [v2_num_eval.json](evaluation/results/v2_num_eval.json) |
 | v2-5 | 웹 UI, `GET /progress` (그래프·가드·프롬프트 변경 없음) | – | |
-| v2-6 | 런타임 LLM·임베딩을 서울 리전으로 (재색인 없음, 코사인 0.9999) | 19/20 | 4번 실패는 재실행 2/2 PASS. 전체 평균 18.7 → 17.3초(네트워크 왕복만큼) · [v2_seoul_eval.json](evaluation/results/v2_seoul_eval.json) |
+| v2-6 | 런타임 LLM·임베딩을 서울 리전으로 (재색인 없음, 코사인 0.9999) | 19/20 | 4번 실패는 재실행 2/2 PASS. us-east-1 왕복이 없어져 전체 평균 18.7 → 17.3초, 개념 21.7 → 20.2초 · [v2_seoul_eval.json](evaluation/results/v2_seoul_eval.json) |
 
 결과를 읽을 때 참고할 점:
 - 20건 결과는 같은 코드로도 1건 정도 흔들립니다(judge·생성의 비결정성).
+- 개념 질문 평균 응답 시간은 개념·해설 문항 15건의 평균입니다. round1에서는 그중 3건이 검색 없이 general_agent로 답해 짧게 나왔고, round2부터는 15건 모두 검색을 거칩니다([round2_report](evaluation/round2_report.md) §5).
 - RAGAS는 같은 답변을 다시 채점해도 문항 하나의 faithfulness가 크게 움직여(예: 12번 0.47~0.88) 14건 평균이 ±0.05 정도 흔들립니다. v2-2·v2-3에서 faithfulness가 0.79까지 내려간 것은 9번 답변이 가이드에 없는 "TTL 값(예: 5분)"을 예시로 쓴 탓이었고, v2-4에서 해소했습니다.
 - RAGAS 결과는 `evaluation/ragas_*.json`(round1·round2·v2_*)에 있습니다.
 
@@ -197,7 +206,7 @@ Remove-Item Env:CCAF_STUDY_LOG
 | 4 | 도구 다중 | 검색 2 + MCP 4 + 계산 1(`allocate_study_time`) + 계획 1(`make_study_plan`) | 구현 |
 | 5 | MCP 서버 | `src/quiz_bank_server.py` (FastMCP stdio): 도구 4개 + resource `quiz://catalog`. `src/quiz_client.py`가 세션 1개를 유지 | 구현 |
 | 6 | 가드레일 | G1~G7 (`src/guards.py`, MCP 도구). 입력 정규식 → LLM 판별, 출력 G3·G4 | 구현 |
-| 7 | HITL | `reset_progress` 승인 | v2 (미구현) |
+| 7 | HITL | `reset_progress` 승인 | 미구현 (하지 않기로 결정) |
 | 8 | 미들웨어 | G3 검증 `TutorAnswerGuard`(after_agent `AgentMiddleware`) + 장기 대화 요약(`src/memory.py`): 긴 thread는 턴 시작 때 최근 3턴만 남기고 앞을 요약, `case_facts`는 코드가 보존. 요약은 AgentMiddleware 클래스가 아니라 `CoachApp.run`의 그래프 앞단 처리 | 구현 |
 | 9 | Multi-Agent Supervisor | `src/agent.py` (`langgraph_supervisor`, `post_model_hook=single_handoff`) | 구현 |
 | 10 | Plan-Execute + 장기 메모리 | `src/planner.py` (plan → execute → 검증 → 1회 재계획 → 결정적 대체). 장기 기억은 사용자별 풀이 기록(`study_log.json`, MCP 경유)이고, 대화 기억은 thread별 `InMemorySaver` | 구현 |
@@ -257,17 +266,19 @@ src/
   api.py               FastAPI /query, /progress, 웹 UI 서빙
   web/                 웹 UI: index.html + style.css + app.js
 scripts/               build_quiz_pool · review_sample · pool_report · seed_study_log · check_bedrock · demo_capture
-data/                  quiz_pool.json · quiz_pool_manifest.json · study_log.json (+ 미커밋: raw/*.pdf, guide_*.jsonl)
+data/                  README.md(가이드 PDF 배치·ingest 방법) · quiz_pool.json · quiz_pool_manifest.json · study_log.json
+                       (미커밋: raw/*.pdf, guide_chunks.jsonl, guide_bullets.jsonl)
 evaluation/            test_queries.csv · ragas_reference.csv · run_eval · llm_judge · smoke_p0/p1/memory · ragas_smoke
-                       results/*_eval.json · ragas_*.json · round1/round2_report.md · quiz_pool_report.md · human_review_results.csv
-docs/                  DESIGN.md · demo/
+                       results/<label>_eval.json (round1·round2·s3_check·v2_*) · ragas_*.json (smoke·round1·round2·v2_*)
+                       round1/round2_report.md · quiz_pool_report.md · human_review_results.csv
+docs/                  DESIGN.md · demo/ · quiz_generation_options.xlsx(문제 풀 생성 방식 사전 비교·비용 추정)
+chroma_db/             벡터 DB (미커밋, ingest로 생성)
+logs/                  trace.jsonl · guard_audit.log · eval/ (미커밋)
 ```
 
-**커밋하지 않는 것** (비공개 저장소여도 유지 — 클론하면 가이드 원문이 재배포되므로. 가이드 파생물은 `python -m src.ingest`로 다시 만듭니다)
-- 가이드 PDF와 그 파생물(`data/guide_chunks.jsonl`, `data/guide_bullets.jsonl`, `chroma_db/`): 가이드 원문이 들어 있습니다.
-- `.env`
-- `evaluation/review_sample.xlsx`: 가이드 원문 시트가 있습니다.
-- `logs/`
+**커밋하지 않는 것** (기준은 `.gitignore`. 비공개 저장소여도 유지 — 클론하면 가이드 원문이 재배포되므로. 가이드 파생물은 `python -m src.ingest`로 다시 만듭니다, [DESIGN.md](docs/DESIGN.md) §2-4)
+- 가이드 PDF와 그 파생물(`data/guide_chunks.jsonl`, `data/guide_bullets.jsonl`, `chroma_db/`, `evaluation/review_sample.xlsx`): 가이드 원문이 들어 있습니다.
+- `.env`, `logs/`
 
 ## 한계
 

@@ -7,6 +7,9 @@
     python scripts/build_quiz_pool.py --resume --limit 20
     python scripts/build_quiz_pool.py --fill-gaps        # 승인 문제가 없는 세부 항목만 보충 (기본/추가가 모두 끝난 뒤)
     python scripts/build_quiz_pool.py --reset-stale      # 이전 prompt_version으로 처리된 슬롯을 pending으로 (LLM 호출 없음)
+    python scripts/build_quiz_pool.py --rebalance-length # 승인 후 정답 길이 재조정 (정답이 가장 긴 오답보다 5% 넘게 긴 문항)
+    python scripts/build_quiz_pool.py --exception-slot TS-5.2-K2:1   # 미커버 항목에 시나리오 고정 예외 슬롯
+    공통 옵션: --concurrency N(기본 2), --no-dedupe. 세부는 --help, DESIGN §5-2
 
 상태는 슬롯 하나가 끝날 때마다 data/quiz_pool_manifest.json, data/quiz_pool.json에 원자적으로 저장된다.
 중단(Ctrl+C)하면 진행 중이던 슬롯은 pending으로 남고 --resume으로 이어진다.
@@ -49,7 +52,7 @@ LONGEST_TARGET = 0.35                                        # 정답이 가장 
 # 사후 작업(정답 길이 재조정·예외 슬롯) 모델 순서: us Sonnet 4.5 할당량을 아끼려고 제외, global 4.5 우선
 MAINT_MODEL_CHAIN = [m for m in config.QUIZ_GEN_MODEL_CHAIN if m != config.QUIZ_GEN_MODEL_ID]
 TRANSIENT_STOP = 3                                           # 일시 오류로 연속 실패한 슬롯이 이 수가 되면 실행 중단
-DEFAULT_CONCURRENCY = 2                                      # 과정 공용 Bedrock 할당량 기준 (쓰로틀링으로 4 → 2)
+DEFAULT_CONCURRENCY = 2                                      # 공용 Bedrock 할당량에서 동시 4개는 쓰로틀링이 남
 
 
 # ---------------------------------------------------------------- 슬롯 배정
@@ -573,7 +576,7 @@ def print_model_summary(manifest: QuizManifest, pool: dict[str, QuizItem], model
         gen_tot[short_model(g)] += 1
         if s.status == "approved":
             gen_c[short_model(g)] += 1
-            rev_c[short_model(s.reviewer_model) if s.reviewer_model else "(기록 전)"] += 1
+            rev_c[short_model(s.reviewer_model) if s.reviewer_model else "us/sonnet-4-5(추정: reviewer_model 기록 도입 전, 당시 us만 사용)"] += 1
     if gen_tot:
         print("[summary] 생성 모델별 승인/처리: " + ", ".join(
             f"{m} {gen_c[m]}/{n} ({gen_c[m] / n:.0%})" for m, n in gen_tot.most_common()))

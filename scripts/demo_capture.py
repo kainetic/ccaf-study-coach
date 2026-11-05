@@ -1,6 +1,6 @@
-"""시연 캡처: 대표 시나리오를 /query와 같은 경로(in-process TestClient)로 실행해 docs/demo/*.md로 저장한다 (DESIGN §1-1 S6).
+"""시연 캡처: 대표 시나리오를 /query와 같은 경로(in-process TestClient)로 실행해 docs/demo/*.md로 저장한다.
 
-실행: python scripts/demo_capture.py            # 전체 (약 10턴, 실제 Bedrock 호출)
+실행: python scripts/demo_capture.py            # 전체 (12턴, 실제 Bedrock 호출)
       python scripts/demo_capture.py --only 02   # 파일 번호로 골라 실행
 - 풀이 기록은 data/study_log.json의 임시 사본(CCAF_STUDY_LOG)에 쌓는다 → 커밋된 기록을 바꾸지 않는다 (run_eval과 같은 방식)
   시연마다 사본을 시드 상태로 되돌린다 (02의 채점이 03의 진도에 섞이지 않게. MCP 서버는 호출마다 파일을 읽음)

@@ -1,4 +1,4 @@
-"""더미 사용자 풀이 기록 시드 (DESIGN §8, S1 후반) → data/study_log.json
+"""더미 사용자 풀이 기록 시드 (DESIGN §8) → data/study_log.json
 
 실행:
     python scripts/seed_study_log.py             # demo_heavy·demo_new 생성 (이미 있으면 중단)
@@ -6,7 +6,7 @@
     python scripts/seed_study_log.py --dry-run   # 집계만 출력, 파일 쓰기 없음
 
 - demo_new: 기록 없음 (test_queries 5번 — 기록이 없으면 시험 비중만으로 출제)
-- demo_heavy: 지난 2주(2026-10-21 ~ 11-03) 61회 풀이. 모든 도메인 3회 이상이고 약점이 분명하게 드러나게
+- demo_heavy: 2주간(2026-10-21 ~ 11-03) 61회 풀이. 모든 도메인 3회 이상이고 약점이 분명하게 드러나게
   구성 (test_queries 7번 — get_weak_domains·allocate_study_time이 기록을 근거로 약점 제시).
   약점 점수 = 시험 비중 × (1 − 정답률) → D2(0.098) > D5(0.090) > D1(0.068) > D4(0.067) > D3(0.033).
   D5는 비중이 가장 낮지만 정답률이 낮아 2위 (정답률만 보는지, 비중×약점을 보는지 구분)
@@ -33,7 +33,7 @@ HEAVY, NEW = "demo_heavy", "demo_new"
 PROFILE = {1: (16, 12), 2: (11, 5), 3: (12, 10), 4: (12, 8), 5: (10, 4)}
 START = datetime(2026, 10, 21, 11, 0, tzinfo=timezone.utc)     # 20:00 KST
 DAYS = 14
-MIN_ATTEMPTS = 3                                                # 이보다 적으면 "데이터 부족" (§3-2)
+MIN_ATTEMPTS = 3                                                # 이보다 적으면 "데이터 부족" (DESIGN §3-2)
 
 
 def pick_items(approved: list[QuizItem], domain: int, n: int, rng: random.Random) -> list[QuizItem]:

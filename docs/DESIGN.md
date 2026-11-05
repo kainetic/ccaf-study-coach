@@ -1,4 +1,4 @@
-# DESIGN · CCA-F 학습 코치 (설계 v0.5.7)
+# DESIGN · CCA-F 학습 코치 (설계 v0.5.8)
 
 > 기준 문서: Claude Certified Architect – Foundations Exam Guide (Version 0.2, 2026-06-30)
 > 과제 규약: [Day 8,9,10] mini PJT 문서 §4 (산출물 규약), §5 (12개 패턴)
@@ -316,7 +316,7 @@ class QuizManifest(BaseModel):
 
 State 확장 (Supervisor 그래프 messages 외):
 - `pending_quiz_id: Optional[str]` — 다음 턴 채점용. **정답은 State에 두지 않음**. checkpointer(thread_id)에 저장
-- `case_facts: dict` — 시험일, 목표 도메인 등 요약에 묻히면 안 되는 사실 (TS 5.1)
+- `case_facts: dict` — 요약에 묻히면 안 되는 사실 (TS 5.1). **v2-3 구현**: `memory.extract_facts`가 사용자 입력에서 정규식으로 남은 일수(`days`)·하루 공부 시간(`hours_per_day`)·관심 도메인(`domains`)·TS(`task_ids`)를 뽑아 `CoachState.case_facts`에 둔다(새 값이 덮어씀). 시험일 자체와 Store 장기 기억은 여전히 미구현
 - 장기 기억(Store, namespace `("users", user_id)`): 시험 예정일, 선호 언어, 최근 약점 스냅샷
 
 ---
@@ -330,6 +330,10 @@ State 확장 (Supervisor 그래프 messages 외):
 4. 답변 끝에 출처 표기: `[근거: TS-1.4, SQ-01]`
 
 S3 구현 메모 (`src/agents/concept_tutor.py`, `src/guards.check_tutor_answer`): `create_agent(response_format=ToolStrategy(TutorAnswer))` + after_agent 미들웨어 `TutorAnswerGuard`. claim은 **이번 턴에 search_guide/get_chunk가 실제로 돌려준 doc_id를 가리킬 때만 유효**(대소문자 무시). 유효 claim 0개(또는 구조화 응답 없음)면 고정 문구 `NO_EVIDENCE`(+coverage_gap). 아니면 answer_ko + "가이드에 없는 부분: …"(coverage_gap) + 코드가 만든 `[근거: …]`(answer_ko의 LLM 표기는 지움). excerpt 원문 일치 수는 trace `output_check`에만 기록(강제 안 함). 결과는 `name="concept_tutor"` AIMessage로 마지막에 붙여 Supervisor last_message·turn_answer가 사용
+
+v2-3 장기 대화 요약 (`src/memory.py`, `CoachApp.run`): 턴 시작 전 thread 메시지가 `config.SUMMARY_TRIGGER_MESSAGES`(40)를 넘으면 최근 `SUMMARY_KEEP_TURNS`(3)개 턴은 그대로 두고 그 앞을 LLM 1회로 한국어 10줄 이내 요약 → `SystemMessage`([이전 대화 요약] + [핵심 사실 — case_facts, 코드 보존]) 하나로 바꿔 바깥 그래프 상태에 `aupdate_state`로 적용(`RemoveMessage(REMOVE_ALL)`). 자르는 지점은 사용자 입력 경계라 도구 호출 쌍이 끊기지 않음. 요약 LLM은 입력 가드 판별과 동시에 돌고, 실패하면 원래 메시지 유지. Supervisor `pre_model_hook`으로 지우면 내부 그래프에만 적용되고 바깥 thread에는 옛 메시지가 남아서 그래프 밖에서 처리. 하위 에이전트도 같은 messages를 받으므로 study_coach는 요약 블록의 일수·시간을 쓰고 다시 묻지 않음(프롬프트 한 줄). 가드 차단 턴은 `_rollback`이 messages·case_facts를 통째로 복원. 검증: `evaluation/smoke_memory.py`
+
+v2-3 검색 결과 트리밍 (`retriever.trim_hits`, `search_guide`) — **청크 단위 필터**: 1순위 hit, 정확 조회 hit, task_statement가 아닌 청크(샘플 문항·범위·개요 등)는 그대로. 2순위 이하 `task_statement` 청크는 영어 검색어와 키워드(일반어 제외)가 겹치는 bullet이 하나라도 있으면 전문, 없으면 뺀다. 처음에는 bullet 단위로 잘랐으나 관련 bullet까지 잘려 평가 8번이 실패(TS-3.3 "reducing irrelevant context and token usage" 누락)해서 청크 안은 자르지 않기로 바꿈
 
 S2 구현 메모 (`src/retriever.py`): 정확 조회는 정규식(`TS 2.2`·`Task Statement 2.2`·`도메인 3`·`Domain 3`·`D3`·`샘플 1번`·`Sample Question 1`·`시나리오 5`·`Exercise 2`)으로 감지한 청크를 앞에 두고 남은 자리를 하이브리드로 채움. BM25는 영어 토크나이저(가이드가 영어), 가중치 BM25 0.4 · 벡터 0.6, 재작성은 `rewrite_query` LLM 1회(실패 시 원문). rewrite·retrieve 결과는 custom event로 trace에 기록
 
@@ -608,9 +612,9 @@ S3 구현 메모 (`evaluation/run_eval.py`, `evaluation/llm_judge.py`):
 ## 10. 매핑표
 
 과제 12개 패턴의 적용 위치와 시험 TS를 앱 구현에 적용한 지점은 README "활용한 패턴"을 기준으로 한다.
-- 12개 중 10개 구현(1~6, 9~12). 7 HITL(`reset_progress`)은 v2, 8 미들웨어는 G3 `TutorAnswerGuard`(after_agent)에만 사용
+- 12개 중 11개 구현(1~6, 8~12). 7 HITL(`reset_progress`)은 v2. 8 미들웨어는 G3 `TutorAnswerGuard`(after_agent) + 턴 시작 장기 대화 요약(`memory.compact`, v2-3 — AgentMiddleware 클래스가 아니라 `CoachApp.run`의 그래프 앞단 처리)
 - 장기 기억은 Store 대신 사용자별 `study_log.json`(MCP 경유), 대화 기억은 thread별 `InMemorySaver`
-- TS 5.1 핵심 사실 보존(`case_facts`, 도구 결과 트리밍)은 미구현(v2)
+- TS 5.1 핵심 사실 보존: `case_facts` + 검색 결과 청크 필터 (v2-3)
 - LangGraph ↔ Claude Agent SDK 용어 대응(Supervisor ≈ coordinator, handoff 도구 ≈ Task tool, 도구 내부 검증·`post_model_hook`·`after_agent` ≈ hook)도 README에 기재
 
 ---
@@ -628,7 +632,8 @@ ccaf-study-coach/
 │   ├── tools.py               # search_guide, get_chunk
 │   ├── quiz_gen.py            # 생성 → 검증 → 독립 검토 → 재시도 (오프라인 전용)
 │   ├── prompts/               # 문제 생성·검토·재조정 프롬프트
-│   ├── retriever.py           # 정확 조회 + rewrite_query + 하이브리드 검색
+│   ├── retriever.py           # 정확 조회 + rewrite_query + 하이브리드 검색 + 결과 청크 필터(trim_hits)
+│   ├── memory.py              # case_facts 추출 + 장기 대화 요약(compact)
 │   ├── schemas.py             # §2, §4 Pydantic 모델
 │   ├── guards.py              # G1~G5 (G6·G7은 MCP 도구), 고정 문구 상수
 │   ├── planner.py             # allocate_study_time(결정적 배분) + Plan-Execute 서브그래프
@@ -678,6 +683,7 @@ ccaf-study-coach/
 
 ## 변경 이력
 
+- v0.5.8 (v2-3): 검색 결과 청크 필터(`trim_hits`, bullet 단위 자르기는 회귀로 철회), 장기 대화 요약 + `case_facts` 보존(`memory.py`, `CoachApp.run`), study_coach 프롬프트에 요약 블록 사실 사용 한 줄 (§4, §5-1, §10)
 - v0.5.7 (v2-2): 입력 가드 2차 LLM 판별을 그래프와 병렬 실행, 앱 도구는 gate에서 판별 통과 대기, 차단 시 그래프 취소 + 이번 턴 메시지 되돌림 (§6)
 - v0.5.6 (v2-1): G3에서 `coverage_gap`이 있으면 `GAP_NOTICE`(공식 안내 확인)를 코드가 붙임 — round2 남은 실패 12번 대응, 프롬프트 변경 없음
 - v0.5.5 (제출 후 정리, 문서만): 변경 이력 압축, 끝난 일정·진행 규칙·미결정 사항(§12·§13) 삭제, §10은 README 참조로 축소, 자격 증명·venv를 저장소 폴더 기준으로

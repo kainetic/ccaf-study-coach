@@ -56,6 +56,11 @@ QUIZ_POOL_PATH = DATA_DIR / "quiz_pool.json"
 # 풀이 기록. 테스트에서만 CCAF_STUDY_LOG로 다른 파일을 가리킬 수 있다.
 STUDY_LOG_PATH = Path(os.environ.get("CCAF_STUDY_LOG", DATA_DIR / "study_log.json"))
 
+# 장기 대화 요약 (src/memory.py, TS 5.1). 턴 시작 때 thread 메시지가 이 수를 넘으면 최근 턴만 남기고 앞부분을 요약.
+# 스모크에서만 CCAF_SUMMARY_TRIGGER로 낮춘다.
+SUMMARY_TRIGGER_MESSAGES = int(os.environ.get("CCAF_SUMMARY_TRIGGER", 40))
+SUMMARY_KEEP_TURNS = 3
+
 # 시험 도메인 비중 (가이드 v0.2). 출제 도메인 가중에 쓴다 (DESIGN §5-3).
 DOMAIN_WEIGHTS = {1: 0.27, 2: 0.18, 3: 0.20, 4: 0.20, 5: 0.15}
 DOMAIN_NAMES = {

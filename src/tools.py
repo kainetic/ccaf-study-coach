@@ -28,6 +28,7 @@ async def search_guide(query: str, domain: Optional[int] = None, doc_type: Optio
     """
     await guards.wait_input_ok()
     query_en, hits = await asyncio.to_thread(retriever.search, query, domain, doc_type)
+    hits = retriever.trim_hits(hits, query_en)     # 2순위 이하 TS 청크 중 검색어와 무관한 것은 뺀다 (TS 5.1)
     await adispatch_custom_event("rewrite", {"query": query, "query_en": query_en})
     await adispatch_custom_event("retrieve", {"hits": [{"doc_id": h.doc_id, "how": h.how, "text": h.text} for h in hits]})
     if not hits:

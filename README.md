@@ -145,6 +145,8 @@ round2에서 바꾼 것은 프롬프트 두 가지입니다.
 
 **v2-2 (응답 시간)**: 입력 가드 LLM 판별을 그래프와 병렬로 돌리고, 앱 도구는 판별 통과까지 기다리게 했습니다. 개념 질문 평균 응답 시간이 **26.4초 → 22.4초**로 줄었습니다(경로가 concept_tutor인 14건, 전체 평균 22.9 → 19.8초). 같은 세트 결과는 19/20입니다([v2_latency_eval.json](evaluation/results/v2_latency_eval.json)). 실패한 9번은 답변에 "TTL 값(예: 5분)" 같은 예시 수치를 넣어 금지 항목에 걸린 경우로, 가드 실행 순서와는 무관한 답변 생성 변동입니다. 목표 15초에는 아직 못 미칩니다(가장 큰 비중은 답변 생성 약 12.6초).
 
+**v2-3 (TS 5.1 핵심 사실 보존)**: 긴 대화는 턴 시작 때 최근 3턴만 남기고 앞부분을 요약하며, 남은 일수·하루 시간 같은 사실(`case_facts`)은 코드가 따로 보존합니다. `search_guide`는 2순위 이하 TS 청크 중 검색어와 겹치는 항목이 없는 청크를 뺍니다. 처음에는 bullet 단위로 잘랐다가 8번이 실패해(관련 bullet까지 잘림) 청크 단위로 바꿨습니다. 결과는 19/20입니다([v2_trim_eval.json](evaluation/results/v2_trim_eval.json)). 실패한 9번은 v2-2와 같은 "TTL 값(예: 5분)" 예시 수치 문제입니다. RAGAS 14건([ragas_v2_trim.json](evaluation/ragas_v2_trim.json))은 context_precision **0.744 → 0.825**, recall 1.000 유지, answer_relevancy 0.446 → 0.477입니다. faithfulness는 0.858 → **0.789**로 목표(0.85) 아래입니다. 하락은 9·10·11번에 몰려 있는데, 9·11번은 트리밍 전과 contexts가 같고 10번은 무관한 청크만 빠져서 답변 문장·채점 변동으로 보지만, 같은 시점 기준선 재측정으로 확인하지는 않았습니다. 긴 대화 동작은 `evaluation/smoke_memory.py`(5턴, 9/9)로 확인합니다.
+
 알려진 한계도 그대로 남겨 둡니다.
 - 응답 시간이 목표 15초보다 깁니다.
 - answer_relevancy는 한국어 답변에 영어 병기와 [근거] 표기가 섞인 형식에서는 신뢰도가 낮습니다.
@@ -188,13 +190,13 @@ $env:CCAF_STUDY_LOG = "$env:TEMP\study_log_smoke.json"; python evaluation/smoke_
 | 5 | MCP 서버 | `src/quiz_bank_server.py` (FastMCP stdio): 도구 4개 + resource `quiz://catalog`. `src/quiz_client.py`가 세션 1개를 유지 | 구현 |
 | 6 | 가드레일 | G1~G7 (`src/guards.py`, MCP 도구). 입력 정규식 → LLM 판별, 출력 G3·G4 | 구현 |
 | 7 | HITL | `reset_progress` 승인 | v2 (미구현) |
-| 8 | 미들웨어 | 장기 세션 요약 미들웨어는 v2. `AgentMiddleware`는 G3 검증(`TutorAnswerGuard`, after_agent)에만 사용 | 부분 |
+| 8 | 미들웨어 | G3 검증 `TutorAnswerGuard`(after_agent `AgentMiddleware`) + 장기 대화 요약(`src/memory.py`, v2-3): 긴 thread는 턴 시작 때 최근 3턴만 남기고 앞을 요약, `case_facts`는 코드가 보존. 요약은 AgentMiddleware 클래스가 아니라 `CoachApp.run`의 그래프 앞단 처리 | 구현 |
 | 9 | Multi-Agent Supervisor | `src/agent.py` (`langgraph_supervisor`, `post_model_hook=single_handoff`) | 구현 |
 | 10 | Plan-Execute + 장기 메모리 | `src/planner.py` (plan → execute → 검증 → 1회 재계획 → 결정적 대체). 장기 기억은 사용자별 풀이 기록(`study_log.json`, MCP 경유)이고, 대화 기억은 thread별 `InMemorySaver` | 구현 |
 | 11 | Trace | `src/tracer.py`: `/query` 응답의 `trace`(가드·라우팅·검색·도구·G3/G4·토큰·실제 응답 모델) + `logs/trace.jsonl` | 구현 |
 | 12 | 평가 (RAGAS · Judge) | `evaluation/run_eval.py` + `llm_judge.py` (20건), `ragas_smoke.py` (RAGAS 14건) | 구현 |
 
-필수 4개(1·3·11·12)를 포함해 10개를 구현했습니다.
+필수 4개(1·3·11·12)를 포함해 11개를 구현했습니다 (8번은 v2-3에서 구현으로 바뀜, 7번 HITL만 미구현).
 
 ### 시험 개념(Task Statement)을 앱 구현에 적용한 지점
 
@@ -214,9 +216,10 @@ $env:CCAF_STUDY_LOG = "$env:TEMP\study_log_smoke.json"; python evaluation/smoke_
 | 4.6 독립 인스턴스 검토 | 생성과 분리된 검토 호출(`quiz_review` 프롬프트) |
 | 5.4 manifest 기반 복구 | 생성이 중단되면 미완료 슬롯만 재개 |
 | 5.5 층화 표본 검토, 세그먼트별 정확도 | 도메인별 층화 사람 표본 검토(재시도 문항 포함), 도메인별 승인율·커버리지 |
+| 5.1 핵심 사실 보존, 도구 결과 트리밍 | `case_facts`(남은 일수·하루 시간·관심 도메인/TS, 정규식 추출)를 요약 블록에 그대로 렌더. `search_guide` 2순위 이하 TS 청크 중 검색어와 겹치는 bullet이 없는 청크는 뺌 (v2-3) |
 | 5.6 claim-source 매핑 | `Claim(doc_id, excerpt)`, 코드가 붙이는 `[근거: …]` |
 
-DESIGN에 적었지만 구현하지 않은 것도 있습니다. TS 5.1 핵심 사실 보존(`case_facts`, 도구 결과 트리밍)은 v2 요약 미들웨어와 함께 미뤘습니다.
+DESIGN에 적었지만 구현하지 않은 것도 있습니다. 시험일 저장과 Store 장기 기억(사용자별 프로필)은 만들지 않았습니다.
 
 **용어 대응**: 이 앱은 시험이 다루는 Claude Agent SDK가 아니라 LangGraph로 만들었습니다. 대응 관계는 다음과 같습니다.
 - Supervisor ≈ coordinator
@@ -234,7 +237,8 @@ src/
   agent.py             Supervisor 조립, CoachApp.run (입력 가드 규칙 → LLM 판별 ∥ 그래프 → 출력 검사)
   agents/              concept_tutor · quiz_master · study_coach · general
   tools.py             search_guide, get_chunk
-  retriever.py         정확 조회 + rewrite_query + BM25·벡터 하이브리드
+  retriever.py         정확 조회 + rewrite_query + BM25·벡터 하이브리드 + 결과 청크 필터
+  memory.py            case_facts 추출 + 장기 대화 요약
   guards.py            G1~G5, 고정 문구 상수
   planner.py           allocate_study_time (결정적) + Plan-Execute
   quiz_bank_server.py  MCP 서버 (문제 은행 + 풀이 기록)
@@ -260,7 +264,7 @@ docs/                  DESIGN.md · demo/
 
 ## 한계와 다음 단계 (v2)
 
-- `reset_progress` HITL 승인, 장기 세션 요약 미들웨어(`case_facts`), 웹 UI, Dockerfile, LangSmith/LangFuse 연동은 만들지 않았습니다.
+- `reset_progress` HITL 승인, 웹 UI, Dockerfile, LangSmith/LangFuse 연동은 만들지 않았습니다.
 - 시험일을 저장하지 않습니다. 학습 계획은 매번 남은 일수와 하루 시간을 물어서 만듭니다.
 - G4 정정 질문과 개념 질문이 한 메시지에 섞이면 정정 문구만 답합니다.
 - 응답 시간이 목표보다 깁니다(개념 질문 평균 27.6초). 가이드에 근거가 없는 질문에서는 검색을 프롬프트 상한(2회)보다 더 반복하기도 합니다([시연 05](docs/demo/05_scope.md) 턴 2: 검색 4회, 31.6초). 다음 개선 후보는 검색 횟수를 코드로 제한하는 것, 검색 결과 트리밍, LLM 호출 수 줄이기입니다([round2_report.md](evaluation/round2_report.md) §6).

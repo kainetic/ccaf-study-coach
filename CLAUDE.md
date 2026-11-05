@@ -5,7 +5,9 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
 설계 세부는 필요할 때 docs/DESIGN.md의 해당 절(§)을 읽을 것. 전체를 미리 읽지 말 것.
 
 ## 현재 단계: S1~S6 완료 · push 완료 (DESIGN §1-1 단계표)
-- 최종: round2 19/20 → v2-1(GAP_NOTICE) 20/20 → v2-2(가드 병렬) 19/20·개념 평균 26.4→22.4s, smoke_p0 24/24, smoke_p1 23/23. 수치·실패 분석은 evaluation/round*_report.md, quiz_pool_report.md
+- 최종: round2 19/20 → v2-1(GAP_NOTICE) 20/20 → v2-2(가드 병렬) 19/20·개념 평균 26.4→22.4s
+  → v2-3(case_facts·요약·청크 필터) 19/20, RAGAS precision 0.744→0.825·faithfulness 0.858→0.789(변동 추정, 미확인).
+  smoke_p0 24/24, smoke_p1 37/37, smoke_memory 9/9. 수치·실패 분석은 evaluation/round*_report.md, quiz_pool_report.md
 - 데이터: 문제 풀 승인 266, study_log 시드 demo_heavy 61회·demo_new 없음 (seed_study_log.py)
 - 원격: https://github.com/kainetic/ccaf-study-coach (private, master). 개선 후보는 round2_report §6
 
@@ -24,7 +26,8 @@ python scripts/seed_study_log.py                     # 더미 사용자 demo_hea
 uvicorn src.api:api --port 8000                      # API 서버
 python evaluation/smoke_p0.py                        # P0 한 바퀴 검증 (--url 실행 중 서버, --keep 기록 남김)
 python evaluation/ragas_smoke.py                     # RAGAS 3건 스모크 → evaluation/ragas_smoke.json
-python evaluation/smoke_p1.py                        # P1 오프라인 검증 (가드 규칙·G3·진도·배분 합계, LLM 없음)
+python evaluation/smoke_p1.py                        # P1 오프라인 검증 (가드 규칙·G3·진도·배분 합계·트리밍·case_facts, LLM 없음)
+python evaluation/smoke_memory.py                    # 긴 대화 5턴: 요약 + case_facts 보존 (Bedrock, study_log 임시 사본)
 python evaluation/run_eval.py --label round1         # 20건 평가 → evaluation/results/round1_eval.json + logs/eval/round1_full.json (--ids 7,13)
 python evaluation/ragas_smoke.py --from logs/eval/round1_full.json --out evaluation/ragas_round1.json   # 같은 답변으로 RAGAS 14건
 python scripts/demo_capture.py                       # 시연 캡처 → docs/demo/*.md (--only 02,04, 실제 Bedrock 호출, study_log 임시 사본)
@@ -79,6 +82,8 @@ MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언�
 - concept_tutor는 ToolStrategy(TutorAnswer) + after_agent(TutorAnswerGuard)가 마지막 AIMessage를 만든다 → 답변 텍스트를 바꾸려면 프롬프트가 아니라 guards.check_tutor_answer
 - 입력 가드 LLM 판별은 그래프와 병렬(v2-2) → 새 앱 도구는 첫 줄에 `await guards.wait_input_ok()` 필수
   (없으면 LLM이 차단하기 전에 도구가 실행됨). 차단 시 CoachApp.run이 그래프 취소 + 이번 턴 메시지 되돌림
+- Supervisor pre_model_hook에서 messages를 RemoveMessage로 지우면 내부 그래프에만 적용되고 바깥 thread에는 남음
+  → 장기 대화 요약은 CoachApp.run이 그래프 시작 전에 memory.compact + aupdate_state로 처리
 - 평가·스모크가 출제하면 study_log에 issued가 쌓임 → run_eval·demo_capture는 임시 사본(CCAF_STUDY_LOG)을 씀.
   smoke_p0는 data/study_log.json을 직접 다시 씀(종료 시 smoke 사용자 삭제, 형식 차이·중단 시 잔존 가능)
   → 실행 전 $env:CCAF_STUDY_LOG에 임시 사본 경로 지정 권장

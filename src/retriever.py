@@ -53,6 +53,33 @@ class Hit:
     how: str                         # "exact" | "hybrid"
 
 
+# ---------------------------------------------------------------- 결과 트리밍 (TS 5.1, v2-3)
+
+# 겹침 계산에서 빼는 일반어 (가이드 전반에 흔해 관련성 신호가 아님)
+TRIM_GENERIC = set("""claude model models use using used agent agents task tasks system systems design implement
+implementing including such based each into when where while other more""".split())
+BULLET = re.compile(r"^\s*-\s+")
+
+
+def _keywords(text: str) -> set[str]:
+    return {t for t in en_tokenize(text) if t not in TRIM_GENERIC}
+
+
+def trim_hits(hits: list[Hit], query_en: str) -> list[Hit]:
+    """청크 단위 필터 (TS 5.1). 1순위 hit, 정확 조회 hit, task_statement가 아닌 청크(샘플 문항·범위·개요 등)는 그대로.
+    2순위 이하 task_statement 청크는 영어 검색어와 키워드(일반어 제외)가 겹치는 bullet이 하나라도 있으면 전문을 두고,
+    하나도 없으면 뺀다. bullet 단위로 자르면 관련 있는 bullet까지 잘려(평가 8번: "reducing irrelevant context and
+    token usage") 답변이 빠져서, 청크 안은 자르지 않는다. LLM 없이 결정적."""
+    q = _keywords(query_en)
+    out: list[Hit] = []
+    for i, h in enumerate(hits):
+        if i == 0 or h.how == "exact" or h.doc_type != "task_statement" or not q:
+            out.append(h)
+        elif any(_keywords(line) & q for line in h.text.splitlines() if BULLET.match(line)):
+            out.append(h)
+    return out
+
+
 @lru_cache(maxsize=1)
 def load_chunks() -> dict[str, GuideChunk]:
     if not config.CHUNKS_PATH.is_file():

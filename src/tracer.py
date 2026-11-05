@@ -21,7 +21,7 @@ from src import config
 TRACE_LOG = config.ROOT / "logs" / "trace.jsonl"
 APP_TOOLS = {"search_guide", "get_chunk", "get_quiz", "submit_answer",
              "get_progress", "get_weak_domains", "allocate_study_time", "make_study_plan"}
-PASSTHROUGH_EVENTS = ("progress", "allocate", "plan")
+PASSTHROUGH_EVENTS = ("progress", "allocate", "plan", "summarize")
 
 
 class QueryTracer(AsyncCallbackHandler):

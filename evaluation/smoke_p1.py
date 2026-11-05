@@ -133,10 +133,78 @@ def input_gate() -> None:
     check(waiting and released, "gate 미결이면 도구가 대기, 판별 통과(set_result) 후 진행")
 
 
+def trimming() -> None:
+    """v2-3: 2순위 이하 TS 청크는 검색어와 겹치는 bullet이 있으면 전문, 없으면 제거. 1순위·정확 조회·다른 doc_type은 그대로."""
+    print("[trim] 검색 결과 청크 필터")
+    ch = retriever.load_chunks()
+
+    def hit(did: str, how: str = "hybrid") -> retriever.Hit:
+        c = ch[did]
+        return retriever.Hit(did, c.title, c.doc_type, c.text, how)
+
+    q = "agentic loop stop_reason tool_use end_turn termination"
+    out = retriever.trim_hits([hit("TS-1.4"), hit("TS-1.1"), hit("SQ-01"), hit("TS-3.2")], q)
+    ids = [h.doc_id for h in out]
+    check(ids[0] == "TS-1.4" and out[0].text == ch["TS-1.4"].text, "1순위 hit은 겹침과 상관없이 그대로")
+    t11 = next((h for h in out if h.doc_id == "TS-1.1"), None)
+    check(t11 is not None and t11.text == ch["TS-1.1"].text, "겹치는 bullet이 있는 2순위 TS 청크는 전문 (bullet을 자르지 않음)")
+    t33 = retriever.trim_hits([hit("SQ-06"), hit("TS-3.3")], "CLAUDE.md .claude/rules/ directory structure when to use")
+    check(any(h.doc_id == "TS-3.3" and "reducing irrelevant context and token usage" in h.text for h in t33),
+          "평가 8번 회귀 방지: TS-3.3의 '토큰 감소' bullet 유지")
+    check("SQ-01" in ids and next(h for h in out if h.doc_id == "SQ-01").text == ch["SQ-01"].text, "샘플 문항(SQ)은 전문")
+    check("TS-3.2" not in ids, "겹치는 bullet이 없는 TS 청크는 제거")
+    ex = retriever.trim_hits([hit("TS-1.1"), hit("TS-3.2", how="exact")], q)
+    check(ex[1].text == ch["TS-3.2"].text, "정확 조회(exact) hit은 전문")
+
+
+def memory_checks() -> None:
+    """v2-3: case_facts 추출(코드)과 턴 시작 요약 경계 (가짜 요약기, LLM 없음)."""
+    from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
+    from src import memory
+    print("[memory] case_facts · 요약")
+    f = memory.extract_facts("시험까지 7일 남았고 하루 2시간 공부할 수 있어")
+    check(f.get("days") == 7 and f.get("hours_per_day") == 2.0, f"case_facts 추출: {f}")
+    f = memory.extract_facts("도메인 2랑 TS 1.4 위주로 볼래. 일주일 남았어", f)
+    check(f["days"] == 7 and f["hours_per_day"] == 2.0 and f["domains"] == [2] and f["task_ids"] == ["TS-1.4"],
+          f"이전 값과 합침: {f}")
+    check(memory.extract_facts("11월 7일에 봤던 문제", {}).get("days") is None, "날짜 표현(11월 7일)은 남은 일수로 보지 않음")
+
+    msgs = []
+    for i in range(5):                                  # 5턴, 턴마다 사용자 → 핸드오프 → 도구 → 답변
+        msgs += [HumanMessage(f"질문 {i}", id=f"h{i}"),
+                 AIMessage("", id=f"a{i}", name="supervisor",
+                           tool_calls=[{"name": "transfer_to_concept_tutor", "args": {}, "id": f"c{i}"}]),
+                 ToolMessage("ok", tool_call_id=f"c{i}", id=f"t{i}", name="transfer_to_concept_tutor"),
+                 AIMessage(f"답변 {i}", id=f"r{i}", name="concept_tutor")]
+    seen: list[str] = []
+
+    async def fake(text: str) -> str:
+        seen.append(text)
+        return "사용자는 agentic loop를 물었다."
+
+    async def broken(text: str) -> str:
+        raise TimeoutError("bedrock")
+
+    facts = {"days": 7, "hours_per_day": 2.0}
+    new, info = asyncio.run(memory.compact(msgs, facts, summarize=fake, trigger=8, keep_turns=3))
+    block, kept = new[0], new[1:]
+    check(isinstance(block, SystemMessage) and "남은 일수: 7일" in block.content and "하루 공부 시간: 2시간" in block.content,
+          "요약 블록에 case_facts가 코드로 렌더됨")
+    start = [m.id for m in msgs].index("h2")
+    check([m.id for m in kept] == [m.id for m in msgs[start:]] and info == {"status": "ok", "removed": start, "kept": len(kept)},
+          f"최근 3턴(사용자 입력 경계)은 그대로, 도구 호출 쌍 보존 {info}")
+    check(seen and "질문 0" in seen[0] and "질문 2" not in seen[0], "요약 입력은 잘린 앞부분만")
+    check(asyncio.run(memory.compact(msgs[:8], facts, summarize=fake, trigger=8)) is None, "기준 이하 길이면 요약하지 않음")
+    failed = asyncio.run(memory.compact(msgs, facts, summarize=broken, trigger=8, keep_turns=3))
+    check(failed == ([], {"status": "error", "error": "TimeoutError"}), "요약 LLM 실패 → 원래 메시지 유지 (빈 목록 + 오류 기록)")
+
+
 def main() -> int:
     sys.stdout.reconfigure(errors="replace")
     guard_rules()
     input_gate()
+    trimming()
+    memory_checks()
     g3()
     chunks()
     allocation(progress())

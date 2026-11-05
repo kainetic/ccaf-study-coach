@@ -6,6 +6,7 @@ MCP 도구를 비동기로 쓰므로 build_app은 async이고 실행은 ainvoke.
 한 턴 실행은 CoachApp.run: rule_check(G1·G2·G4) → [llm_guard(G1·G2) ∥ Supervisor 그래프, 도구는 gate 대기]
   → turn_answer → output_check(G4 백스톱).
 G3는 concept_tutor 안(TutorAnswerGuard), G5는 Supervisor 배분 + general_agent.
+긴 thread는 CoachApp.run이 그래프 시작 전에 요약(memory.compact)하고 case_facts를 보존한다.
 """
 import asyncio
 import contextlib
@@ -14,10 +15,11 @@ from typing import NotRequired, Optional
 
 from langchain_core.messages import AIMessage, HumanMessage, RemoveMessage, ToolMessage
 from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.graph.message import REMOVE_ALL_MESSAGES
 from langgraph.prebuilt.chat_agent_executor import AgentState
 from langgraph_supervisor import create_supervisor
 
-from src import config, guards
+from src import config, guards, memory
 from src.agents.concept_tutor import build_concept_tutor
 from src.agents.general import build_general_agent
 from src.agents.quiz_master import DIRECT_TOOLS as QUIZ_DIRECT, build_quiz_master
@@ -33,6 +35,7 @@ RECURSION_LIMIT = 30
 class CoachState(AgentState):
     """Supervisor 상태. 정답은 두지 않고 출제 중인 문제 id만 둔다 (CLAUDE.md 규칙)."""
     pending_quiz_id: NotRequired[Optional[str]]
+    case_facts: NotRequired[dict]          # 요약에 묻히면 안 되는 사실 (memory.extract_facts, TS 5.1)
 
 
 SUPERVISOR_PROMPT = """너는 CCA-F 학습 코치(비공식 학습 도구)의 Supervisor다. 직접 답하지 말고 담당 에이전트에게 맡긴다.
@@ -98,16 +101,32 @@ class CoachApp:
         cfg = {"configurable": {"thread_id": thread_id, "user_id": user_id},
                "callbacks": [tracer], "recursion_limit": RECURSION_LIMIT}
         before = await self.graph.aget_state(cfg)
-        gate = asyncio.get_running_loop().create_future()
-        token = guards.INPUT_GATE.set(gate)
+        prev = before.values or {}
+        # 요약에 묻히면 안 되는 사실은 코드가 따로 보존한다 (memory.extract_facts, TS 5.1)
+        facts = memory.extract_facts(question, prev.get("case_facts"))
+        guard_task = asyncio.create_task(guards.llm_guard(question))
+        graph_task = None
         try:
-            graph_task = asyncio.create_task(self.graph.ainvoke({"messages": [HumanMessage(question)]}, cfg))
-        finally:
-            guards.INPUT_GATE.reset(token)
-        try:
-            d = await guards.llm_guard(question)
-        except BaseException:          # run 자체가 취소되면 그래프도 남기지 않는다
-            graph_task.cancel()
+            # 긴 thread는 그래프 시작 전에 요약 (요약 LLM은 입력 가드 판별과 동시에 돈다)
+            compacted = await memory.compact(prev.get("messages", []), facts)
+            if compacted:
+                new_msgs, info = compacted
+                if new_msgs:
+                    await self.graph.aupdate_state(
+                        cfg, {"messages": [RemoveMessage(id=REMOVE_ALL_MESSAGES), *new_msgs]}, as_node="supervisor")
+                tracer.add_step({"step": "summarize", **info})
+            gate = asyncio.get_running_loop().create_future()
+            token = guards.INPUT_GATE.set(gate)
+            try:
+                graph_task = asyncio.create_task(
+                    self.graph.ainvoke({"messages": [HumanMessage(question)], "case_facts": facts}, cfg))
+            finally:
+                guards.INPUT_GATE.reset(token)
+            d = await guard_task
+        except BaseException:          # run 자체가 취소되거나 요약 적용이 실패하면 남은 task를 정리한다
+            guard_task.cancel()
+            if graph_task is not None:
+                graph_task.cancel()
             raise
         tracer.add_step({"step": "guard", "action": d.action, "rule": d.rule, "layer": d.layer})
         if d.action != "pass":
@@ -124,14 +143,19 @@ class CoachApp:
         return answer
 
     async def _rollback(self, cfg: dict, before) -> None:
-        """차단된 턴에 thread에 추가된 메시지를 지운다 (다음 턴이 차단된 입력을 보지 않게).
-        도구는 실행되지 않았으므로 pending_quiz_id 등 다른 상태는 그대로다."""
-        keep = {m.id for m in (before.values or {}).get("messages", [])}
-        now = await self.graph.aget_state(cfg)
-        added = [m for m in (now.values or {}).get("messages", []) if m.id not in keep]
-        if added:
-            await self.graph.aupdate_state(cfg, {"messages": [RemoveMessage(id=m.id) for m in added]},
-                                           as_node="supervisor")
+        """차단된 턴의 흔적을 되돌린다: messages와 case_facts를 차단 전 그대로 (다음 턴이 차단된 입력을 보지 않게).
+        턴 시작 요약(memory.compact)이 이미 messages를 바꿨을 수 있으므로 id 비교가 아니라 통째로 복원한다.
+        도구는 실행되지 않았으므로 pending_quiz_id는 그대로다."""
+        prev = before.values or {}
+        prev_msgs = prev.get("messages", [])
+        now = (await self.graph.aget_state(cfg)).values or {}
+        if [m.id for m in now.get("messages", [])] == [m.id for m in prev_msgs] \
+                and now.get("case_facts") == prev.get("case_facts"):
+            return
+        await self.graph.aupdate_state(
+            cfg, {"messages": [RemoveMessage(id=REMOVE_ALL_MESSAGES), *prev_msgs],
+                  "case_facts": prev.get("case_facts") or {}},
+            as_node="supervisor")
 
 
 async def build_app() -> CoachApp:

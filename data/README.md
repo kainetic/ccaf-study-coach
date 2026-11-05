@@ -9,6 +9,8 @@
 | `quiz_pool_manifest.json` | 생성 슬롯과 상태 | O |
 | `study_log.json` | 풀이 기록 | O |
 
+X 항목은 가이드 원문이거나 그 파생물이라 비공개 저장소여도 커밋하지 않는다 (클론하면 재배포가 되므로. 아래 ingest로 다시 만든다, `docs/DESIGN.md` §2-4).
+
 ## 가이드 PDF 배치와 ingest
 
 1. 시험 가이드 PDF를 `data/raw/ccaf_exam_guide.pdf`로 저장한다 (저장소에는 포함하지 않음).

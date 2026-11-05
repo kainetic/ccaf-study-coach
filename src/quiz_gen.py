@@ -390,7 +390,8 @@ class ModelPool:
                  clock=time.monotonic, sleep=time.sleep):
         from src.schemas import ScenarioFit
         self.model_ids = list(model_ids or config.QUIZ_GEN_MODEL_CHAIN)
-        factory = factory or (lambda mid: config.get_llm(mid, max_retries=POOL_BOTOCORE_RETRIES))
+        factory = factory or (lambda mid: config.get_llm(mid, max_retries=POOL_BOTOCORE_RETRIES,
+                                                          region=config.QUIZ_GEN_REGION))
         schemas = schemas or {"draft": QuizDraft, "review": ReviewVerdict,
                               "repair": QuizOptionsRepair, "scenario": ScenarioFit}
         self.runnables = {}

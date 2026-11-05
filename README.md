@@ -53,7 +53,7 @@ flowchart LR
 | study_coach | `get_progress`, `get_weak_domains` (MCP), `allocate_study_time`, `make_study_plan` | 시간 배분·약점 점수는 코드로 계산. 일자별 계획은 Plan-Execute 서브그래프 |
 | general_agent | 없음 | 인사, 기능 안내, 무관한 주제 안내(G5) |
 
-- **런타임 LLM**: `src/llm.py`의 `FallbackChatModel`. 쓰로틀링 같은 일시 오류가 나면 Sonnet 4.5의 다른 프로필·리전 → Sonnet 4.6 순으로 전환합니다.
+- **런타임 LLM**: `src/llm.py`의 `FallbackChatModel`. 기본은 서울 리전(ap-northeast-2)의 global Sonnet 4.5입니다(v2-6). 쓰로틀링 같은 일시 오류가 나면 Sonnet 4.5의 다른 프로필·리전 → Sonnet 4.6 순으로 전환합니다.
 - **입력 가드 LLM 판별은 그래프와 병렬로 돕니다 (v2-2).** 규칙 검사에 걸리면 그래프를 부르지 않습니다. 규칙을 통과하면 LLM 판별과 그래프를 함께 시작하되, 모든 앱 도구는 판별이 통과할 때까지 기다립니다. LLM이 차단하면 그래프를 취소하고 이번 턴 메시지를 되돌리므로, 차단된 요청에서는 도구가 한 번도 실행되지 않습니다.
 - **문제는 런타임에 만들지 않습니다.** 오프라인에서 미리 생성하고 검토한 풀에서만 출제하고, 풀에 없는 조합이면 대체 문제를 제안합니다.
 
@@ -150,6 +150,8 @@ round2에서 바꾼 것은 프롬프트 두 가지입니다.
 **v2-3 (TS 5.1 핵심 사실 보존)**: 긴 대화는 턴 시작 때 최근 3턴만 남기고 앞부분을 요약하며, 남은 일수·하루 시간 같은 사실(`case_facts`)은 코드가 따로 보존합니다. `search_guide`는 2순위 이하 TS 청크 중 검색어와 겹치는 항목이 없는 청크를 뺍니다. 처음에는 bullet 단위로 잘랐다가 8번이 실패해(관련 bullet까지 잘림) 청크 단위로 바꿨습니다. 결과는 19/20입니다([v2_trim_eval.json](evaluation/results/v2_trim_eval.json)). 실패한 9번은 v2-2와 같은 "TTL 값(예: 5분)" 예시 수치 문제입니다. RAGAS 14건([ragas_v2_trim.json](evaluation/ragas_v2_trim.json))은 context_precision **0.744 → 0.825**, recall 1.000 유지, answer_relevancy 0.446 → 0.477입니다. faithfulness는 0.789로 목표(0.85) 아래였습니다. 이전 실행 기록에 RAGAS만 다시 돌려 보니 v2-1 0.848 → v2-2 0.792로 이미 떨어져 있어 트리밍 때문은 아니었고(precision은 직전 기준선 0.762·0.774보다 약 0.05 높음), 하락의 대부분은 9번 답변이 가이드에 없는 "TTL 값(예: 5분)"을 예시로 쓴 데서 나왔습니다. 긴 대화 동작은 `evaluation/smoke_memory.py`(5턴, 9/9)로 확인합니다.
 
 **v2-4 (예시 수치 금지)**: concept_tutor 프롬프트에 "검색 결과에 없는 수치는 '예: …'나 괄호 속 예시로도 쓰지 않는다"를 한 줄 넣었습니다. 9번은 3회 연속 PASS했고, 20건 결과는 **20/20**입니다([v2_num_eval.json](evaluation/results/v2_num_eval.json)). RAGAS 14건([ragas_v2_num.json](evaluation/ragas_v2_num.json))은 faithfulness **0.889**, recall 1.000, precision 0.796, relevancy 0.462이고, 개념 질문 평균 응답 시간은 21.0초입니다. 같은 답변을 다시 채점해도 문항 하나의 faithfulness가 크게 움직이므로(예: 12번 0.47~0.88) 14건 평균은 ±0.05 정도 흔들린다고 봅니다.
+
+**v2-6 (서울 리전)**: 런타임 기본 모델을 global Sonnet 4.5 @ ap-northeast-2(서울)로, 임베딩도 서울로 옮겼습니다(서울에는 Sonnet 4.5 `apac.` 프로필이 없음, 임베딩은 us-east-1과 코사인 0.9999라 재색인 없음). 같은 20건 결과는 19/20이고([v2_seoul_eval.json](evaluation/results/v2_seoul_eval.json)), LLM 88회가 모두 서울에서 응답했습니다. 실패한 4번은 "50% 비용 절감" 언급 누락으로, 4번만 두 번 다시 돌리면 2/2 PASS라 답변 생성 변동으로 봅니다. 응답 시간은 v2-4(사실상 global @ us-west-2, 88회 중 87회)와 같은 방식으로 재면 전체 평균 **18.7 → 17.3초**, 개념 질문(경로 concept_tutor 15건) 평균 **21.7 → 20.2초**이고, 가드 차단 3건을 뺀 17건 중 14건이 빨라졌습니다. 모델이 같아 줄어든 폭은 왕복 네트워크 지연만큼이고, 답변 생성 시간 자체는 그대로입니다.
 
 알려진 한계도 그대로 남겨 둡니다.
 - 응답 시간이 목표 15초보다 깁니다.

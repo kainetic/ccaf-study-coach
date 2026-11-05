@@ -47,7 +47,7 @@ SCENARIO_OVERRIDES = {
 COVERAGE_TARGET = 228                                        # 240의 95%
 LONGEST_TARGET = 0.35                                        # 정답이 가장 긴 보기 비율 상한 (DESIGN §9-3)
 # 사후 작업(정답 길이 재조정·예외 슬롯) 모델 순서: us Sonnet 4.5 할당량을 아끼려고 제외, global 4.5 우선
-MAINT_MODEL_CHAIN = [m for m in config.QUIZ_GEN_MODEL_CHAIN if m != config.MODEL_ID]
+MAINT_MODEL_CHAIN = [m for m in config.QUIZ_GEN_MODEL_CHAIN if m != config.QUIZ_GEN_MODEL_ID]
 TRANSIENT_STOP = 3                                           # 일시 오류로 연속 실패한 슬롯이 이 수가 되면 실행 중단
 DEFAULT_CONCURRENCY = 2                                      # 과정 공용 Bedrock 할당량 기준 (쓰로틀링으로 4 → 2)
 
@@ -196,7 +196,7 @@ def load_state(corpus: Corpus, allow_processed_change: bool = False) -> tuple[Qu
         sync_definitions(manifest, built, allow_processed_change)
     else:
         ts = now_iso()
-        manifest = QuizManifest(guide_version=config.GUIDE_VERSION, generator_model=config.MODEL_ID,
+        manifest = QuizManifest(guide_version=config.GUIDE_VERSION, generator_model=config.QUIZ_GEN_MODEL_ID,
                                 created_at=ts, updated_at=ts, slots=built)
         print(f"[manifest] 새로 생성: 슬롯 {len(built)}개 → {MANIFEST_PATH.name}")
     pool: dict[str, QuizItem] = {}
@@ -569,7 +569,7 @@ def print_model_summary(manifest: QuizManifest, pool: dict[str, QuizItem], model
         if s.status == "pending":
             continue
         # 모델 기록 도입 전 슬롯은 기본 모델(us Sonnet 4.5)로 처리됨
-        g = s.generator_model or (pool[s.quiz_id].generator_model if s.quiz_id in pool else config.MODEL_ID)
+        g = s.generator_model or (pool[s.quiz_id].generator_model if s.quiz_id in pool else config.QUIZ_GEN_MODEL_ID)
         gen_tot[short_model(g)] += 1
         if s.status == "approved":
             gen_c[short_model(g)] += 1

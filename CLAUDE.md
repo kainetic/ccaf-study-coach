@@ -8,7 +8,8 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
 - 최종: round2 19/20 → v2-1(GAP_NOTICE) 20/20 → v2-2(가드 병렬) 19/20·개념 평균 26.4→22.4s
   → v2-3(case_facts·요약·청크 필터) 19/20, RAGAS precision 0.825·faithfulness 0.789 (하락은 v2-2부터, 9번 예시 수치 탓)
   → v2-4(튜터 예시 수치 금지 한 줄) 20/20, RAGAS faithfulness 0.889·recall 1.0·precision 0.796, 개념 평균 21.0s.
-  → v2-5 웹 UI(`GET /`·`GET /progress`, 그래프 변경 없음).
+  → v2-5 웹 UI(`GET /`·`GET /progress`, 그래프 변경 없음)
+  → v2-6 서울 리전(global Sonnet 4.5 @ ap-northeast-2) 19/20(4번 변동, 재실행 2/2 PASS), 전체 평균 18.7→17.3s·개념 21.7→20.2s.
   smoke_p0 24/24, smoke_p1 37/37, smoke_memory 9/9. 수치·실패 분석은 evaluation/round*_report.md, quiz_pool_report.md
 - 데이터: 문제 풀 승인 266, study_log 시드 demo_heavy 61회·demo_new 없음 (seed_study_log.py)
 - 원격: https://github.com/kainetic/ccaf-study-coach (private, master). 개선 후보는 round2_report §6
@@ -36,12 +37,13 @@ python scripts/demo_capture.py                       # 시연 캡처 → docs/de
 MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언트가 sys.executable로 stdio 자식 프로세스로 띄움.
 
 ## 고정값
-- LLM: ChatBedrockConverse, model "us.anthropic.claude-sonnet-4-5-20250929-v1:0", region "us-east-1", temperature 0
+- LLM: ChatBedrockConverse, model "global.anthropic.claude-sonnet-4-5-20250929-v1:0", region "ap-northeast-2"(서울, v2-6), temperature 0
+  (서울에는 Sonnet 4.5 apac 프로필이 없어 global 프로필. 문제 풀 생성만 QUIZ_GEN_MODEL_ID us Sonnet 4.5 @ QUIZ_GEN_REGION us-east-1)
   - 예외: 쓰로틀링·일일 할당량 소진 등 일시 오류일 때만 모델 전환 (Haiku 미사용)
     - 문제 풀 생성(오프라인 quiz_gen): config.QUIZ_GEN_MODEL_CHAIN (Sonnet 4.5/4.6 × us/global, DESIGN §5-2)
     - 런타임 에이전트: src/llm.py FallbackChatModel, config.RUNTIME_MODEL_CHAIN (Sonnet 4.5 다른 프로필·리전
-      → Sonnet 4.6, us-east-1·us-west-2·ap-northeast-2, DESIGN §7-1). LLM은 config.get_llm()이 아니라 get_runtime_llm()
-- 임베딩: BedrockEmbeddings "amazon.titan-embed-text-v2:0"
+      → Sonnet 4.6, 서울 먼저 → us-east-1·us-west-2, DESIGN §7-1). LLM은 config.get_llm()이 아니라 get_runtime_llm()
+- 임베딩: BedrockEmbeddings "amazon.titan-embed-text-v2:0", region은 REGION(서울). us-east-1 벡터와 코사인 0.9999라 재색인 안 함
 - Chroma: persist ./chroma_db, collection "ccaf_guide"
 - 자격 증명: 저장소 폴더(프로젝트 루트)의 .env를 사용 (.gitignore에 포함, 커밋 금지).
   src/config.py 한 곳에서만 load_dotenv(ROOT / ".env")로 로드하고,

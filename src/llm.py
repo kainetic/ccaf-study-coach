@@ -1,6 +1,6 @@
 """런타임 LLM: 쓰로틀링 시 모델·리전 전환 (DESIGN §5-2 모델 전환의 런타임판).
 
-기본은 config.MODEL_ID(us Sonnet 4.5 @ us-east-1). 일시 오류(쓰로틀링·일일 토큰 할당량 소진 등)가 나면 그 후보에
+기본은 config.MODEL_ID(global Sonnet 4.5 @ ap-northeast-2, v2-6). 일시 오류(쓰로틀링·일일 토큰 할당량 소진 등)가 나면 그 후보에
 쿨다운을 걸고 config.RUNTIME_MODEL_CHAIN의 다음 후보로 바로 넘어간다. 쿨다운 상태는 프로세스 안의 모든 에이전트가
 공유한다. 일시 오류가 아닌 오류는 전환하지 않고 올린다 (모델 문제를 다른 모델로 감추지 않음).
 

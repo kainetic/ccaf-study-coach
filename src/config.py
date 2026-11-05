@@ -16,32 +16,36 @@ if not ENV_PATH.is_file():
 load_dotenv(ENV_PATH)
 
 # ---- 모델 (CLAUDE.md 고정값) ----
-MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
-REGION = "us-east-1"
+# v2-6: 기본 리전을 서울(ap-northeast-2)로. 서울에는 Sonnet 4.5 apac 프로필이 없어 global 추론 프로필을 쓴다.
+# 임베딩(Titan v2)도 REGION을 따른다 (us-east-1과 벡터 코사인 0.9999, 재색인 불필요).
+MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
+REGION = "ap-northeast-2"
 
-# 문제 풀 생성(오프라인 quiz_gen) 전용: 쓰로틀링 시 이 순서로 전환 (DESIGN §5-2). 런타임은 MODEL_ID 고정.
-# Haiku는 문항·검토 품질 때문에 쓰지 않는다.
+# 문제 풀 생성(오프라인 quiz_gen) 전용: 기존대로 us-east-1, 쓰로틀링 시 이 순서로 전환 (DESIGN §5-2).
+# us. 프로필이 들어 있어 서울 리전으로는 부를 수 없으므로 리전을 따로 둔다. Haiku는 문항·검토 품질 때문에 쓰지 않는다.
+QUIZ_GEN_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+QUIZ_GEN_REGION = "us-east-1"
 QUIZ_GEN_MODEL_CHAIN = [
-    MODEL_ID,                                              # us  Sonnet 4.5 (기본)
+    QUIZ_GEN_MODEL_ID,                                     # us  Sonnet 4.5 (기본)
     "global.anthropic.claude-sonnet-4-5-20250929-v1:0",    # global Sonnet 4.5
     "us.anthropic.claude-sonnet-4-6",                      # us  Sonnet 4.6
     "global.anthropic.claude-sonnet-4-6",                  # global Sonnet 4.6
 ]
 
-# 런타임 에이전트: 기본은 MODEL_ID(us-east-1). 쓰로틀링·일일 할당량 소진 시에만 이 순서로 전환 (src/llm.py, DESIGN §5-2·§7).
-# 같은 Sonnet 4.5를 다른 추론 프로필·리전으로 먼저 쓰고, 그다음 Sonnet 4.6. Haiku는 쓰지 않는다. (model_id, region)
+# 런타임 에이전트: 기본은 MODEL_ID(global @ ap-northeast-2). 쓰로틀링·일일 할당량 소진 시에만 이 순서로 전환 (src/llm.py, DESIGN §7-1).
+# 같은 Sonnet 4.5를 다른 추론 프로필·리전으로 먼저 쓰고, 그다음 Sonnet 4.6(서울 먼저). Haiku는 쓰지 않는다. (model_id, region)
 _S45, _S46 = "anthropic.claude-sonnet-4-5-20250929-v1:0", "anthropic.claude-sonnet-4-6"
 RUNTIME_MODEL_CHAIN = [
-    (MODEL_ID, REGION),                         # 기본: us Sonnet 4.5 @ us-east-1
+    (MODEL_ID, REGION),                         # 기본: global Sonnet 4.5 @ ap-northeast-2
+    (f"us.{_S45}", "us-east-1"),
     (f"global.{_S45}", "us-east-1"),
     (f"us.{_S45}", "us-west-2"),
     (f"global.{_S45}", "us-west-2"),
-    (f"global.{_S45}", "ap-northeast-2"),
+    (f"global.{_S46}", "ap-northeast-2"),
     (f"us.{_S46}", "us-east-1"),
     (f"global.{_S46}", "us-east-1"),
     (f"us.{_S46}", "us-west-2"),
     (f"global.{_S46}", "us-west-2"),
-    (f"global.{_S46}", "ap-northeast-2"),
 ]
 EMBED_MODEL_ID = "amazon.titan-embed-text-v2:0"
 

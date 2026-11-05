@@ -70,7 +70,7 @@ Claude 기반 에이전트 시스템을 설계·구축하는 실무 아키텍트
 | 문제 풀: **승인 문제 266개** (목표 270, 최소 250). 세부 항목 240개마다 1문제 + 도메인 비중으로 추가 30문제 배정 → 승인 D1 55, D2 47, D3 55, D4 53, D5 56, 커버리지 240/240 | JSON (MCP 서버) | **생성 데이터**: 실제 가이드를 근거로 LLM이 생성하고 자동·사람 검토를 거친 원본 문제 (저장소에 포함) |
 | 사용자 풀이 기록 | JSON (MCP 서버) | **가짜** (더미 사용자 2명 시드) |
 
-LLM: AWS Bedrock Claude Sonnet 4.5 (기본 us Sonnet 4.5, 쓰로틀링·일일 할당량 소진 등 일시 오류 때만 다른 추론 프로필·리전 → Sonnet 4.6 순으로 전환, DESIGN §7-1), 임베딩: Titan Text Embeddings v2
+LLM: AWS Bedrock Claude Sonnet 4.5 (기본 global Sonnet 4.5 @ 서울 ap-northeast-2, 쓰로틀링·일일 할당량 소진 등 일시 오류 때만 다른 추론 프로필·리전 → Sonnet 4.6 순으로 전환, DESIGN §7-1), 임베딩: Titan Text Embeddings v2
 
 **이번 과제에서 하지 않는 것**
 - 실제 시험 문항 재현·덤프 제공, 합격 예측

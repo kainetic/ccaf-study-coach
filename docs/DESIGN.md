@@ -1,4 +1,4 @@
-# DESIGN · CCA-F 학습 코치 (설계 v0.6.0)
+# DESIGN · CCA-F 학습 코치 (설계 v0.6.1)
 
 > 기준 문서: Claude Certified Architect – Foundations Exam Guide (Version 0.2, 2026-06-30)
 > 과제 규약: [Day 8,9,10] mini PJT 문서 §4 (산출물 규약), §5 (12개 패턴)
@@ -531,7 +531,8 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 - `GET /progress?user_id=...` (v2-5): `get_progress` MCP 결과 + `weak`(`get_weak_domains` top_k=2 결과)를 반환 (코드 계산, LLM·입력 가드 없음, 읽기 전용). 웹 UI 진도 패널용
 
 ### 7-1. 런타임 모델 전환 (S2, `src/llm.py`)
-- 기본은 고정 모델 `us.anthropic.claude-sonnet-4-5-20250929-v1:0` @ us-east-1. **쓰로틀링·일일 토큰 할당량 소진 등 일시 오류일 때만** `config.RUNTIME_MODEL_CHAIN` 순서로 전환: Sonnet 4.5(global@us-east-1 → us@us-west-2 → global@us-west-2 → global@ap-northeast-2) → Sonnet 4.6(같은 순서). Haiku는 쓰지 않음
+- 기본은 고정 모델 `global.anthropic.claude-sonnet-4-5-20250929-v1:0` @ **ap-northeast-2(서울, v2-6)**. 서울에는 Sonnet 4.5 `apac.` 프로필이 없어(ValidationException) `global.` 프로필을 씀. **쓰로틀링·일일 토큰 할당량 소진 등 일시 오류일 때만** `config.RUNTIME_MODEL_CHAIN` 순서로 전환: Sonnet 4.5(us@us-east-1 → global@us-east-1 → us@us-west-2 → global@us-west-2) → Sonnet 4.6(global@ap-northeast-2 → 미국 리전 같은 순서). Haiku는 쓰지 않음
+- v2-6 이전 기본은 `us.` Sonnet 4.5 @ us-east-1. 임베딩 Titan v2도 `config.REGION`(서울)을 따름 — us-east-1과 벡터 코사인 0.9999라 Chroma 재색인 안 함. 문제 풀 생성(오프라인)은 `us.` 프로필이 있어 `QUIZ_GEN_MODEL_ID`·`QUIZ_GEN_REGION`(us-east-1)으로 분리
 - 도입 경위: S2 스모크 시점에 us Sonnet 4.5의 일일 토큰 할당량이 문제 풀 생성으로 소진됨 (사용자 합의로 런타임에도 전환 허용, 사용 가능 모델·리전은 사용자 확인 목록)
 - `FallbackChatModel`(BaseChatModel): 후보마다 ChatBedrockConverse(botocore 재시도 1회). 쓰로틀된 후보는 쿨다운(일일 할당량 60분, 그 외 4·2^k초, 최대 60초)을 걸고 다음 후보로. 쿨다운은 프로세스 안 모든 에이전트가 공유. 일시 오류가 아닌 오류는 전환하지 않고 올림, 권한 없음·모델 없음은 제외
 - `bind_tools`는 첫 후보로 Bedrock 형식 도구 kwargs를 만들고 호출 때 실제 후보의 `_generate`에 같은 kwargs를 넘김 (Converse 도구 형식은 모델 간 동일). 응답 메시지 `response_metadata.served_by`에 실제 모델·리전을 남기고 trace `llm.models`에 집계
@@ -686,6 +687,7 @@ ccaf-study-coach/
 
 ## 변경 이력
 
+- v0.6.1 (v2-6): 런타임 기본 모델 리전을 서울(ap-northeast-2, global Sonnet 4.5)로, 임베딩도 서울. 문제 풀 생성은 us-east-1 유지(`QUIZ_GEN_MODEL_ID`·`QUIZ_GEN_REGION`) (§7-1). 20건 19/20(4번 변동), 전체 평균 18.7→17.3s, 개념 21.7→20.2s (v2_seoul_eval.json)
 - v0.6.0 (v2-5): 웹 UI(`src/web/index.html`, `GET /`)와 `GET /progress` 추가. 그래프·가드·프롬프트 변경 없음. LangSmith/LangFuse·Dockerfile은 하지 않기로 결정 (§1-2, §7, §11)
 - v0.5.9 (v2-4): concept_tutor 프롬프트에 "검색 결과에 없는 수치는 예시로도 쓰지 않음" 한 줄 (평가 9번 TTL 예시 수치 대응, 평가 문장은 넣지 않음)
 - v0.5.8 (v2-3): 검색 결과 청크 필터(`trim_hits`, bullet 단위 자르기는 회귀로 철회), 장기 대화 요약 + `case_facts` 보존(`memory.py`, `CoachApp.run`), study_coach 프롬프트에 요약 블록 사실 사용 한 줄 (§4, §5-1, §10)

@@ -162,18 +162,82 @@ function splitQuiz(answer) {
            after: lines.slice(idx[idx.length - 1] + 1).join("\n") };
 }
 
-let activeQuiz = null;          // 답을 기다리는 문항 카드 묶음 {cards}
+// 출제 머리줄 (quiz_master.format_quiz): **연습 문제** (Q-2.4-K3 · TS-2.4 · 시나리오 4: 제목)
+const QUIZ_HEAD_RE = /^\*\*연습 문제\*\* \((Q-\S+) · (TS-(\d+)\.\d+) · 시나리오 (\d+): (.+)\)\s*$/;
+const ABBREV_RE = /\b(e\.g|i\.e|etc|vs|Mr|Ms|Dr|U\.S)\.$/;
+
+// 지문 → { context, question }. 마지막 문장이 "?"로 끝나고 그 앞에 문장 경계가 있을 때만 나눈다.
+// 두 조각을 공백 하나로 이으면 원문과 정확히 같아야 하며, 아니면 null (나누지 않음)
+function splitStem(stem) {
+  if (!stem.endsWith("?")) return null;
+  const re = /[.!?]["”')\]]?\s+(?=["“]?[A-Z])/g;
+  let cut = -1, m;
+  while ((m = re.exec(stem)) !== null) {
+    if (ABBREV_RE.test(stem.slice(0, m.index + 1))) continue;
+    cut = m.index + m[0].trimEnd().length;
+  }
+  if (cut <= 0) return null;
+  const context = stem.slice(0, cut), question = stem.slice(cut).trimStart();
+  if (question.length < 12 || question.length > stem.length * 0.7 || `${context} ${question}` !== stem) return null;
+  return { context, question };
+}
+
+// 채점 텍스트 (quiz_master.format_grade): 머리줄 / **보기별 해설** / - **A (정답)**: … / [근거: …] / 안내
+const GRADE_HEAD_RE = /^(정답입니다!|아쉽지만 오답입니다\.)/;
+function parseGrade(answer) {
+  const lines = answer.split(/\r?\n/);
+  const head = lines.findIndex((l) => GRADE_HEAD_RE.test(l.trim()));
+  const title = lines.findIndex((l) => l.trim() === "**보기별 해설**");
+  if (head < 0 || title <= head) return null;
+  const items = [];
+  let i = title + 1;
+  for (; i < lines.length; i++) {
+    const m = lines[i].match(/^- \*\*([A-F])(?: \((정답|선택)\))?\*\*: (.*)$/);
+    if (!m) break;
+    items.push({ label: m[1], tag: m[2] || "", text: m[3] });
+  }
+  if (items.length < 2) return null;
+  return { before: lines.slice(0, head).join("\n"), head: lines[head].trim(), items, after: lines.slice(i).join("\n") };
+}
+
+let activeQuiz = null;          // 답을 기다리는 문항 {el, cards, state}
+const domainNames = {};         // 진도 데이터의 도메인 이름 (문항 배지 툴팁용)
+const QUIZ_STATES = { open: "풀이 중", pending: "채점 중", ok: "정답", bad: "오답", closed: "종료" };
+const OPT_STATES = { picked: "채점 중…", right: "✓ 정답", wrong: "✗ 내 선택" };
+
+function setQuizState(quiz, state) {
+  if (!quiz || !quiz.el) return;
+  quiz.state = state;
+  const pill = quiz.el.querySelector(".qh-status");
+  if (pill) { pill.dataset.state = state; pill.textContent = QUIZ_STATES[state]; }
+}
+
+// 보기 카드 상태: 클래스 + 오른쪽 상태 표시(아이콘·텍스트, 색만으로 구분하지 않음)
+function setOptState(card, state) {
+  card.classList.remove("picked", "right", "wrong", "dim");
+  if (state) card.classList.add(state);
+  const tag = card.querySelector(".o-state");
+  if (tag) tag.textContent = OPT_STATES[state] || "";
+}
 
 function disableChoices() {
   document.querySelectorAll(".choices .btn, .opt").forEach((b) => { b.disabled = true; });
 }
 
 function pick(label) {
-  if (!activeQuiz || busy) return;
+  if (!activeQuiz || busy || activeQuiz.state !== "open") return;    // 채점 중 재선택·중복 제출 방지
   const card = activeQuiz.cards[label];
   if (!card) return;
-  card.classList.add("picked");
+  setOptState(card, "picked");
+  setQuizState(activeQuiz, "pending");
   ask(label);
+}
+
+// 답 제출이 오류로 끝나면(채점 응답 없음) 다시 고를 수 있게 되돌린다
+function reopenQuiz() {
+  if (!activeQuiz || activeQuiz.state !== "pending") return;
+  Object.values(activeQuiz.cards).forEach((c) => { c.disabled = false; setOptState(c, null); });
+  setQuizState(activeQuiz, "open");
 }
 
 function quizBlock(el, answer) {
@@ -195,11 +259,36 @@ function quizBlock(el, answer) {
     el.appendChild(row);
     return cards;
   }
-  el.innerHTML = renderMarkdown(q.before);
+  // 머리줄을 찾으면 문제 카드(헤더·지문·Question), 못 찾으면 앞부분을 마크다운 그대로
+  const lines = q.before.split(/\r?\n/);
+  const hi = lines.findIndex((l) => QUIZ_HEAD_RE.test(l.trim()));
+  if (hi >= 0) {
+    const [, quizId, ts, dom, scen, scenTitle] = lines[hi].trim().match(QUIZ_HEAD_RE);
+    const notice = lines.slice(0, hi).join("\n").trim();
+    const stem = lines.slice(hi + 1).join("\n").trim();
+    const parts = stem.includes("\n") ? null : splitStem(stem);
+    el.classList.add("quiz");
+    el.innerHTML = (notice ? `<div class="quiz-notice">${renderMarkdown(notice)}</div>` : "") + `
+      <div class="quiz-head">
+        <div class="qh-row"><span class="qh-kicker">연습 문제</span><span class="qh-id">${esc(quizId)}</span>
+          <span class="qh-status" data-state="open">${QUIZ_STATES.open}</span></div>
+        <div class="qh-row qh-meta">
+          <span class="badge" title="${esc(domainNames[dom] || "")}">Domain ${esc(dom)}</span><span class="badge">${esc(ts)}</span>
+          <span class="qh-scen">시나리오 ${esc(scen)} · ${esc(scenTitle)}</span></div>
+      </div>
+      <div class="quiz-body">` +
+      (parts
+        ? `<p class="stem">${inline(esc(parts.context))}</p>
+           <div class="question"><span class="q-label">Question</span><p>${inline(esc(parts.question))}</p></div>`
+        : `<div class="stem">${renderMarkdown(stem)}</div>`) + "</div>";
+  } else {
+    el.innerHTML = renderMarkdown(q.before);
+  }
+  const body = el.querySelector(".quiz-body") || el;
   const hint = document.createElement("p");
   hint.className = "opt-hint";
-  hint.textContent = "보기를 눌러 답하세요 · 키보드 " + q.options.map((o) => o.label).join("/");
-  el.appendChild(hint);
+  hint.innerHTML = "보기를 눌러 답하세요 · 키보드 " + q.options.map((o) => `<kbd>${o.label}</kbd>`).join(" ");
+  body.appendChild(hint);
   const box = document.createElement("div");
   box.className = "options";
   const cards = {};
@@ -207,30 +296,59 @@ function quizBlock(el, answer) {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "opt";
-    b.innerHTML = `<span class="key">${o.label}</span><span>${inline(esc(o.text))}</span>`;
+    b.innerHTML = `<span class="key">${o.label}</span><span class="o-text">${inline(esc(o.text))}</span><span class="o-state"></span>`;
     b.addEventListener("click", () => pick(o.label));
     box.appendChild(b);
     cards[o.label] = b;
   }
-  el.appendChild(box);
+  body.appendChild(box);
   // "답을 A~D 중 하나로 알려 주세요" 안내는 카드 힌트와 겹치므로 뺀다
   const rest = q.after.split(/\r?\n/).filter((l) => !/^\s*답을\s*[A-F]~[A-F]/.test(l)).join("\n");
-  if (rest.trim()) el.insertAdjacentHTML("beforeend", renderMarkdown(rest));
+  if (rest.trim()) body.insertAdjacentHTML("beforeend", renderMarkdown(rest));
   return cards;
 }
 
-// 채점 결과: 말풍선 머리줄 + 직전 문항 카드에 내 선택(정답/오답)과 정답 표시
-function markGraded(el, submit, answer) {
+// 채점 결과: 직전 문항 카드에 내 선택(정답/오답)과 정답 표시. 정답 글자는 채점 텍스트("정답: X")에서만 읽는다
+function markQuizGraded(submit, answer) {
+  if (!activeQuiz) return;
+  const correct = (answer.match(/정답\s*[:：]\s*([A-F])/) || [])[1];
+  for (const [label, card] of Object.entries(activeQuiz.cards)) {
+    card.disabled = true;
+    if (label === submit.choice) setOptState(card, submit.correct ? "right" : "wrong");
+    else if (label === correct) setOptState(card, "right");
+    else setOptState(card, "dim");
+  }
+  setQuizState(activeQuiz, submit.correct ? "ok" : "bad");
+}
+
+// 예전 표시 (채점 텍스트 형식이 다를 때): 말풍선 머리줄 + 원문 마크다운
+function markGraded(el, submit) {
   el.classList.add(submit.correct ? "graded-ok" : "graded-bad");
   const head = document.createElement("div");
   head.className = "verdict";
   head.textContent = submit.correct ? `✓ 정답 (선택 ${submit.choice})` : `✗ 오답 (선택 ${submit.choice})`;
   el.prepend(head);
-  if (!activeQuiz) return;
-  const correct = (answer.match(/정답\s*[:：]\s*([A-F])/) || [])[1];
-  const mine = activeQuiz.cards[submit.choice];
-  if (mine) { mine.classList.remove("picked"); mine.classList.add(submit.correct ? "right" : "wrong"); }
-  if (correct && activeQuiz.cards[correct]) activeQuiz.cards[correct].classList.add("right");
+}
+
+// 채점 결과 배너 + 보기별 해설. 해설 문장은 서버 텍스트 그대로, 정답·내 선택 항목만 펼친다
+function gradeBlock(el, g, submit) {
+  const item = (it) => {
+    const tags = [];
+    if (it.tag === "정답") tags.push('<span class="x-tag ok">✓ 정답</span>');
+    if (it.tag === "선택" || it.label === submit.choice) tags.push('<span class="x-tag mine">내 선택</span>');
+    const cls = it.tag === "정답" ? " ok" : it.tag === "선택" ? " bad" : "";
+    return `<div class="x-item${cls}"><span class="key">${it.label}</span>
+      <div class="x-body"><div class="x-tags">${tags.join("")}</div><p>${inline(esc(it.text))}</p></div></div>`;
+  };
+  const main = g.items.filter((it) => it.tag || it.label === submit.choice);
+  const others = g.items.filter((it) => !main.includes(it));
+  el.classList.add("graded");
+  el.innerHTML = (g.before.trim() ? renderMarkdown(g.before) : "") + `
+    <div class="result ${submit.correct ? "ok" : "bad"}" role="status">
+      <span class="r-ico" aria-hidden="true">${submit.correct ? "✓" : "✗"}</span><span class="r-text">${esc(g.head)}</span></div>
+    <section class="explain"><h4>보기별 해설</h4>${main.map(item).join("")}
+      ${others.length ? `<details class="more"><summary>나머지 보기 해설 ${others.length}개</summary>${others.map(item).join("")}</details>` : ""}
+    </section>` + (g.after.trim() ? `<div class="grade-foot">${renderMarkdown(g.after.trim())}</div>` : "");
 }
 
 // 채점 후 다음 행동 칩 (quiz_id "Q-2.4-K3" → TS-2.4, Domain 2)
@@ -257,6 +375,9 @@ function nextActions(el, submit) {
   el.appendChild(row);
 }
 
+// 출제·채점 응답은 메시지 위쪽이 보이게 (긴 해설 끝으로 튀지 않게), 그 외는 맨 아래로
+function scrollToMsg(el) { log.scrollTop = Math.max(0, el.offsetTop - 16); }
+
 function addBot(data) {
   const el = document.createElement("div");
   el.className = "msg bot";
@@ -264,16 +385,20 @@ function addBot(data) {
   const trace = data.trace || [];
   const submit = trace.find((s) => s.step === "submit" && s.status === "graded");
   const quizOk = trace.some((s) => s.step === "get_quiz" && s.status === "ok");
-  if (quizOk) {
-    el.dataset.quiz = "1";
+  if (submit) {
+    const g = parseGrade(answer);
+    if (g) gradeBlock(el, g, submit);
+    else { el.innerHTML = renderMarkdown(answer); markGraded(el, submit); }
+    markQuizGraded(submit, answer);
+    nextActions(el, submit);
   } else {
-    el.innerHTML = renderMarkdown(answer);
+    if (activeQuiz && activeQuiz.state !== "ok" && activeQuiz.state !== "bad") setQuizState(activeQuiz, "closed");
+    if (!quizOk) el.innerHTML = renderMarkdown(answer);
   }
-  if (submit) { markGraded(el, submit, answer); nextActions(el, submit); }
-  activeQuiz = quizOk ? { cards: quizBlock(el, answer) } : null;
+  activeQuiz = quizOk ? { el, cards: quizBlock(el, answer), state: "open" } : null;
   el.appendChild(traceSummary(data));
   log.appendChild(el);
-  scrollDown();
+  if (quizOk || submit) scrollToMsg(el); else scrollDown();
 }
 
 function setBusy(on) {
@@ -338,6 +463,7 @@ async function ask(question) {
     const msg = "오류: " + (e.message || "서버에 연결할 수 없습니다.");
     addError(msg);
     record({ r: "e", t: msg });
+    reopenQuiz();
   } finally {
     clearInterval(timer);
     wait.remove();
@@ -358,6 +484,7 @@ async function loadProgress() {
     const p = await res.json();
     if (!res.ok || p.isError) throw new Error(p.message || p.detail || `HTTP ${res.status}`);
     // 약점 판정은 서버 get_weak_domains 결과(weak)를 그대로 쓴다 (UI에서 계산하지 않음)
+    for (const d of p.domains) domainNames[d.domain] = d.name;
     const weak = p.weak && !p.weak.isError ? p.weak : null;
     const weakIds = new Set(weak ? weak.top.map((w) => w.domain) : []);
     const dis = busy ? " disabled" : "";

@@ -93,7 +93,7 @@ python -m src.ingest               # 청크 62 + 세부 항목 240 → data/*.js
 uvicorn src.api:api --port 8000   # 브라우저에서 http://localhost:8000/
 ```
 
-**웹 UI** (`http://localhost:8000/`, v2-5): 채팅으로 개념 질문·출제·학습 계획을 요청하고, 출제된 문제는 보기 카드를 누르거나 키보드 A~D로 답하고, 채점 후 정답/오답 표시와 다음 행동 버튼(같은 도메인·다른 도메인·개념 설명)이 나옵니다. 오른쪽 진도 패널(`GET /progress`)에 정답률·도메인별 막대·커버리지가 나오고 채점 직후 갱신됩니다. 약점 도메인(서버의 `get_weak_domains` 판정)은 붉게 강조되고, 도메인을 누르면 그 도메인 문제가 나옵니다. 휴대폰 폭에서는 헤더의 "진도" 버튼으로 엽니다. 답변 끝의 근거 배지(`TS-x.y`)를 누르면 시험 가이드 원문 발췌가 펼쳐집니다. trace(경로·도구·근거·응답 시간)는 기본으로 숨겨 두었고, 진도 패널 아래 "개발 정보(trace) 표시"를 켜면 답변마다 볼 수 있습니다. 새로고침해도 같은 탭에서는 대화가 남습니다(서버를 다시 시작하면 풀던 문제는 이어지지 않음). 기본 user_id는 `web_demo`입니다(시드 사용자 `demo_heavy`도 고를 수 있지만 풀이가 `data/study_log.json`에 기록됩니다).
+**웹 UI** (`http://localhost:8000/`, v2-5): 채팅으로 개념 질문·출제·학습 계획을 요청하고, 출제된 문제는 보기 카드를 누르거나 키보드 A~D로 답하고, 채점 후 정답/오답 표시와 다음 행동 버튼(같은 도메인·다른 도메인·개념 설명)이 나옵니다. 오른쪽 진도 패널(`GET /progress`)에 정답률·도메인별 막대·커버리지가 나오고 채점 직후 갱신됩니다. 약점 도메인(서버의 `get_weak_domains` 판정)은 붉게 강조되고, 도메인을 누르면 그 도메인 문제가 나옵니다. 데스크톱 브라우저 기준이며 모바일 화면은 지원하지 않습니다. 답변 끝의 근거 배지(`TS-x.y`)를 누르면 시험 가이드 원문 발췌가 펼쳐집니다. trace(경로·도구·근거·응답 시간)는 기본으로 숨겨 두었고, 진도 패널 아래 "개발 정보(trace) 표시"를 켜면 답변마다 볼 수 있습니다. 새로고침해도 같은 탭에서는 대화가 남습니다(서버를 다시 시작하면 풀던 문제는 이어지지 않음). 기본 user_id는 `web_demo`입니다(시드 사용자 `demo_heavy`도 고를 수 있지만 풀이가 `data/study_log.json`에 기록됩니다).
 
 ```powershell
 # 개념 질문
@@ -253,7 +253,7 @@ src/
   tracer.py            trace 수집
   ingest.py            PDF → 청크 62 + 세부 항목 240 → Chroma
   api.py               FastAPI /query, /progress, 웹 UI 서빙
-  web/index.html       웹 UI (v2-5)
+  web/                 웹 UI (v2-5): index.html + style.css + app.js
 scripts/               build_quiz_pool · review_sample · pool_report · seed_study_log · check_bedrock · demo_capture
 data/                  quiz_pool.json · quiz_pool_manifest.json · study_log.json (+ 미커밋: raw/*.pdf, guide_*.jsonl)
 evaluation/            test_queries.csv · ragas_reference.csv · run_eval · llm_judge · smoke_p0/p1 · ragas_smoke

@@ -527,8 +527,8 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 - `contexts`: `search_guide`/`get_chunk` 결과와, 출제 시에는 해당 문제의 TS 청크(정답 단서인 source_excerpt는 넣지 않음)를 콜백으로 수집 (Day 7 `run_eval.py`의 ToolRecorder 방식)
 - `trace`: step 단위 `guard → route(agent) → rewrite → retrieve → get_quiz → submit → progress → allocate → plan → output_check` + 끝에 `tools`(이번 턴 앱 도구 이름, 핸드오프·TutorAnswer 제외 — 평가 판정용)와 `llm`(호출 수·토큰·실제 응답 모델). `output_check`는 G3(concept_tutor)과 G4(최종 답변) 두 종류. Day 7 `local_tracer.py` 확장. 로컬 사본 `logs/trace.jsonl`(커밋 안 함)
 - 서버: FastAPI (Day 6 `api_server.py` 재사용, 경로만 `/query`로 변경)
-- 웹 UI (v2-5): `GET /`가 `src/web/index.html`(바닐라 JS 한 장, 외부 의존성·CDN 없음)을 서빙. `/query`를 그대로 부르며 그래프·가드·도구는 바꾸지 않음. `trace`에 `get_quiz` status=ok가 있으면 보기를 카드로 나눠 보여 주고(키보드 A~D 가능) 고른 글자를 다음 질문으로 보냄(정답은 UI도 모름, 채점은 `submit_answer`). 채점 응답(`submit`)이 오면 정답/오답 머리줄, 직전 문항의 내 선택·정답 카드 색 표시(정답 글자는 채점 답변 문구에서 읽음), 다음 행동 칩(같은 도메인·다른 도메인·해당 TS 개념). `submit` status=graded 직후 진도 패널 갱신. 기본 user_id는 시드 사용자가 아닌 `web_demo`(커밋 대상 study_log 보호)
-- `GET /progress?user_id=...` (v2-5): `get_progress` MCP 결과를 그대로 반환 (코드 계산, LLM·입력 가드 없음, 읽기 전용). 웹 UI 진도 패널용
+- 웹 UI (v2-5): `GET /`가 `src/web/index.html`(바닐라 JS 한 장, 외부 의존성·CDN 없음)을 서빙. `/query`를 그대로 부르며 그래프·가드·도구는 바꾸지 않음. `trace`에 `get_quiz` status=ok가 있으면 보기를 카드로 나눠 보여 주고(키보드 A~D 가능) 고른 글자를 다음 질문으로 보냄(정답은 UI도 모름, 채점은 `submit_answer`). 채점 응답(`submit`)이 오면 정답/오답 머리줄, 직전 문항의 내 선택·정답 카드 색 표시(정답 글자는 채점 답변 문구에서 읽음), 다음 행동 칩(같은 도메인·다른 도메인·해당 TS 개념). `submit` status=graded 직후 진도 패널 갱신. 진도 패널은 약점 도메인(`get_weak_domains` top 2)을 강조하고, 도메인 행·약점 버튼을 누르면 해당 도메인 출제 질문을 보냄. 폭 760px 이하에서는 헤더 "진도" 버튼으로 여는 아래 시트. 기본 user_id는 시드 사용자가 아닌 `web_demo`(커밋 대상 study_log 보호)
+- `GET /progress?user_id=...` (v2-5): `get_progress` MCP 결과 + `weak`(`get_weak_domains` top_k=2 결과)를 반환 (코드 계산, LLM·입력 가드 없음, 읽기 전용). 웹 UI 진도 패널용
 
 ### 7-1. 런타임 모델 전환 (S2, `src/llm.py`)
 - 기본은 고정 모델 `us.anthropic.claude-sonnet-4-5-20250929-v1:0` @ us-east-1. **쓰로틀링·일일 토큰 할당량 소진 등 일시 오류일 때만** `config.RUNTIME_MODEL_CHAIN` 순서로 전환: Sonnet 4.5(global@us-east-1 → us@us-west-2 → global@us-west-2 → global@ap-northeast-2) → Sonnet 4.6(같은 순서). Haiku는 쓰지 않음

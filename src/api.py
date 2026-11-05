@@ -5,7 +5,7 @@
 응답: {"answer", "contexts": [{"doc_id", "text"}], "trace": [...], "thread_id"}
   - thread_id를 주지 않으면 새로 만들어 돌려준다. 같은 thread_id로 이어서 부르면 출제 → 채점이 이어진다.
 GET /           웹 UI (src/web/index.html, v2-5)
-GET /progress   ?user_id=... → get_progress 결과 그대로 (코드 계산, LLM 없음. 웹 UI 진도 패널용)
+GET /progress   ?user_id=... → get_progress 결과 + weak(get_weak_domains) (코드 계산, LLM 없음. 웹 UI 진도 패널용)
 """
 import re
 import uuid
@@ -68,8 +68,12 @@ async def query(q: Query):
 
 @api.get("/progress")
 async def progress(user_id: str):
+    """get_progress 결과 + weak(get_weak_domains top 2). 약점 판정은 서버 코드가 하고 UI는 표시만 한다."""
     check_user_id(user_id)
-    return JSONResponse(content=await coach.bank.call("get_progress", {"user_id": user_id}), headers=UTF8_JSON)
+    out = await coach.bank.call("get_progress", {"user_id": user_id})
+    if not out.get("isError"):
+        out["weak"] = await coach.bank.call("get_weak_domains", {"user_id": user_id, "top_k": 2})
+    return JSONResponse(content=out, headers=UTF8_JSON)
 
 
 @api.get("/", include_in_schema=False)

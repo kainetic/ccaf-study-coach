@@ -118,9 +118,24 @@ aside .btn { padding: 2px 8px; font-size: 12px; }
 .stat div { background: var(--bg); border-radius: 8px; padding: 8px; }
 .stat b { display: block; font-size: 18px; }
 .stat span { font-size: 12px; color: var(--muted); }
-.dom { margin-bottom: 10px; font-size: 13px; }
+.dom {
+  display: block; width: 100%; text-align: left; margin-bottom: 6px; font-size: 13px;
+  padding: 6px 8px; border: 1px solid transparent; border-radius: 8px; background: none; cursor: pointer;
+}
+.dom:hover:not(:disabled), .dom:focus-visible { border-color: var(--accent); outline: none; }
+.dom:disabled { cursor: default; opacity: .6; }
 .dom .name { display: flex; justify-content: space-between; gap: 8px; }
-.dom .name span:last-child { color: var(--muted); white-space: nowrap; }
+.dom .name > span:last-child { color: var(--muted); white-space: nowrap; }
+.dom .track, .dom .fill { display: block; }
+.dom .go { color: var(--accent); visibility: hidden; }
+.dom:hover:not(:disabled) .go, .dom:focus-visible .go { visibility: visible; }
+.dom.weak { border-color: var(--err); background: var(--err-bg); }
+.dom.weak .fill { background: var(--err); }
+.weak-tag { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 4px; font-size: 11px; font-weight: 700; background: var(--err); color: var(--panel); white-space: nowrap; }
+.weak-box { font-size: 13px; background: var(--bg); border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; }
+.weak-box .btn { margin-top: 6px; padding: 4px 10px; font-size: 13px; }
+#toggleProgress, #closeProgress { display: none; }
+#backdrop { display: none; }
 .track { height: 8px; background: var(--bar); border-radius: 4px; margin-top: 3px; overflow: hidden; }
 .fill { height: 100%; background: var(--accent); }
 .note { font-size: 12px; color: var(--muted); }
@@ -130,8 +145,16 @@ aside .btn { padding: 2px 8px; font-size: 12px; }
   .chat { grid-template-rows: auto auto; }
   #log { overflow: visible; min-height: 50vh; }
   form#ask { position: sticky; bottom: 0; }
-  aside { border-left: 0; border-top: 1px solid var(--border); }
   header input { width: 110px; }
+  /* 모바일: 진도 패널은 헤더 "진도" 버튼으로 여는 아래 시트 */
+  #toggleProgress, #closeProgress { display: inline-block; }
+  aside {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; max-height: 80vh;
+    border-left: 0; border-top: 1px solid var(--border); border-radius: 14px 14px 0 0;
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, .25); transform: translateY(105%); transition: transform .2s ease;
+  }
+  body.sheet-open aside { transform: none; }
+  body.sheet-open #backdrop { display: block; position: fixed; inset: 0; z-index: 10; background: rgba(0, 0, 0, .35); }
 }
 </style>
 </head>
@@ -143,6 +166,7 @@ aside .btn { padding: 2px 8px; font-size: 12px; }
       <input id="uid" list="uids" autocomplete="off" spellcheck="false">
       <datalist id="uids"><option value="web_demo"><option value="demo_heavy"><option value="demo_new"></datalist>
     </label>
+    <button class="btn" id="toggleProgress" type="button" aria-controls="progressPanel">진도</button>
     <button class="btn" id="reset" type="button">새 대화</button>
   </header>
   <div class="main">
@@ -153,12 +177,14 @@ aside .btn { padding: 2px 8px; font-size: 12px; }
         <button class="btn primary" id="send" type="submit">보내기</button>
       </form>
     </section>
-    <aside>
-      <h2>진도 <button class="btn" id="refresh" type="button">새로고침</button></h2>
+    <aside id="progressPanel">
+      <h2>진도 <span><button class="btn" id="refresh" type="button">새로고침</button>
+        <button class="btn" id="closeProgress" type="button" aria-label="진도 닫기">닫기</button></span></h2>
       <div id="progress"><p class="note">불러오는 중…</p></div>
     </aside>
   </div>
 </div>
+<div id="backdrop"></div>
 <script>
 const USER_ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
 const EXAMPLES = [
@@ -391,8 +417,11 @@ function setBusy(on) {
   send.disabled = on;
   q.disabled = on;
   uid.disabled = on;
-  document.querySelectorAll(".examples .btn").forEach((b) => { b.disabled = on; });
+  document.querySelectorAll(".examples .btn, #progress [data-domain]").forEach((b) => { b.disabled = on; });
 }
+
+function openSheet() { document.body.classList.add("sheet-open"); }
+function closeSheet() { document.body.classList.remove("sheet-open"); }
 
 function currentUid() {
   const v = uid.value.trim();
@@ -451,20 +480,38 @@ async function loadProgress() {
     const res = await fetch("/progress?user_id=" + encodeURIComponent(user));
     const p = await res.json();
     if (!res.ok || p.isError) throw new Error(p.message || p.detail || `HTTP ${res.status}`);
+    // 약점 판정은 서버 get_weak_domains 결과(weak)를 그대로 쓴다 (UI에서 계산하지 않음)
+    const weak = p.weak && !p.weak.isError ? p.weak : null;
+    const weakIds = new Set(weak ? weak.top.map((w) => w.domain) : []);
+    const dis = busy ? " disabled" : "";
     const doms = p.domains.map((d) => `
-      <div class="dom">
-        <div class="name"><span>D${d.domain} ${esc(d.name)}</span><span>${pct(d.accuracy)} · ${d.correct}/${d.attempts}</span></div>
-        <div class="track" title="시험 비중 ${pct(d.weight)}"><div class="fill" style="width:${d.accuracy == null ? 0 : d.accuracy * 100}%"></div></div>
-        <div class="note">시험 비중 ${pct(d.weight)}</div>
-      </div>`).join("");
+      <button type="button" class="dom${weakIds.has(d.domain) ? " weak" : ""}" data-domain="${d.domain}"${dis}
+        title="Domain ${d.domain} 연습 문제 풀기">
+        <span class="name"><span>D${d.domain} ${esc(d.name)}${weakIds.has(d.domain) ? '<span class="weak-tag">약점</span>' : ""}</span>
+          <span>${pct(d.accuracy)} · ${d.correct}/${d.attempts}</span></span>
+        <span class="track"><span class="fill" style="width:${d.accuracy == null ? 0 : d.accuracy * 100}%"></span></span>
+        <span class="name note"><span>시험 비중 ${pct(d.weight)}</span><span class="go">문제 풀기 →</span></span>
+      </button>`).join("");
+    let weakBox = "";
+    if (weak && weak.top.length) {
+      const names = weak.top.map((w) => `D${w.domain} (정답률 ${pct(w.accuracy)})`).join(", ");
+      weakBox = `<div class="weak-box">약점 도메인: <b>${esc(names)}</b>
+        <br><button type="button" class="btn primary" id="weakQuiz" data-domain="${weak.top[0].domain}"${dis}>D${weak.top[0].domain} 약점 문제 풀기</button></div>`;
+    } else if (weak) {
+      weakBox = `<div class="weak-box note">${esc(weak.message || "약점을 판단할 기록이 부족합니다.")}</div>`;
+    }
     box.innerHTML = `
       <div class="stat">
         <div><b>${pct(p.accuracy)}</b><span>정답률 (${p.correct}/${p.attempts})</span></div>
         <div><b>${p.task_coverage.solved}/${p.task_coverage.total}</b><span>TS 커버리지</span></div>
         <div><b>${p.bullet_coverage.solved}/${p.bullet_coverage.total}</b><span>세부 항목 커버리지</span></div>
         <div><b>${p.last_answered_at ? esc(String(p.last_answered_at).slice(0, 10)) : "–"}</b><span>마지막 풀이</span></div>
-      </div>${doms}
-      <p class="note">막대는 도메인별 정답률. 정답률·약점 계산은 서버 코드가 합니다.</p>`;
+      </div>${weakBox}${doms}
+      <p class="note">막대는 도메인별 정답률. 도메인을 누르면 그 도메인 문제를 냅니다. 약점 점수 = 시험 비중 × (1 − 정답률), 시도 3회 이상 도메인만 (서버 계산).</p>`;
+    box.querySelectorAll("[data-domain]").forEach((b) => b.addEventListener("click", () => {
+      closeSheet();
+      ask(`Domain ${b.dataset.domain}에서 연습 문제 하나 내줘`);
+    }));
   } catch (e) {
     box.innerHTML = `<p class="note">진도를 불러오지 못했습니다: ${esc(e.message || "")}</p>`;
   }
@@ -507,6 +554,12 @@ document.addEventListener("keydown", (e) => {
 });
 $("reset").addEventListener("click", () => { if (!busy) { threadId = null; activeQuiz = null; showIntro(); q.focus(); } });
 $("refresh").addEventListener("click", loadProgress);
+$("toggleProgress").addEventListener("click", () => {
+  document.body.classList.contains("sheet-open") ? closeSheet() : (openSheet(), loadProgress());
+});
+$("closeProgress").addEventListener("click", closeSheet);
+$("backdrop").addEventListener("click", closeSheet);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet(); });
 uid.addEventListener("change", () => {
   if (currentUid()) { store("ccaf_user_id", uid.value.trim()); threadId = null; showIntro(); }
   loadProgress();

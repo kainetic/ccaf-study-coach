@@ -4,7 +4,7 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
 기획: SERVICE.md · 설계: docs/DESIGN.md · 평가: evaluation/test_queries.csv
 설계 세부는 필요할 때 docs/DESIGN.md의 해당 절(§)을 읽을 것. 전체를 미리 읽지 말 것.
 
-## 현재 단계: S1~S5 완료 → S6(제출 정리) (DESIGN §1-1 단계표)
+## 현재 단계: S1~S6 완료 → 제출 대기 (DESIGN §1-1 단계표)
 - 완료: S0(ingest 62/240) · S1 전반(문제 풀 승인 266/284 슬롯(93.7%), 세부 항목 커버리지 240/240,
   정답이 가장 긴 보기 54% → 33.8%(목표 35% 이하 달성, --rebalance-length 성공 55·원본 유지 20),
   5% 초과 비율 28% → 7.9%(참고). 수치·예외 기록은 evaluation/quiz_pool_report.md)
@@ -28,7 +28,10 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
   - 적용: §9-4 #2 오라우팅 보강(SUPERVISOR_PROMPT 배분 기준·예시, general 방어 규칙) + #4 TutorAnswer 완결성 규칙·형식 템플릿 (프롬프트만)
   - RAGAS 14건 (evaluation/ragas_round2.json): faithfulness 0.858 · recall 1.000 · precision 0.744 · relevancy 0.446 (목표 2개 충족)
   - 출처 표기율 100%, forbidden 위반 0. 남은 실패 12번("공식 채널 확인 권고" 누락). 개념 평균 27.6s(목표 15s 미달), 입력 토큰 +39%
-- 다음: S6 — README("활용한 패턴" 포함, DESIGN §10) · 시연 캡처 · 최종 점검. push는 원격 URL 받은 뒤
+- S6 완료: README.md("활용한 패턴" — 12개 패턴 중 10개 구현, 시험 TS 적용 지점, 용어 대응) · 시연 캡처 docs/demo/01~05
+  (scripts/demo_capture.py, 임시 study_log 사본) · DESIGN v0.5.4(§10·§11 실제 구현 기준)
+  - 최종 점검: smoke_p1 19/19 · smoke_p0 18/18 · pip check · compileall · 커밋 금지 파일·비밀값 검사 이상 없음
+- 다음: push (원격 URL 받은 뒤). 제출 후 후보는 round2_report §6
 - 선택 항목(v2)은 요청 전까지 시작하지 않는다
 
 ## 명령 (Windows PowerShell)
@@ -54,6 +57,7 @@ python evaluation/ragas_smoke.py                     # RAGAS 3건 스모크 → 
 python evaluation/smoke_p1.py                        # P1 오프라인 검증 (가드 규칙·G3·진도·배분 합계, LLM 없음)
 python evaluation/run_eval.py --label round1         # 20건 평가 → evaluation/results/round1_eval.json + logs/eval/round1_full.json (--ids 7,13)
 python evaluation/ragas_smoke.py --from logs/eval/round1_full.json --out evaluation/ragas_round1.json   # 같은 답변으로 RAGAS 14건
+python scripts/demo_capture.py                       # 시연 캡처 → docs/demo/*.md (--only 02,04, 실제 Bedrock 호출, study_log 임시 사본)
 MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언트가 sys.executable로 stdio 자식 프로세스로 띄움.
 
 ## 고정값

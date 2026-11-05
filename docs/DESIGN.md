@@ -1,8 +1,12 @@
-# DESIGN · CCA-F 학습 코치 (설계 v0.5.3)
+# DESIGN · CCA-F 학습 코치 (설계 v0.5.4)
 
 > 기준 문서: Claude Certified Architect – Foundations Exam Guide (Version 0.2, 2026-06-30)
 > 과제 규약: [Day 8,9,10] mini PJT 문서 §4 (산출물 규약), §5 (12개 패턴)
 > 이 문서는 Claude Code에 넘기는 구현 기준 문서입니다. SERVICE.md가 "왜/누구를", 이 문서는 "어떻게"를 다룹니다.
+
+**v0.5.4 변경 사항 (S6 제출 정리, 문서만)**
+- §10 매핑표를 실제 구현 기준으로 정리: 하위 에이전트는 `create_agent`, 장기 기억은 Store가 아니라 `study_log.json`(MCP) + thread별 `InMemorySaver`, 미들웨어는 G3 `TutorAnswerGuard`만, TS 5.1 `case_facts`·도구 결과 트리밍은 미구현(v2)
+- §11 폴더 구조를 실제 트리로 갱신(Dockerfile 없음, `check_bedrock`·`pool_report`·`demo_capture`, `docs/demo/`, `human_review_results.csv`). README.md 작성, 시연 캡처 `scripts/demo_capture.py` → `docs/demo/*.md`
 
 **v0.5.3 변경 사항 (S5 round2)**
 - round1 15/20의 실패 원인(오라우팅 3, 답변 누락 2)에 맞춰 §9-4 #2·#4 채택 (§9-4 채택 메모). 도구·스키마·가드 고정 문구는 바꾸지 않고 프롬프트만 변경
@@ -649,16 +653,16 @@ S3 구현 메모 (`evaluation/run_eval.py`, `evaluation/llm_judge.py`):
 
 | # | 패턴 | 적용 위치 | 우선순위 |
 |---|---|---|---|
-| 1 | LCEL + Pydantic 구조화 출력 | `TutorAnswer`, `QuizItem`, `ReviewVerdict` | 필수 |
-| 2 | ReAct | 각 하위 에이전트 (`create_react_agent`) | v1 |
+| 1 | LCEL + Pydantic 구조화 출력 | `TutorAnswer`(ToolStrategy), `with_structured_output`: `QuizItem`·`ReviewVerdict`·`InputCheck`·`StudyPlanDraft`·`JudgeVerdict` (`\|` 파이프 체인은 미사용) | 필수 |
+| 2 | ReAct | 각 하위 에이전트 (`langchain.agents.create_agent`) | v1 |
 | 3 | RAG (하이브리드·쿼리 확장) | `search_guide` | 필수 |
-| 4 | 도구 다중 | 검색 + 계산기 + MCP | v1 |
+| 4 | 도구 다중 | 검색(`search_guide`·`get_chunk`) + 계산(`allocate_study_time`) + 계획(`make_study_plan`) + MCP 4개 | v1 |
 | 5 | MCP 서버 | `quiz_bank_server.py` (문제 은행 + 학습 기록) | v1 |
 | 6 | 가드레일 | G1~G7 | v1 |
 | 7 | HITL | `reset_progress` 승인 | v2 |
-| 8 | 미들웨어 | 장기 세션 요약 + `case_facts` 보존 | v2 |
+| 8 | 미들웨어 | 장기 세션 요약 + `case_facts` 보존 (v2, 미구현). v1에서는 `AgentMiddleware`를 G3 검증(`TutorAnswerGuard`)에만 사용 | v2 |
 | 9 | Multi-Agent Supervisor | 전체 구조 | v1 |
-| 10 | Plan-Execute + 장기 메모리 | 학습 계획, Store | v1 |
+| 10 | Plan-Execute + 장기 메모리 | 학습 계획(`src/planner.py`), 장기 기억은 사용자별 `study_log.json`(MCP 경유, Store 대신), 대화 기억은 `InMemorySaver` | v1 |
 | 11 | Trace | `/query` trace, jsonl 로그 | 필수 |
 | 12 | 평가 (RAGAS · Judge) | §9 | 필수 |
 
@@ -669,7 +673,7 @@ v1만으로 10개 패턴(1~6, 9~12) 충족. 권장 기준(6개 이상)과 필수
 | 시험 TS | 앱에서 적용한 곳 |
 |---|---|
 | 1.2 coordinator가 필요한 에이전트만 선택 | Supervisor 배분 기준 |
-| 1.3 하위 에이전트에 컨텍스트 명시 전달 | handoff 시 task_id·시나리오·quiz_id 전달 |
+| 1.3 하위 에이전트에 컨텍스트 명시 전달 | handoff 시 TS 번호·도메인·시나리오 전달(Supervisor 규칙), 채점 대상은 State `pending_quiz_id` |
 | 1.4 / 1.5 프롬프트 대신 코드로 강제 | 가드레일, 코드 채점 + 기록 일체화(`submit_answer`), 정답 비노출 |
 | 2.1 도구 설명으로 선택 정확도 확보 | 도구 docstring 작성 규칙 |
 | 2.2 / 5.3 구조화 에러, 빈 결과와 실패 구분 | MCP 응답 형식, `no_match` |
@@ -680,7 +684,7 @@ v1만으로 10개 패턴(1~6, 9~12) 충족. 권장 기준(6개 이상)과 필수
 | 4.4 오류 피드백 재시도, 실패 유형 추적 | 생성 재시도 루프, `detected_patterns` |
 | 4.5 지연 허용 작업의 배치 처리, custom_id 기반 재제출, 표본으로 프롬프트 개선 | 풀 사전 생성, 매니페스트·`--resume`·`--fill-gaps`, 파일럿 10문제 |
 | 4.6 독립 인스턴스 검토 | `quiz_reviewer` |
-| 5.1 핵심 사실 보존 | `case_facts`, 도구 결과 트리밍 |
+| 5.1 핵심 사실 보존 | `case_facts`, 도구 결과 트리밍 — **미구현 (v2, README에서 제외)** |
 | 5.4 manifest 기반 복구 | 생성 중단 시 미완료 슬롯만 재개 |
 | 5.5 층화 표본 검토, 세그먼트별 정확도 확인 | 도메인별 층화 표본(재시도 문제 가중), 도메인별 승인율·커버리지 |
 | 5.6 claim-source 매핑 | `Claim`, 답변 출처 표기 |
@@ -692,31 +696,36 @@ LangGraph는 시험의 Claude Agent SDK와 다른 프레임워크이므로, 용�
 ## 11. 폴더 구조 (과제 §4-1 준수)
 
 ```
-mini-pjt_{이름}/
+mini_pjt/
 ├── src/
-│   ├── config.py              # 상위 폴더 ..\.env 로드, 모델 ID·리전·경로 상수, 모델 전환 체인
+│   ├── config.py              # 상위 폴더 ..\.env 로드(ENV_PATH), 모델 ID·리전·경로 상수, 모델 전환 체인
 │   ├── llm.py                 # 런타임 LLM (쓰로틀링 시 모델·리전 전환, §7-1)
-│   ├── agent.py               # Supervisor 그래프 조립 (build_app, CoachState, turn_answer)
-│   ├── agents/                # concept_tutor.py, quiz_master.py, general.py, study_coach.py(P1)
+│   ├── agent.py               # Supervisor 조립 (build_app, CoachState, single_handoff, CoachApp.run, turn_answer)
+│   ├── agents/                # concept_tutor.py, quiz_master.py, study_coach.py, general.py
 │   ├── quiz_client.py         # MCP stdio 세션 클라이언트
 │   ├── tools.py               # search_guide, get_chunk
 │   ├── quiz_gen.py            # 생성 → 검증 → 독립 검토 → 재시도 (오프라인 전용)
-│   ├── prompts/               # 문제 생성·검토 프롬프트
-│   ├── retriever.py           # 하이브리드 검색 + rewrite_query
+│   ├── prompts/               # 문제 생성·검토·재조정 프롬프트
+│   ├── retriever.py           # 정확 조회 + rewrite_query + 하이브리드 검색
 │   ├── schemas.py             # §2, §4 Pydantic 모델
-│   ├── guards.py              # G1~G7
+│   ├── guards.py              # G1~G5 (G6·G7은 MCP 도구), 고정 문구 상수
 │   ├── planner.py             # allocate_study_time(결정적 배분) + Plan-Execute 서브그래프
 │   ├── tracer.py              # trace 수집
 │   ├── ingest.py              # PDF → 청크 62개 + 세부 항목 240개 → Chroma
 │   ├── quiz_bank_server.py    # MCP 서버 (문제 은행 + 학습 기록)
 │   └── api.py                 # FastAPI /query
 ├── scripts/
-│   ├── build_quiz_pool.py     # 문제 풀 사전 생성 (--pilot, --resume, --fill-gaps)
-│   ├── review_sample.py       # 층화 표본 추출 → 사람 검토용 CSV
-│   └── seed_study_log.py      # 더미 풀이 기록 생성
+│   ├── build_quiz_pool.py     # 문제 풀 사전 생성 (--pilot, --resume, --fill-gaps, --rebalance-length …)
+│   ├── review_sample.py       # 층화 표본 → 사람 검토 xlsx, --apply로 반영
+│   ├── pool_report.py         # quiz_pool_report.md 자동 절 갱신
+│   ├── seed_study_log.py      # 더미 풀이 기록 생성
+│   ├── check_bedrock.py       # Bedrock 연결 확인
+│   └── demo_capture.py        # 시연 캡처 → docs/demo/*.md (S6)
 ├── data/
 │   ├── README.md              # 가이드 PDF 배치·ingest 방법 (PDF 자체는 미커밋)
 │   ├── raw/                   # ccaf_exam_guide.pdf (미커밋)
+│   ├── guide_chunks.jsonl     # (미커밋)
+│   ├── guide_bullets.jsonl    # (미커밋)
 │   ├── quiz_pool.json
 │   ├── quiz_pool_manifest.json
 │   └── study_log.json
@@ -728,17 +737,19 @@ mini-pjt_{이름}/
 │   ├── smoke_p0.py            # P0 한 바퀴 검증 (3턴)
 │   ├── smoke_p1.py            # P1 오프라인 검증 (LLM 없음)
 │   ├── ragas_smoke.py         # RAGAS (S2 3건 / --from으로 run_eval 결과 14건)
+│   ├── ragas_smoke.json · ragas_round1.json · ragas_round2.json
+│   ├── human_review_results.csv
 │   ├── quiz_pool_report.md
 │   ├── round1_report.md
 │   └── round2_report.md
 ├── docs/
 │   ├── DESIGN.md
+│   ├── demo/                  # 시연 캡처 (S6)
 │   └── quiz_generation_options.xlsx
 ├── CLAUDE.md
 ├── SERVICE.md
-├── requirements.txt           # + ragas, fastapi, uvicorn, pypdf
 ├── README.md
-└── Dockerfile                 # 선택
+└── requirements.txt           # Dockerfile은 v2 (미작성)
 ```
 
 ---

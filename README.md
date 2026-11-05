@@ -153,12 +153,14 @@ round2에서 바꾼 것은 프롬프트 두 가지입니다.
 
 **v2-6 (서울 리전)**: 런타임 기본 모델을 global Sonnet 4.5 @ ap-northeast-2(서울)로, 임베딩도 서울로 옮겼습니다(서울에는 Sonnet 4.5 `apac.` 프로필이 없음, 임베딩은 us-east-1과 코사인 0.9999라 재색인 없음). 같은 20건 결과는 19/20이고([v2_seoul_eval.json](evaluation/results/v2_seoul_eval.json)), LLM 88회가 모두 서울에서 응답했습니다. 실패한 4번은 "50% 비용 절감" 언급 누락으로, 4번만 두 번 다시 돌리면 2/2 PASS라 답변 생성 변동으로 봅니다. 응답 시간은 v2-4(사실상 global @ us-west-2, 88회 중 87회)와 같은 방식으로 재면 전체 평균 **18.7 → 17.3초**, 개념 질문(경로 concept_tutor 15건) 평균 **21.7 → 20.2초**이고, 가드 차단 3건을 뺀 17건 중 14건이 빨라졌습니다. 모델이 같아 줄어든 폭은 왕복 네트워크 지연만큼이고, 답변 생성 시간 자체는 그대로입니다. 같은 답변으로 잰 RAGAS 14건([ragas_v2_seoul.json](evaluation/ragas_v2_seoul.json), 채점 LLM·임베딩도 서울)은 faithfulness 0.850, recall 1.000, precision 0.760, relevancy 0.462입니다. v2-4(0.889 / 1.000 / 0.796 / 0.462)보다 faithfulness·precision이 0.04 정도 낮지만, 같은 답변을 다시 채점해도 생기는 흔들림(±0.05) 안이라 리전 변경의 영향으로 보지 않습니다.
 
+**웹 UI 점검 (v2-5, 2026-11-05)**: 화면 개선 항목(웰컴 화면, 문제 카드·채점 결과, 진도 패널, 개발 모드 trace)을 headless 브라우저에서 저장해 둔 대화와 세 프로필(`web_demo`·`demo_heavy`·`demo_new`)로 하나씩 확인했고 모두 통과했습니다. 1280·1440·1920 너비에서 가로로 넘치는 곳이 없고 콘솔 오류도 없습니다. 웹 UI용 자동 스모크는 저장소에 없으니, 화면을 확인할 때는 출제·채점 기록이 커밋된 `data/study_log.json`에 쌓이지 않도록 임시 사본으로 서버를 띄웁니다: `Copy-Item data\study_log.json $env:TEMP\study_log_ui.json; $env:CCAF_STUDY_LOG = "$env:TEMP\study_log_ui.json"; uvicorn src.api:api --port 8000`.
+
 알려진 한계도 그대로 남겨 둡니다.
 - 응답 시간이 목표 15초보다 깁니다.
 - answer_relevancy는 한국어 답변에 영어 병기와 [근거] 표기가 섞인 형식에서는 신뢰도가 낮습니다.
 
 ```powershell
-python evaluation/smoke_p1.py                                   # 오프라인 검증 (LLM 없음) 23/23
+python evaluation/smoke_p1.py                                   # 오프라인 검증 (LLM 없음) 37/37
 python evaluation/smoke_p0.py                                   # 개념 → 출제 → 채점 한 바퀴 + 늦은 가드 차단 24/24
 python evaluation/run_eval.py --label myrun                     # 20건 → evaluation/results/myrun_eval.json
 python evaluation/ragas_smoke.py --from logs/eval/myrun_full.json --out evaluation/ragas_myrun.json

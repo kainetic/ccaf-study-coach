@@ -69,7 +69,7 @@ gh repo clone kainetic/ccaf-study-coach    # GitHub CLI (gh auth login 후)
 cd ccaf-study-coach
 ```
 
-클론하면 코드, 문제 풀(`data/quiz_pool.json`), 풀이 기록, 평가 결과가 함께 받아집니다. 가이드 PDF와 그 파생물(청크 jsonl, `chroma_db/`)은 저장소에 없으므로 아래 3번(ingest)을 한 번 실행해야 합니다.
+클론하면 코드, 문제 풀(`data/quiz_pool.json`), 풀이 기록, 평가 결과가 함께 받아집니다. 가이드 PDF와 그 파생물(청크 jsonl, `chroma_db/`)은 저장소에 없으므로 아래 3번(ingest)을 한 번 실행해야 합니다. 문제 풀은 다시 만들지 않아도 되고, ingest 후 바로 출제·채점할 수 있습니다.
 
 ### 설치와 실행
 
@@ -107,7 +107,6 @@ curl.exe -s localhost:8000/query -H "Content-Type: application/json" `
 - 응답 형식: `{"answer", "contexts": [{"doc_id", "text"}], "trace": [...], "thread_id"}`. Swagger UI는 `http://localhost:8000/docs`에 있습니다.
 - `user_id`는 영문·숫자·`_`·`-`만 쓸 수 있습니다.
 - 시드된 더미 사용자는 두 명입니다. `demo_heavy`는 61회 풀이 기록이 있고 약점이 D2 > D5 순이며, `demo_new`는 기록이 없습니다.
-- 문제 풀(`data/quiz_pool.json`)과 풀이 기록(`data/study_log.json`)은 저장소에 포함돼 있어, ingest 후 바로 출제·채점할 수 있습니다. 문제를 다시 생성할 필요는 없습니다.
 
 ## 문제 풀 (오프라인 사전 생성)
 
@@ -153,7 +152,12 @@ python evaluation/run_eval.py --label myrun                     # 20건 → eval
 python evaluation/ragas_smoke.py --from logs/eval/myrun_full.json --out evaluation/ragas_myrun.json
 ```
 
-평가와 스모크는 `data/study_log.json`의 임시 사본에 기록하므로 커밋된 풀이 기록을 바꾸지 않습니다.
+`run_eval`과 `demo_capture`는 `data/study_log.json`의 임시 사본에 기록하고, `smoke_p1`은 읽기만 합니다. `smoke_p0`는 `data/study_log.json`을 직접 다시 쓰므로(끝나면 smoke 사용자 기록 삭제) 커밋된 기록을 그대로 두려면 임시 사본을 지정하고 실행합니다.
+
+```powershell
+Copy-Item data\study_log.json $env:TEMP\study_log_smoke.json
+$env:CCAF_STUDY_LOG = "$env:TEMP\study_log_smoke.json"; python evaluation/smoke_p0.py; Remove-Item Env:CCAF_STUDY_LOG
+```
 
 ## 시연
 
@@ -249,8 +253,6 @@ docs/                  DESIGN.md · demo/
 - `.env`
 - `evaluation/review_sample.xlsx`: 가이드 원문 시트가 있습니다.
 - `logs/`
-
-새 환경에서는 가이드 PDF를 받아 `python -m src.ingest`를 한 번 실행하면 됩니다. 문제 풀은 저장소에 있으니 다시 만들지 않아도 됩니다.
 
 ## 한계와 다음 단계 (v2)
 

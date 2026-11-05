@@ -1,37 +1,8 @@
-# DESIGN · CCA-F 학습 코치 (설계 v0.5.4)
+# DESIGN · CCA-F 학습 코치 (설계 v0.5.5)
 
 > 기준 문서: Claude Certified Architect – Foundations Exam Guide (Version 0.2, 2026-06-30)
 > 과제 규약: [Day 8,9,10] mini PJT 문서 §4 (산출물 규약), §5 (12개 패턴)
 > 이 문서는 Claude Code에 넘기는 구현 기준 문서입니다. SERVICE.md가 "왜/누구를", 이 문서는 "어떻게"를 다룹니다.
-
-**v0.5.4 변경 사항 (S6 제출 정리, 문서만)**
-- §10 매핑표를 실제 구현 기준으로 정리: 하위 에이전트는 `create_agent`, 장기 기억은 Store가 아니라 `study_log.json`(MCP) + thread별 `InMemorySaver`, 미들웨어는 G3 `TutorAnswerGuard`만, TS 5.1 `case_facts`·도구 결과 트리밍은 미구현(v2)
-- §11 폴더 구조를 실제 트리로 갱신(Dockerfile 없음, `check_bedrock`·`pool_report`·`demo_capture`, `docs/demo/`, `human_review_results.csv`). README.md 작성, 시연 캡처 `scripts/demo_capture.py` → `docs/demo/*.md`
-
-**v0.5.3 변경 사항 (S5 round2)**
-- round1 15/20의 실패 원인(오라우팅 3, 답변 누락 2)에 맞춰 §9-4 #2·#4 채택 (§9-4 채택 메모). 도구·스키마·가드 고정 문구는 바꾸지 않고 프롬프트만 변경
-
-**v0.5.2 변경 사항 (S3 구현)**
-- 가드레일 `src/guards.py`: G1·G2 입력 차단(규칙 → LLM 판별), **G4는 입력 정정(고정 문구, 그래프 미호출) + 출력 금지어 백스톱**, G3은 concept_tutor `TutorAnswer` 검증, 고정 문구 상수화 (§6)
-- concept_tutor `TutorAnswer` 구조화 출력 + G3, `[근거: …]`는 코드가 붙임 (§5-1). `get_chunk` 추가, search_guide의 정확 조회 선행은 유지 (§3-1)
-- `get_progress`·`get_weak_domains` MCP 도구 (§3-2). study_coach: `allocate_study_time`(LLM 인자는 days·hours_per_day만, 비중·정답률은 코드 조회) + `make_study_plan`(Plan-Execute, return_direct) (§3-1, §5-5). 시험일 Store/case_facts는 S3에서 하지 않음 (일수·시간이 없으면 묻기)
-- 평가 러너 `evaluation/run_eval.py` + `llm_judge.py`, 산출물은 커밋용 요약(`evaluation/results/`)과 비커밋 전체(`logs/eval/`)로 분리 (§9-1). `smoke_p1.py`(오프라인), `ragas_smoke.py --from` (§9-2)
-
-**v0.5.1 변경 사항 (S2 구현)**
-- 런타임 모델 전환 `config.RUNTIME_MODEL_CHAIN`(§7-1): us Sonnet 4.5 고정 → 쓰로틀링·일일 할당량 소진 시 같은 모델의 다른 프로필·리전, 그다음 Sonnet 4.6
-- quiz_master 도구는 MCP 래퍼 + return_direct: user_id·quiz_id 주입, 출제·채점 결과를 코드가 서식화, no_match 대체 출제도 코드 (§3-1, §5-3, §5-4)
-- 풀이 기록 스키마·CoachState(§4), 출제 도메인 가중 공식(§5-3), /query 응답 thread_id·answer 구성(§7), TutorAnswer는 S3(§5-1)
-
-**v0.5 변경 사항**
-- §1-1 구현 우선순위와 §12 일정을 **단계(Stage) S0~S6 + 선택 항목**으로 통합. 단계마다 범위·완료 기준·시작 조건을 두고, 날짜는 고정 마감 3개(Day 8 18:00 진도 공유, Day 9 종료 round1_report, Day 10 15:00 제출)만 남김. S2 = P0, S3 = P1 (기존 표기 유지)
-- v0.4.1~v0.4.4: 문제 풀 생성 세부 규칙(코드 검증 세부 패턴, 길이 repair, extra 쌍 선정, fill-gaps 가드·시나리오 재순위, 모델 전환) — §5-2
-
-**v0.4 변경 사항**
-- **런타임 실시간 문제 생성 제거** (v2 목록에서도 삭제). 문제 생성은 오프라인 풀 구축에서만 수행
-- **사전 생성 문제 풀 270문제**: 생성 단위를 TS에서 **세부 항목(Knowledge·Skills 불릿, 240개)**으로 변경. 세부 항목마다 1문제 + 도메인 비중으로 추가 30문제 (§5-2)
-- 사람 표본 검토: 일반 문제 10% + 재시도 거친 문제 20% (약 35문제)
-- 지표: 풀 적중률 삭제, 세부 항목 커버리지 추가
-- 이전 변경: v0.3 구현 우선순위(P0 = `search_guide` + `get_quiz` + `submit_answer`), v0.2 문제 은행 MCP 서버·코드 채점
 
 ---
 
@@ -47,7 +18,7 @@
 | 샘플 문항 12개(정답·해설 포함) | 생성 few-shot 예시(형식·난이도 기준), 해설 질문의 근거 |
 | Preparation Exercises 4개 | 학습 계획의 실습 과제 항목으로 연결 |
 | In-scope / Out-of-scope 목록 | negative·edge 응답 근거 ("이건 시험 범위 밖") |
-| TS 내용 자체 (hook 강제, 구조화 에러, 독립 검토, 배치 처리, 층화 표본, claim-source 매핑 등) | **이 앱의 구현 원칙으로도 적용** (§10-2) |
+| TS 내용 자체 (hook 강제, 구조화 에러, 독립 검토, 배치 처리, 층화 표본, claim-source 매핑 등) | **이 앱의 구현 원칙으로도 적용** (§10, README "활용한 패턴") |
 
 ---
 
@@ -55,7 +26,7 @@
 
 ### 1-1. 단계 (Stage) — 구현 우선순위와 일정 통합 (v0.5)
 
-진행은 날짜가 아니라 **단계와 완료 기준**으로 관리한다. 날짜로 고정된 것은 아래 "고정 마감" 3개뿐이다. 기존 P0/P1 표기는 S2/S3과 같은 뜻으로 계속 쓴다.
+단계별 범위와 완료 기준 (S0~S6 모두 완료). P0/P1은 S2/S3과 같은 뜻으로 쓴다.
 
 | 단계 | 범위 | 완료 기준 | 시작 조건 |
 |---|---|---|---|
@@ -68,28 +39,12 @@
 | **S6** 제출 정리 | README("활용한 패턴" 포함, §10) · 시연 캡처 · 최종 점검 후 제출 | 제출 | S5 완료, 또는 제출 마감이 임박하면 S5 진행 중이라도 시작 |
 | 선택 (= v2) | `reset_progress` HITL · 장기 세션 요약 미들웨어 · 웹 UI · Dockerfile · LangSmith/LangFuse 연동 | §9-4 참조 | 요청이 있을 때만 (S5 개선 후보로 고르거나 제출 후) |
 
-**진행 규칙**
-- **S1 후반(사람 검토·리포트·시드)과 S2는 병행할 수 있다.** S2는 파일럿 풀만으로 검증할 수 있으므로 풀 완성을 기다리지 않는다.
-- S2가 끝나기 전에는 S3(=P1)·선택 항목을 시작하지 않는다.
-- **S3이 늦어지면 덜어내는 순서**: ① study_coach(`allocate_study_time`, `make_study_plan`)부터 제외 → 테스트 7번은 round1 실패로 기록 ② 사람 표본 검토를 도메인당 3문제로 축소(S1 후반)
-- **S4(round1)는 S3 완료 즉시 실행하고, 어떤 개선 작업보다 먼저 수행한다.** round1은 개선 전 기준선이므로 S5 작업이 섞이면 안 된다.
-- 선택 항목은 요청 전까지 만들지 않는다.
-
-**고정 마감** (날짜로 고정된 것은 이 3개뿐)
-
-| 시각 | 마감 | 해당 단계 |
-|---|---|---|
-| Day 8 18:00 | SERVICE.md · test_queries.csv 진도 공유 | S0 |
-| Day 9 종료 | `round1_report.md` | S4 |
-| Day 10 15:00 | 최종 제출 | S6 |
-
 ### 1-2. 하지 않는 것 (이번 과제 범위 밖)
 - 실제 시험 문항 재현·덤프 제공, 합격 예측
 - **런타임 실시간 문제 생성** (제거. 풀이 부족한 범위는 오프라인 배치로 보충)
 - 난이도별 출제 (단일 난이도)
 - 가이드 외 문서(공식 SDK·MCP 문서 등) 코퍼스 확장
-- LangSmith/LangFuse 연동 (로컬 trace로 대체, 시간 남으면 선택), Dockerfile (선택)
-- 웹 UI는 선택 항목(v2) (1차 평가 후 결정, §13)
+- 선택 항목(v2): LangSmith/LangFuse 연동(로컬 trace로 대체), Dockerfile, 웹 UI
 
 ---
 
@@ -151,7 +106,7 @@ class GuideBullet(BaseModel):
 ### 2-4. 저장 정책 (공개 repo)
 - 가이드 PDF 원본(`data/raw/ccaf_exam_guide.pdf`), `guide_chunks.jsonl`, `guide_bullets.jsonl`은 **커밋하지 않음** (`.gitignore`). `data/README.md`에 PDF 배치 위치와 ingest 실행법만 기재.
 - **문제 풀 `data/quiz_pool.json`은 커밋함**: 직접 생성한 원본 문제이고 근거 인용은 짧은 발췌만 포함. 평가 재현성 확보 목적.
-- 미결정: 강사가 데이터 포함을 요구하면 청크 파일도 커밋 (§13).
+- 청크 파일은 미포함으로 확정 (데이터 포함을 요구받을 때만 커밋).
 
 ### 2-5. 다국어 검색 이슈 (중요)
 코퍼스는 영어, 질문은 한국어. BM25(kiwipiepy)는 한국어 질의로 영어 문서를 거의 못 찾음.
@@ -432,7 +387,7 @@ S2 구현 메모 (`src/retriever.py`): 정확 조회는 정규식(`TS 2.2`·`Tas
 - **프롬프트 변경 후 재생성** (`--reset-stale`, LLM 호출 없음): 현재 `prompt_version`과 다른 버전으로 처리된 슬롯을 되돌림. base/extra는 pending으로 초기화(attempts·repairs·detected_patterns·last_errors, 시나리오는 원래 배정값), fill 슬롯은 삭제, pool에서 해당 문항 제거. 자동 리셋은 하지 않고(전체 생성 도중 진행분 보호) 실행 시 오래된 버전 슬롯 수를 경고로 출력
 - **매니페스트 동기화**: 슬롯 배정 규칙이 바뀌면 pending 슬롯의 정의(focus_bullet_ids, scenario_candidates)는 자동 갱신, 처리된 슬롯의 정의가 바뀌었으면 오류(`--reset-stale` 후 재실행)
 - **Bedrock 일시 오류**(throttling 등)는 재시도 횟수(attempts)에 넣지 않음. 처리할 수 없으면 슬롯은 pending으로 남음
-- **모델 전환** (v0.4.4, 문제 풀 생성 전용 — 런타임은 `config.MODEL_ID` 고정): 생성·검토·repair·시나리오 순위 호출은 `quiz_gen.ModelPool`을 거침
+- **모델 전환** (v0.4.4, 문제 풀 생성용 — 런타임 전환은 §7-1): 생성·검토·repair·시나리오 순위 호출은 `quiz_gen.ModelPool`을 거침
   - 체인 `config.QUIZ_GEN_MODEL_CHAIN`: us Sonnet 4.5(기본) → global Sonnet 4.5 → us Sonnet 4.6 → global Sonnet 4.6. **Haiku는 쓰지 않음**(문항·검토 품질, 검토자가 생성자보다 약하면 안 됨)
   - 쓰로틀된 모델은 쿨다운(`min(60, 4·2^k)`초, 일일 토큰 할당량 소진 메시지면 60분)을 걸고 **기다리지 않고 다음 모델로 전환**. 기본 모델은 쿨다운이 끝나면 다시 우선 사용
   - 체인 전체가 쿨다운이면 가장 빨리 풀리는 시각까지 대기, 한 호출의 대기가 180초를 넘으면 `TransientError` → 슬롯 pending, 연속 3개 슬롯이면 실행 중단(재실행은 `--resume`)
@@ -582,7 +537,7 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 | `data/raw/ccaf_exam_guide.pdf` | 시험 가이드 원본 | X |
 | `data/guide_chunks.jsonl` | 검색용 청크 62개 | X |
 | `data/guide_bullets.jsonl` | 세부 항목 240개 | X |
-| `data/quiz_pool.json` | 문제 은행 (`QuizItem` 270개 목표) | O |
+| `data/quiz_pool.json` | 문제 은행 (`QuizItem`, 승인 266 / 목표 270) | O |
 | `data/quiz_pool_manifest.json` | 생성 슬롯과 상태 (재개·보충용) | O |
 | `data/study_log.json` | 풀이 기록. 더미 사용자 `demo_heavy`(기록 많음), `demo_new`(기록 없음) 시드 | O |
 
@@ -649,54 +604,18 @@ S3 구현 메모 (`evaluation/run_eval.py`, `evaluation/llm_judge.py`):
 
 ## 10. 매핑표
 
-### 10-1. 과제 12개 패턴
-
-| # | 패턴 | 적용 위치 | 우선순위 |
-|---|---|---|---|
-| 1 | LCEL + Pydantic 구조화 출력 | `TutorAnswer`(ToolStrategy), `with_structured_output`: `QuizItem`·`ReviewVerdict`·`InputCheck`·`StudyPlanDraft`·`JudgeVerdict` (`\|` 파이프 체인은 미사용) | 필수 |
-| 2 | ReAct | 각 하위 에이전트 (`langchain.agents.create_agent`) | v1 |
-| 3 | RAG (하이브리드·쿼리 확장) | `search_guide` | 필수 |
-| 4 | 도구 다중 | 검색(`search_guide`·`get_chunk`) + 계산(`allocate_study_time`) + 계획(`make_study_plan`) + MCP 4개 | v1 |
-| 5 | MCP 서버 | `quiz_bank_server.py` (문제 은행 + 학습 기록) | v1 |
-| 6 | 가드레일 | G1~G7 | v1 |
-| 7 | HITL | `reset_progress` 승인 | v2 |
-| 8 | 미들웨어 | 장기 세션 요약 + `case_facts` 보존 (v2, 미구현). v1에서는 `AgentMiddleware`를 G3 검증(`TutorAnswerGuard`)에만 사용 | v2 |
-| 9 | Multi-Agent Supervisor | 전체 구조 | v1 |
-| 10 | Plan-Execute + 장기 메모리 | 학습 계획(`src/planner.py`), 장기 기억은 사용자별 `study_log.json`(MCP 경유, Store 대신), 대화 기억은 `InMemorySaver` | v1 |
-| 11 | Trace | `/query` trace, jsonl 로그 | 필수 |
-| 12 | 평가 (RAGAS · Judge) | §9 | 필수 |
-
-v1만으로 10개 패턴(1~6, 9~12) 충족. 권장 기준(6개 이상)과 필수 4개 모두 만족.
-
-### 10-2. 시험 개념을 앱 구현에 적용한 지점 (README "활용한 패턴"에 같이 기재)
-
-| 시험 TS | 앱에서 적용한 곳 |
-|---|---|
-| 1.2 coordinator가 필요한 에이전트만 선택 | Supervisor 배분 기준 |
-| 1.3 하위 에이전트에 컨텍스트 명시 전달 | handoff 시 TS 번호·도메인·시나리오 전달(Supervisor 규칙), 채점 대상은 State `pending_quiz_id` |
-| 1.4 / 1.5 프롬프트 대신 코드로 강제 | 가드레일, 코드 채점 + 기록 일체화(`submit_answer`), 정답 비노출 |
-| 2.1 도구 설명으로 선택 정확도 확보 | 도구 docstring 작성 규칙 |
-| 2.2 / 5.3 구조화 에러, 빈 결과와 실패 구분 | MCP 응답 형식, `no_match` |
-| 2.3 에이전트당 도구 4~5개 이하 | §3-1 |
-| 2.4 MCP resource로 카탈로그 노출 | `quiz://catalog` |
-| 4.2 few-shot | 샘플 문항 기반 생성 |
-| 4.3 nullable·enum으로 날조 방지 | `coverage_gap`, `in_exam_scope="unclear"`, `detected_pattern` enum |
-| 4.4 오류 피드백 재시도, 실패 유형 추적 | 생성 재시도 루프, `detected_patterns` |
-| 4.5 지연 허용 작업의 배치 처리, custom_id 기반 재제출, 표본으로 프롬프트 개선 | 풀 사전 생성, 매니페스트·`--resume`·`--fill-gaps`, 파일럿 10문제 |
-| 4.6 독립 인스턴스 검토 | `quiz_reviewer` |
-| 5.1 핵심 사실 보존 | `case_facts`, 도구 결과 트리밍 — **미구현 (v2, README에서 제외)** |
-| 5.4 manifest 기반 복구 | 생성 중단 시 미완료 슬롯만 재개 |
-| 5.5 층화 표본 검토, 세그먼트별 정확도 확인 | 도메인별 층화 표본(재시도 문제 가중), 도메인별 승인율·커버리지 |
-| 5.6 claim-source 매핑 | `Claim`, 답변 출처 표기 |
-
-LangGraph는 시험의 Claude Agent SDK와 다른 프레임워크이므로, 용어 대응(Supervisor ≈ coordinator, handoff 도구 ≈ Task tool, 도구 내부 검증·노드 분기 ≈ hook)을 README에 한 줄로 밝힘. 풀 생성은 Bedrock 동기 호출을 병렬로 돌리는 방식이며 Message Batches API 자체를 쓰지는 않음.
+과제 12개 패턴의 적용 위치와 시험 TS를 앱 구현에 적용한 지점은 README "활용한 패턴"을 기준으로 한다.
+- 12개 중 10개 구현(1~6, 9~12). 7 HITL(`reset_progress`)은 v2, 8 미들웨어는 G3 `TutorAnswerGuard`(after_agent)에만 사용
+- 장기 기억은 Store 대신 사용자별 `study_log.json`(MCP 경유), 대화 기억은 thread별 `InMemorySaver`
+- TS 5.1 핵심 사실 보존(`case_facts`, 도구 결과 트리밍)은 미구현(v2)
+- LangGraph ↔ Claude Agent SDK 용어 대응(Supervisor ≈ coordinator, handoff 도구 ≈ Task tool, 도구 내부 검증·`post_model_hook`·`after_agent` ≈ hook)도 README에 기재
 
 ---
 
 ## 11. 폴더 구조 (과제 §4-1 준수)
 
 ```
-mini_pjt/
+ccaf-study-coach/
 ├── src/
 │   ├── config.py              # 저장소 폴더 .env 로드(ENV_PATH), 모델 ID·리전·경로 상수, 모델 전환 체인
 │   ├── llm.py                 # 런타임 LLM (쓰로틀링 시 모델·리전 전환, §7-1)
@@ -754,14 +673,12 @@ mini_pjt/
 
 ---
 
-## 12. 일정
+## 변경 이력
 
-§1-1 "단계(Stage)"로 통합 (v0.5). 단계별 범위·완료 기준·시작 조건과 고정 마감 3개는 §1-1 참조.
-
----
-
-## 13. 미결정 사항
-
-1. 가이드 원문/청크 파일을 repo에 포함할지 (기본값: 미포함, 문제 풀은 포함)
-2. 웹 UI 범위 (v2. 후보: 단일 HTML 페이지. 1차 평가 후 결정)
-3. 답변 언어: 한국어 설명 + 영어 핵심 용어 병기 (기본값)
+- v0.5.5 (제출 후 정리, 문서만): 변경 이력 압축, 끝난 일정·진행 규칙·미결정 사항(§12·§13) 삭제, §10은 README 참조로 축소, 자격 증명·venv를 저장소 폴더 기준으로
+- v0.5.4 (S6): §10 매핑을 실제 구현 기준으로 정리, §11 폴더 구조 갱신, README·시연 캡처(`scripts/demo_capture.py`)
+- v0.5.3 (S5 round2): §9-4 #2(오라우팅)·#4(TutorAnswer 완결성) 채택, 프롬프트만 변경
+- v0.5.2 (S3): 가드레일(G4는 입력 정정 + 출력 백스톱), `TutorAnswer` + G3, `get_chunk`, 진도·약점 MCP, study_coach(`allocate_study_time`은 days·hours만), 평가 러너와 산출물 분리
+- v0.5.1 (S2): 런타임 모델 전환(§7-1), quiz_master MCP 래퍼 + return_direct, 풀이 기록 스키마·CoachState
+- v0.5: 구현 우선순위와 일정을 단계 S0~S6으로 통합. v0.4.1~v0.4.4: 문제 풀 생성 세부 규칙(§5-2)
+- v0.4: 런타임 문제 생성 제거, 세부 항목 단위 사전 생성 풀(270문제 목표). v0.3: P0 우선순위. v0.2: 문제 은행 MCP 서버·코드 채점

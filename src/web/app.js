@@ -14,6 +14,7 @@ let history = [];               // 이번 대화 기록 (새로고침 복원용,
 const SESSION_KEY = "ccaf_session", HISTORY_MAX = 60;
 const DEBUG = new URLSearchParams(location.search).get("debug") === "1";   // ?debug=1 → trace 표시 체크박스
 const ACC_MIN = 10;             // 전체 정답률은 이만큼 풀어야 크게 보여 준다 (그 전에는 풀이 수 중심)
+const DOM_MIN = 3;              // 도메인 정답률은 이만큼 풀어야 보여 준다 (서버 약점 판정 기준 시도 3회와 같게)
 const sources = new Map();      // doc_id → 가이드 원문 (이번 대화에서 받은 contexts). 채점 턴은 출제 턴의 TS 청크를 쓴다
 
 function store(key, value) {
@@ -540,17 +541,20 @@ async function loadProgress(flashDomain) {
     const weak = p.weak && !p.weak.isError ? p.weak : null;
     const weakIds = new Set(weak ? weak.top.map((w) => w.domain) : []);
     const dis = busy ? " disabled" : "";
-    // 막대 길이 = 시험 비중(가장 큰 도메인이 꽉 참), 채운 부분 = 그 도메인 정답률
-    const maxW = Math.max(...p.domains.map((d) => d.weight)) || 1;
+    // 막대는 모든 도메인이 같은 길이, 채운 부분 = 정답률 (시도 DOM_MIN회 미만이면 정답률 대신 시도 수만)
     const doms = p.domains.map((d) => {
-      const tried = d.attempts > 0 && d.accuracy != null;
+      const shown = d.attempts >= DOM_MIN && d.accuracy != null;
+      const status = shown
+        ? `<span class="d-cnt">${d.correct}/${d.attempts}</span><span class="d-acc">${num("d" + d.domain, Math.round(d.accuracy * 100), "%")}</span>`
+        : d.attempts > 0
+          ? `<span class="d-none" title="${DOM_MIN}문제부터 정답률 표시">${num("n" + d.domain, d.attempts)}/${DOM_MIN} 풀이</span>`
+          : '<span class="d-none">아직 안 풂</span>';
       return `
       <button type="button" class="dom${weakIds.has(d.domain) ? " weak" : ""}" data-domain="${d.domain}"${dis}
-        title="Domain ${d.domain} 연습 문제 풀기 · 막대 길이 = 시험 비중 ${pct(d.weight)}, 채운 부분 = 정답률">
+        title="Domain ${d.domain} 연습 문제 풀기 · 시험 비중 ${pct(d.weight)}">
         <span class="row"><span class="d-name">D${d.domain} ${esc(d.name)}${weakIds.has(d.domain) ? '<span class="weak-tag">약점</span>' : ""}</span>
-          ${tried ? `<span class="d-cnt">${d.correct}/${d.attempts}</span><span class="d-acc">${num("d" + d.domain, Math.round(d.accuracy * 100), "%")}</span>`
-                  : '<span class="d-none">아직 안 풂</span>'}</span>
-        <span class="row bar-row"><span class="lane"><span class="track" style="width:${(d.weight / maxW) * 100}%"><span class="fill" style="width:${tried ? d.accuracy * 100 : 0}%"></span></span></span>
+          ${status}</span>
+        <span class="row bar-row"><span class="lane"><span class="track"><span class="fill" style="width:${shown ? d.accuracy * 100 : 0}%"></span></span></span>
           <span class="d-weight">비중 ${pct(d.weight)}</span><span class="go"><span class="go-text">문제 풀기</span>${CHEVRON}</span></span>
       </button>`;
     }).join("");
@@ -560,7 +564,11 @@ async function loadProgress(flashDomain) {
       weakBox = `<div class="weak-box"><span class="w-title">약점 도메인</span>${esc(names)}
         <button type="button" class="btn primary" id="weakQuiz" data-domain="${weak.top[0].domain}"${dis}>D${weak.top[0].domain} 약점 문제 풀기</button></div>`;
     } else if (weak) {
-      weakBox = `<div class="weak-box note">${esc(weak.message || "약점을 판단할 기록이 부족합니다.")}</div>`;
+      // 아직 판정할 도메인이 없으면 서버 문구 대신 안내형 문구, 기록이 아예 없으면 첫 문제 버튼도
+      const none = !p.domains.some((d) => d.attempts >= DOM_MIN);
+      const start = [...p.domains].sort((a, b) => b.weight - a.weight)[0];
+      weakBox = `<div class="weak-box note">${none ? `도메인별로 ${DOM_MIN}문제 이상 풀면 약점을 분석해 드려요.` : esc(weak.message || "약점을 판단할 기록이 부족합니다.")}` +
+        (p.attempts === 0 && start ? `<button type="button" class="btn primary" data-domain="${start.domain}"${dis}>첫 문제 풀기</button>` : "") + "</div>";
     }
     const kpi = (label, value, sub, cls = "", extra = "") =>
       `<div class="kpi${cls}"><div class="k-label">${label}</div><div class="k-value">${value}</div>${extra}<div class="k-sub">${sub}</div></div>`;
@@ -582,7 +590,7 @@ async function loadProgress(flashDomain) {
       <div class="section-title">도메인별 진도
         <span class="info" tabindex="0" aria-label="도메인별 진도 설명" aria-describedby="domTip">
           <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
-          <span class="tip" role="tooltip" id="domTip">막대 길이는 시험 비중, 채운 부분은 정답률이에요. 도메인을 누르면 그 도메인 문제를 냅니다.
+          <span class="tip" role="tooltip" id="domTip">막대는 정답률이에요(도메인별 ${DOM_MIN}문제부터 표시). 도메인을 누르면 그 도메인 문제를 냅니다.
             <span class="tip-sub">약점 점수 = 시험 비중 × (1 − 정답률), 시도 3회 이상 도메인만 (서버 계산)</span></span></span>
       </div>
       ${doms}`;
@@ -726,6 +734,7 @@ showTrace.addEventListener("change", () => {
 });
 uid.addEventListener("change", () => {
   if (currentUid()) { store("ccaf_user_id", uid.value.trim()); newConversation(); }
+  $("progress").scrollTop = 0;      // 다른 프로필의 진도는 맨 위부터
   loadProgress();
 });
 

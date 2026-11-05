@@ -364,7 +364,7 @@ aside { display: flex; flex-direction: column; min-height: 0; background: var(--
 .dom:hover:not(:disabled) .go-text, .dom:focus-visible .go-text { max-width: 60px; opacity: 1; }
 .dom:hover:not(:disabled) .go svg.ico { transform: translateX(2px); }
 .dom .track, .dom .fill { display: block; }
-.dom .track { flex: none; margin-top: 0; height: 8px; border-radius: 4px; background: #e8e9f3; }
+.dom .track { margin-top: 0; height: 8px; border-radius: 4px; background: #e8e9f3; }
 .dom .fill { border-radius: 4px; }
 .dom.weak { border-color: #fecaca; background: var(--err-bg); }
 .dom.weak .fill { background: var(--err); }

@@ -1,4 +1,4 @@
-# DESIGN · CCA-F 학습 코치 (설계 v0.6.3)
+# DESIGN · CCA-F 학습 코치 (설계 v0.6.4)
 
 > 기준 문서: Claude Certified Architect – Foundations Exam Guide (Version 0.2, 2026-06-30)
 > 과제 규약: [Day 8,9,10] mini PJT 문서 §4 (산출물 규약), §5 (12개 패턴)
@@ -578,6 +578,7 @@ S3 구현 메모 (`evaluation/run_eval.py`, `evaluation/llm_judge.py`):
 - judge 입력: 질문·답변·trace 요약(경로·도구·출제·약점·배분 수치, 가이드 원문 없음) → `JudgeVerdict`(traits·forbidden 항목별 ok + 사유). 빠뜨린 항목은 실패로 둠. `JUDGE_VERSION`으로 루브릭 버전 구분, judge 실제 모델 기록
 - 산출물: `evaluation/results/<label>_eval.json`(커밋: 판정·사유·도구·doc_id·지연·호출 수, 답변 본문·가이드 원문 없음) + `logs/eval/<label>_full.json`(비커밋: 답변·contexts, RAGAS 재사용)
 - 오프라인 스모크 `evaluation/smoke_p1.py`: 가드 규칙 20건, G3 분기, get_chunk 정규화, 진도·약점, 배분 합계, 기본 일정 검증 (LLM 없음)
+- 웹 UI(§7)는 자동 스모크 없음. 화면 확인은 `CCAF_STUDY_LOG`를 임시 사본으로 지정해 서버를 띄우고(출제·채점 기록이 커밋 대상 study_log에 쌓이지 않게) 1280·1440·1920 너비, 세 프로필(`web_demo`·`demo_heavy`·`demo_new`)로 본다. 2026-11-05 전체 점검 통과 (UI 3단계 항목별 동작, 가로 넘침 없음, 콘솔 오류 없음)
 
 ### 9-2. RAGAS
 - 대상: 근거 검색이 있는 문항만 (`evaluation/ragas_reference.csv`의 `ragas=Y`, 14건). 출제·학습 계획·가드레일 차단 문항은 judge로만 평가
@@ -688,6 +689,7 @@ ccaf-study-coach/
 
 ## 변경 이력
 
+- v0.6.4 (v2-5 UI 3단계·저장 정책): 웰컴 화면·채점 스크롤·오답 카드·아코디언·진도 패널(풀이 수 KPI, 막대 길이 동일·채움=정답률, 도메인 3회 미만 "N/3 풀이", 안내형 약점 문구)·trace는 `?debug=1`에서만·한글 어절 단위 줄바꿈 (§7). 저장 정책을 private repo 기준으로 정리, 가이드 원문·파생물 커밋 금지는 유지 (§2-4). 웹 UI 확인 방법과 점검 결과 (§9-1). 백엔드·채점 로직 변경 없음
 - v0.6.3 (v2-5 UI 2단계): 문제 카드·보기 상태·채점 결과 배너·보기별 해설 표시 개선. 백엔드·채점 로직·문항 텍스트 형식 변경 없음 (§7)
 - v0.6.2 (v2-5 UI 1단계): 웹 UI 디자인 시스템·레이아웃 개선, 라이트 전용(다크 모드 제거), 진도 패널 접기. 문항 카드 세부 디자인·백엔드 변경 없음 (§7)
 - v0.6.1 (v2-6): 런타임 기본 모델 리전을 서울(ap-northeast-2, global Sonnet 4.5)로, 임베딩도 서울. 문제 풀 생성은 us-east-1 유지(`QUIZ_GEN_MODEL_ID`·`QUIZ_GEN_REGION`) (§7-1). 20건 19/20(4번 변동), 전체 평균 18.7→17.3s, 개념 21.7→20.2s (v2_seoul_eval.json)

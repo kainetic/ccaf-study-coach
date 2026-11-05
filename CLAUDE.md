@@ -5,34 +5,9 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
 설계 세부는 필요할 때 docs/DESIGN.md의 해당 절(§)을 읽을 것. 전체를 미리 읽지 말 것.
 
 ## 현재 단계: S1~S6 완료 · push 완료 (DESIGN §1-1 단계표)
-- 완료: S0(ingest 62/240) · S1 전반(문제 풀 승인 266/284 슬롯(93.7%), 세부 항목 커버리지 240/240,
-  정답이 가장 긴 보기 54% → 33.8%(목표 35% 이하 달성, --rebalance-length 성공 55·원본 유지 20),
-  5% 초과 비율 28% → 7.9%(참고). 수치·예외 기록은 evaluation/quiz_pool_report.md)
-  · S1 후반: 사람 표본 검토 38/38 OK(오류 0, 경미 0) — 재검토 시 review_sample.xlsx 기입 → review_sample.py --apply
-    · study_log 시드: demo_heavy 61회(약점 D2 > D5 > D1 > D4 > D3), demo_new 기록 없음
-- S2(=P0) 완료: search_guide, get_quiz(MCP), submit_answer(MCP) + Supervisor + /query
-  - evaluation/smoke_p0.py 18/18 PASS (개념 질문 → 풀 출제 → 채점, study_log.json 기록, 정답 비노출)
-  - RAGAS 3건 기준선 (evaluation/ragas_smoke.json): faithfulness 0.896 · recall 1.0 · precision 0.917 · relevancy 0.681
-- S3(=P1) 완료: 가드레일 G1~G5(src/guards.py, G6·G7은 S2 도구), concept_tutor TutorAnswer+G3, get_chunk,
-  get_progress·get_weak_domains(MCP), study_coach(allocate_study_time·make_study_plan, src/planner.py), run_eval.py+llm_judge.py
-  - 설계 변경(DESIGN v0.5.2): G4는 입력 정정+출력 백스톱, search_guide 정확 조회 유지, allocate 인자는 days·hours만,
-    시험일 Store/case_facts 미구현(없으면 묻기), 평가 산출물은 evaluation/results(커밋)·logs/eval(비커밋)
-  - smoke_p1 19/19 · smoke_p0 18/18 · 20건 확인 실행(s3_check): 16/20 (positive 8/8 · negative 2/4 · edge 3/5 · guardrail 3/3).
-    실패 10·12·14는 Supervisor가 general_agent로 오라우팅(도구 0건, 12는 URL·접수 절차 지어냄), 16은 C·D 해설 누락
-    → 고치지 않고 round1에서 기준선으로 기록 (§9-4 #2 오라우팅 후보)
-- S4(round1) 완료: evaluation/round1_report.md — 15/20 (positive 7/8 · negative 2/4 · edge 3/5 · guardrail 3/3, 목표 14/20 충족)
-  - 실패: 오라우팅 10·12·14 (general_agent, 검색 없음) · 답변 누락 4·16 (청크에 있는 제약·오답 해설 빠뜨림)
-  - RAGAS 14건 (evaluation/ragas_round1.json): faithfulness 0.663 · recall 0.786 · precision 0.665 · relevancy 0.456
-    (오라우팅 3건 제외 11건: 0.844 · 1.000 · 0.846 · 0.514)
-- S5(round2) 완료: evaluation/round2_report.md — 19/20 (positive 8/8 · negative 3/4 · edge 5/5 · guardrail 3/3, 목표 17/20 충족)
-  - 적용: §9-4 #2 오라우팅 보강(SUPERVISOR_PROMPT 배분 기준·예시, general 방어 규칙) + #4 TutorAnswer 완결성 규칙·형식 템플릿 (프롬프트만)
-  - RAGAS 14건 (evaluation/ragas_round2.json): faithfulness 0.858 · recall 1.000 · precision 0.744 · relevancy 0.446 (목표 2개 충족)
-  - 출처 표기율 100%, forbidden 위반 0. 남은 실패 12번("공식 채널 확인 권고" 누락). 개념 평균 27.6s(목표 15s 미달), 입력 토큰 +39%
-- S6 완료: README.md("활용한 패턴" — 12개 패턴 중 10개 구현, 시험 TS 적용 지점, 용어 대응) · 시연 캡처 docs/demo/01~05
-  (scripts/demo_capture.py, 임시 study_log 사본) · DESIGN v0.5.4(§10·§11 실제 구현 기준)
-  - 최종 점검: smoke_p1 19/19 · smoke_p0 18/18 · pip check · compileall · 커밋 금지 파일·비밀값 검사 이상 없음
-- 원격: https://github.com/kainetic/ccaf-study-coach (private, 브랜치 master, origin 추적). 제출 후 개선 후보는 round2_report §6
-- 선택 항목(v2)은 요청 전까지 시작하지 않는다
+- 최종: round2 19/20, smoke_p0 18/18, smoke_p1 19/19. 수치·실패 분석은 evaluation/round*_report.md, quiz_pool_report.md
+- 데이터: 문제 풀 승인 266, study_log 시드 demo_heavy 61회·demo_new 없음 (seed_study_log.py)
+- 원격: https://github.com/kainetic/ccaf-study-coach (private, master). 개선 후보는 round2_report §6
 
 ## 명령 (Windows PowerShell)
 .venv\Scripts\activate; pip install -r requirements.txt     # 저장소 폴더 안 로컬 venv (.gitignore에 포함)
@@ -40,13 +15,8 @@ python scripts/check_bedrock.py                      # Bedrock LLM·임베딩 �
 python scripts/check_bedrock.py --quiz-chain         # 문제 풀 생성 모델 체인(QUIZ_GEN_MODEL_CHAIN) 4개 각각 접근 확인
 python -m src.ingest --dry-run                       # 파싱·62/240 검증만
 python -m src.ingest                                 # 가이드 PDF → guide_chunks.jsonl(62) + guide_bullets.jsonl(240) → Chroma
-python scripts/build_quiz_pool.py --pilot 10         # 파일럿 풀
-python scripts/build_quiz_pool.py --resume           # 전체 풀 270문제 (매니페스트 기준 이어서, 기본 슬롯 240개 먼저)
-python scripts/build_quiz_pool.py --fill-gaps        # 승인 문제가 없는 세부 항목만 보충
-python scripts/build_quiz_pool.py --rebalance-length # 정답이 가장 긴 오답보다 5% 넘게 긴 승인 문항의 보기 재조정
-python scripts/build_quiz_pool.py --exception-slot TS-5.2-K2:1   # 미커버 항목 시나리오 고정 예외 슬롯
-python scripts/build_quiz_pool.py --reset-stale      # 이전 prompt_version으로 처리된 슬롯을 pending으로 (LLM 호출 없음)
-python scripts/build_quiz_pool.py --resume --concurrency 1   # 동시 실행 수 (기본 2, 쓰로틀링 심하면 1)
+python scripts/build_quiz_pool.py --resume           # 문제 풀 생성 (매니페스트 기준 이어서). 다른 모드(--pilot·--fill-gaps·
+                                                     # --rebalance-length·--exception-slot·--reset-stale·--concurrency)는 --help, DESIGN §5-2
 python scripts/review_sample.py                      # 사람 표본 검토 xlsx + 결과 CSV (층화, repair 문항 층마다 1개 이상)
 python scripts/review_sample.py --apply             # 검토 반영: human_checked, 오류 → needs_fix, 리포트 갱신 (--dry-run 가능)
 python scripts/pool_report.py                        # evaluation/quiz_pool_report.md 자동 절 갱신
@@ -95,16 +65,6 @@ MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언�
 - 계산(시간 배분, 정답률, 약점 점수)은 LLM이 아니라 코드로 한다
 - 답변은 한국어, 핵심 용어는 영어 병기, 개념 답변 끝에 [근거: TS-x.y] 표기
 
-## 실습 코드 재사용 (원본: 상위 폴더 ..\dayN_practice)
-- day2_practice/hybrid.py, extra_multiquery.py → src/retriever.py
-- day4_practice/mcp_server.py → src/quiz_bank_server.py 골격
-- day5_practice guards_input.py, guards_refusal.py → src/guards.py (P1)
-- day6_practice/final_scenario.py → src/agent.py (build_app 구조)
-- day6_practice/api_server.py → src/api.py (경로 /query로 변경)
-- day7_practice/local_tracer.py → src/tracer.py
-- day7_practice/run_eval.py, llm_judge.py → evaluation/ (P1)
-- day7_practice/plan_and_execute.py → src/planner.py (P1)
-
 ## 알려진 함정
 - ChatBedrockConverse의 content가 블록 리스트로 올 수 있음 → get_text() 헬퍼로 텍스트 추출
 - Supervisor 구조에서는 하위 에이전트 도구 결과가 최상위 messages에 안 올라옴
@@ -117,7 +77,9 @@ MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언�
 - output_mode="last_message"는 하위 에이전트의 마지막 메시지만 올림 → 출제·채점은 return_direct 도구 결과를 답변으로 씀 (agent.turn_answer)
 - ragas 0.4.3은 langchain_community.chat_models.vertexai를 import (0.4에서 삭제) → ragas_smoke.py 안의 자리표시 모듈로 우회
 - concept_tutor는 ToolStrategy(TutorAnswer) + after_agent(TutorAnswerGuard)가 마지막 AIMessage를 만든다 → 답변 텍스트를 바꾸려면 프롬프트가 아니라 guards.check_tutor_answer
-- 평가·스모크가 출제하면 study_log에 issued가 쌓임 → run_eval은 임시 사본(CCAF_STUDY_LOG)을 씀. 다른 스크립트도 커밋 파일을 더럽히지 않게 주의
+- 평가·스모크가 출제하면 study_log에 issued가 쌓임 → run_eval·demo_capture는 임시 사본(CCAF_STUDY_LOG)을 씀.
+  smoke_p0는 data/study_log.json을 직접 다시 씀(종료 시 smoke 사용자 삭제, 형식 차이·중단 시 잔존 가능)
+  → 실행 전 $env:CCAF_STUDY_LOG에 임시 사본 경로 지정 권장
 - 가드 고정 문구(guards.REFUSALS·G4_CORRECTION·NO_EVIDENCE·OFF_TOPIC)는 run_eval이 문자열로 매칭 → 문구를 바꾸면 평가 기준도 바뀜
 
 ## 작업 방식

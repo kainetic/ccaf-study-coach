@@ -698,7 +698,7 @@ LangGraph는 시험의 Claude Agent SDK와 다른 프레임워크이므로, 용�
 ```
 mini_pjt/
 ├── src/
-│   ├── config.py              # 상위 폴더 ..\.env 로드(ENV_PATH), 모델 ID·리전·경로 상수, 모델 전환 체인
+│   ├── config.py              # 저장소 폴더 .env 로드(ENV_PATH), 모델 ID·리전·경로 상수, 모델 전환 체인
 │   ├── llm.py                 # 런타임 LLM (쓰로틀링 시 모델·리전 전환, §7-1)
 │   ├── agent.py               # Supervisor 조립 (build_app, CoachState, single_handoff, CoachApp.run, turn_answer)
 │   ├── agents/                # concept_tutor.py, quiz_master.py, study_coach.py, general.py

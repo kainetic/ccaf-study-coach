@@ -35,7 +35,7 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
 - 선택 항목(v2)은 요청 전까지 시작하지 않는다
 
 ## 명령 (Windows PowerShell)
-..\.venv\Scripts\activate; pip install -r requirements.txt   # 상위 venv 공용 (버전 동일 고정, 독립 저장소 분리 시 새 venv)
+.venv\Scripts\activate; pip install -r requirements.txt     # 저장소 폴더 안 로컬 venv (.gitignore에 포함)
 python scripts/check_bedrock.py                      # Bedrock LLM·임베딩 연결 확인
 python scripts/check_bedrock.py --quiz-chain         # 문제 풀 생성 모델 체인(QUIZ_GEN_MODEL_CHAIN) 4개 각각 접근 확인
 python -m src.ingest --dry-run                       # 파싱·62/240 검증만
@@ -68,10 +68,10 @@ MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언�
       → Sonnet 4.6, us-east-1·us-west-2·ap-northeast-2, DESIGN §7-1). LLM은 config.get_llm()이 아니라 get_runtime_llm()
 - 임베딩: BedrockEmbeddings "amazon.titan-embed-text-v2:0"
 - Chroma: persist ./chroma_db, collection "ccaf_guide"
-- 자격 증명: 상위 폴더의 ..\.env (sds-ax-practice\.env)를 사용. mini_pjt 안에 .env를 만들거나 복사하지 않음.
-  src/config.py 한 곳에서만 load_dotenv(Path(__file__).resolve().parents[2] / ".env")로 로드하고,
+- 자격 증명: 저장소 폴더(프로젝트 루트)의 .env를 사용 (.gitignore에 포함, 커밋 금지).
+  src/config.py 한 곳에서만 load_dotenv(ROOT / ".env")로 로드하고,
   다른 모듈·스크립트는 src.config를 import해서 씀 (모듈마다 load_dotenv() 호출 금지). 코드·문서에 키를 쓰지 않음.
-  .env 파일이 없으면 시작 시 경로를 포함한 오류로 즉시 종료 (제출용 독립 저장소로 분리할 때 이 경로만 바꾸면 됨)
+  .env 파일이 없으면 시작 시 경로를 포함한 오류로 즉시 종료
 - 가이드 PDF 위치: data/raw/ccaf_exam_guide.pdf (커밋 금지)
 
 ## 반드시 지킬 규칙

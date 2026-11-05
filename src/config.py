@@ -1,8 +1,7 @@
 """프로젝트 설정의 유일한 진입점.
 
-- 자격 증명은 상위 폴더(sds-ax-practice)의 .env 하나만 사용한다.
+- 자격 증명은 저장소 폴더(프로젝트 루트)의 .env 하나만 사용한다 (.gitignore에 포함, 커밋 금지).
   다른 모듈은 load_dotenv()를 직접 부르지 말고 이 모듈을 import한다.
-- 제출용 독립 저장소로 분리할 때는 ENV_PATH 한 줄만 바꾼다.
 """
 import os
 from pathlib import Path
@@ -10,7 +9,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parents[1]                 # mini_pjt/
-ENV_PATH = Path(__file__).resolve().parents[2] / ".env"    # sds-ax-practice/.env
+ENV_PATH = ROOT / ".env"                                   # 저장소 폴더/.env
 
 if not ENV_PATH.is_file():
     raise SystemExit(f"[config] .env not found: {ENV_PATH}")

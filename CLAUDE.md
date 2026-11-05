@@ -6,7 +6,8 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
 
 ## 현재 단계: S1~S6 완료 · push 완료 (DESIGN §1-1 단계표)
 - 최종: round2 19/20 → v2-1(GAP_NOTICE) 20/20 → v2-2(가드 병렬) 19/20·개념 평균 26.4→22.4s
-  → v2-3(case_facts·요약·청크 필터) 19/20, RAGAS precision 0.744→0.825·faithfulness 0.858→0.789(변동 추정, 미확인).
+  → v2-3(case_facts·요약·청크 필터) 19/20, RAGAS precision 0.825·faithfulness 0.789 (하락은 v2-2부터, 9번 예시 수치 탓)
+  → v2-4(튜터 예시 수치 금지 한 줄) 20/20, RAGAS faithfulness 0.889·recall 1.0·precision 0.796, 개념 평균 21.0s.
   smoke_p0 24/24, smoke_p1 37/37, smoke_memory 9/9. 수치·실패 분석은 evaluation/round*_report.md, quiz_pool_report.md
 - 데이터: 문제 풀 승인 266, study_log 시드 demo_heavy 61회·demo_new 없음 (seed_study_log.py)
 - 원격: https://github.com/kainetic/ccaf-study-coach (private, master). 개선 후보는 round2_report §6

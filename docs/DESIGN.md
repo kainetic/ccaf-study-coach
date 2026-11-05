@@ -1,4 +1,4 @@
-# DESIGN · CCA-F 학습 코치 (설계 v0.5.8)
+# DESIGN · CCA-F 학습 코치 (설계 v0.5.9)
 
 > 기준 문서: Claude Certified Architect – Foundations Exam Guide (Version 0.2, 2026-06-30)
 > 과제 규약: [Day 8,9,10] mini PJT 문서 §4 (산출물 규약), §5 (12개 패턴)
@@ -683,6 +683,7 @@ ccaf-study-coach/
 
 ## 변경 이력
 
+- v0.5.9 (v2-4): concept_tutor 프롬프트에 "검색 결과에 없는 수치는 예시로도 쓰지 않음" 한 줄 (평가 9번 TTL 예시 수치 대응, 평가 문장은 넣지 않음)
 - v0.5.8 (v2-3): 검색 결과 청크 필터(`trim_hits`, bullet 단위 자르기는 회귀로 철회), 장기 대화 요약 + `case_facts` 보존(`memory.py`, `CoachApp.run`), study_coach 프롬프트에 요약 블록 사실 사용 한 줄 (§4, §5-1, §10)
 - v0.5.7 (v2-2): 입력 가드 2차 LLM 판별을 그래프와 병렬 실행, 앱 도구는 gate에서 판별 통과 대기, 차단 시 그래프 취소 + 이번 턴 메시지 되돌림 (§6)
 - v0.5.6 (v2-1): G3에서 `coverage_gap`이 있으면 `GAP_NOTICE`(공식 안내 확인)를 코드가 붙임 — round2 남은 실패 12번 대응, 프롬프트 변경 없음

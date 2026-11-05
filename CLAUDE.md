@@ -4,19 +4,12 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
 기획: SERVICE.md · 설계: docs/DESIGN.md · 평가: evaluation/test_queries.csv
 설계 세부는 필요할 때 docs/DESIGN.md의 해당 절(§)을 읽을 것. 전체를 미리 읽지 말 것.
 
-## 현재 단계: S1~S6 완료 · push 완료 (DESIGN §1-1 단계표)
-- 최종: round2 19/20 → v2-1(GAP_NOTICE) 20/20 → v2-2(가드 병렬) 19/20·개념 평균 26.4→22.4s
-  → v2-3(case_facts·요약·청크 필터) 19/20, RAGAS precision 0.825·faithfulness 0.789 (하락은 v2-2부터, 9번 예시 수치 탓)
-  → v2-4(튜터 예시 수치 금지 한 줄) 20/20, RAGAS faithfulness 0.889·recall 1.0·precision 0.796, 개념 평균 21.0s.
-  → v2-5 웹 UI(`GET /`·`GET /progress`, 그래프 변경 없음). 이후 프런트 다듬기(웰컴 압축·채점 스크롤·진도 패널·
-    trace는 `/?debug=1`에서만, DESIGN §7 웹 UI 항목 "UI 3단계"). 진도 패널 후속: 막대 길이 동일·채움=정답률,
-    도메인 시도 3회 미만은 "N/3 풀이"(약점 판정 기준과 같게). 한글 줄바꿈은 body의 word-break: keep-all
-    (+ overflow-wrap: anywhere)로 어절 단위. UI 전체 점검(2026-11-05) 통과: 1280·1440·1920 가로 넘침 없음,
-    콘솔 오류 없음. 웹 UI 스모크는 저장소에 없음 → 화면 확인은 브라우저로 (study_log 임시 사본으로 서버 실행, DESIGN §9-1)
-  → v2-6 서울 리전(global Sonnet 4.5 @ ap-northeast-2) 19/20(4번 변동, 재실행 2/2 PASS), 전체 평균 18.7→17.3s·개념 21.7→20.2s.
-  smoke_p0 24/24, smoke_p1 37/37, smoke_memory 9/9. 수치·실패 분석은 evaluation/round*_report.md, quiz_pool_report.md
+## 상태: 프로젝트 종료 (S0~S6 + 제출 후 개선 v2-1~v2-6 완료, DESIGN §1-1·변경 이력)
+- 최종(v2-6): 20건 19/20, RAGAS faithfulness 0.850·recall 1.000, 개념 평균 20.2s.
+  smoke_p0 24/24, smoke_p1 37/37, smoke_memory 9/9. 버전별 수치는 README "평가 결과", 성공 기준 대비는 SERVICE §5
 - 데이터: 문제 풀 승인 266, study_log 시드 demo_heavy 61회·demo_new 없음 (seed_study_log.py)
-- 원격: https://github.com/kainetic/ccaf-study-coach (private, master). 개선 후보는 round2_report §6
+- 웹 UI는 자동 스모크 없음 → 브라우저로 확인 (study_log 임시 사본으로 서버 실행, DESIGN §9-1)
+- 원격: https://github.com/kainetic/ccaf-study-coach (private, master). 남은 개선 후보는 README "한계"
 
 ## 명령 (Windows PowerShell)
 .venv\Scripts\activate; pip install -r requirements.txt     # 저장소 폴더 안 로컬 venv (.gitignore에 포함)

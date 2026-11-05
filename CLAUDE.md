@@ -11,7 +11,8 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
   → v2-5 웹 UI(`GET /`·`GET /progress`, 그래프 변경 없음). 이후 프런트 다듬기(웰컴 압축·채점 스크롤·진도 패널·
     trace는 `/?debug=1`에서만, DESIGN §7 웹 UI 항목 "UI 3단계"). 진도 패널 후속: 막대 길이 동일·채움=정답률,
     도메인 시도 3회 미만은 "N/3 풀이"(약점 판정 기준과 같게). 한글 줄바꿈은 body의 word-break: keep-all
-    (+ overflow-wrap: anywhere)로 어절 단위. 웹 UI 스모크는 없음 → 화면 확인은 브라우저로
+    (+ overflow-wrap: anywhere)로 어절 단위. UI 전체 점검(2026-11-05) 통과: 1280·1440·1920 가로 넘침 없음,
+    콘솔 오류 없음. 웹 UI 스모크는 저장소에 없음 → 화면 확인은 브라우저로 (study_log 임시 사본으로 서버 실행)
   → v2-6 서울 리전(global Sonnet 4.5 @ ap-northeast-2) 19/20(4번 변동, 재실행 2/2 PASS), 전체 평균 18.7→17.3s·개념 21.7→20.2s.
   smoke_p0 24/24, smoke_p1 37/37, smoke_memory 9/9. 수치·실패 분석은 evaluation/round*_report.md, quiz_pool_report.md
 - 데이터: 문제 풀 승인 266, study_log 시드 demo_heavy 61회·demo_new 없음 (seed_study_log.py)

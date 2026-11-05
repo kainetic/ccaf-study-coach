@@ -55,7 +55,7 @@ flowchart LR
 
 - **런타임 LLM**: `src/llm.py`의 `FallbackChatModel`. 기본은 서울 리전(ap-northeast-2)의 global Sonnet 4.5입니다. 쓰로틀링 같은 일시 오류가 나면 Sonnet 4.5의 다른 프로필·리전 → Sonnet 4.6 순으로 전환합니다.
 - **입력 가드 LLM 판별은 그래프와 병렬로 돕니다.** 규칙 검사에 걸리면 그래프를 부르지 않습니다. 규칙을 통과하면 LLM 판별과 그래프를 함께 시작하되, 모든 앱 도구는 판별이 통과할 때까지 기다립니다. LLM이 차단하면 그래프를 취소하고 이번 턴 메시지를 되돌리므로, 차단된 요청에서는 도구가 한 번도 실행되지 않습니다.
-- **문제는 런타임에 만들지 않습니다.** 오프라인에서 미리 생성하고 검토한 풀에서만 출제하고, 풀에 없는 조합이면 대체 문제를 제안합니다.
+- **문제는 런타임에 만들지 않습니다.** 오프라인에서 미리 생성하고 검토한 풀에서만 출제하고, 풀에 없는 조합이면 그 사실을 알리고 풀에 있는 대체 조합에서 출제합니다.
 
 ## 빠른 시작 (Windows PowerShell)
 
@@ -101,7 +101,6 @@ uvicorn src.api:api --port 8000   # 브라우저에서 http://localhost:8000/
 - **진도 패널**: 오른쪽 패널(`GET /progress`)에 정답률·도메인별 막대·커버리지가 나오고 채점 직후 갱신됩니다. 약점 도메인은 붉게 강조되고, 도메인을 누르면 그 도메인 문제가 나옵니다.
 - **프로필·기록**: 헤더의 프로필 메뉴에서 `web_demo`(기본)·`demo_heavy`(기록 61회)·`demo_new`(신규)를 고릅니다. 푼 문제는 `data/study_log.json`에 기록되므로, 기록을 남기지 않으려면 임시 사본으로 서버를 띄우세요(아래 "study_log 보호"). 새로고침해도 같은 탭에서는 대화가 남지만, 서버를 다시 시작하면 풀던 문제는 이어지지 않습니다.
 - **개발 모드**: `http://localhost:8000/?debug=1`에서 진도 패널 아래 "개발 정보(trace) 표시"를 켜면 답변마다 경로·도구·근거·응답 시간을 볼 수 있습니다.
-- 웹 UI는 자동 스모크가 없어 브라우저로 확인합니다(DESIGN §9-1).
 
 ```powershell
 # 개념 질문
@@ -173,6 +172,8 @@ python evaluation/run_eval.py --label myrun                     # 20건 → eval
 python evaluation/ragas_smoke.py --from logs/eval/myrun_full.json --out evaluation/ragas_myrun.json
 ```
 
+웹 UI는 자동 스모크가 없어 브라우저로 확인합니다(DESIGN §9-1).
+
 **study_log 보호**: `run_eval`·`smoke_memory`·`demo_capture`는 `data/study_log.json`의 임시 사본에 기록하고, `smoke_p1`은 읽기만 합니다. `smoke_p0`와 API 서버(웹 UI 포함)는 `data/study_log.json`에 직접 씁니다(`smoke_p0`는 끝나면 smoke 사용자 기록을 삭제). 커밋된 기록을 그대로 두려면 임시 사본을 지정하고 실행합니다.
 
 ```powershell
@@ -223,7 +224,7 @@ Remove-Item Env:CCAF_STUDY_LOG
 | 1.3 하위 에이전트에 컨텍스트를 명시적으로 넘김 | 핸드오프 때 TS 번호·도메인·시나리오를 빠뜨리지 않는 규칙. 채점 대상은 State의 `pending_quiz_id`로 넘김 |
 | 1.4 / 1.5 프롬프트 대신 코드로 강제 | 입력 가드, `single_handoff`(동시 핸드오프 제거), 코드 채점과 기록을 한 번에(`submit_answer`), 정답 비노출, G3 claim 검증 |
 | 2.1 도구 설명으로 선택 정확도 확보 | 모든 도구 docstring에 언제 쓰고 언제 쓰지 않는지, 입력 형식, 예시를 적음 |
-| 2.2 / 5.3 구조화 에러, 빈 결과와 실패를 구분 | MCP 에러 `{isError, errorCategory, isRetryable, message}`, 결과 없음은 `status: "no_match"` + 대체 제안 |
+| 2.2 / 5.3 구조화 에러, 빈 결과와 실패를 구분 | MCP 에러 `{isError, errorCategory, isRetryable, message}`, 결과 없음은 `status: "no_match"` + 대체 조합 출제 |
 | 2.3 에이전트당 도구 4~5개 이하 | 최대 4개 (study_coach) |
 | 2.4 MCP resource로 카탈로그 노출 | `quiz://catalog` (도메인·TS·시나리오별 출제 가능 수) |
 | 4.2 few-shot | 가이드 샘플 문항 기반 문제 생성, round2 형식 예시 |
@@ -231,9 +232,9 @@ Remove-Item Env:CCAF_STUDY_LOG
 | 4.4 오류 피드백 재시도, 실패 유형 추적 | 생성 재시도 루프, 실패 패턴 집계 |
 | 4.5 지연 허용 작업은 배치로, custom_id 기반 재제출 | 풀 사전 생성, 매니페스트·`--resume`·`--fill-gaps`, 파일럿 10문제로 프롬프트 조정 |
 | 4.6 독립 인스턴스 검토 | 생성과 분리된 검토 호출(`quiz_review` 프롬프트) |
+| 5.1 핵심 사실 보존, 도구 결과 트리밍 | `case_facts`(남은 일수·하루 시간·관심 도메인/TS, 정규식 추출)를 요약 블록에 그대로 렌더. `search_guide` 2순위 이하 TS 청크 중 검색어와 겹치는 bullet이 없는 청크는 뺌 |
 | 5.4 manifest 기반 복구 | 생성이 중단되면 미완료 슬롯만 재개 |
 | 5.5 층화 표본 검토, 세그먼트별 정확도 | 도메인별 층화 사람 표본 검토(재시도 문항 포함), 도메인별 승인율·커버리지 |
-| 5.1 핵심 사실 보존, 도구 결과 트리밍 | `case_facts`(남은 일수·하루 시간·관심 도메인/TS, 정규식 추출)를 요약 블록에 그대로 렌더. `search_guide` 2순위 이하 TS 청크 중 검색어와 겹치는 bullet이 없는 청크는 뺌 |
 | 5.6 claim-source 매핑 | `Claim(doc_id, excerpt)`, 코드가 붙이는 `[근거: …]` |
 
 **용어 대응**: 이 앱은 시험이 다루는 Claude Agent SDK가 아니라 LangGraph로 만들었습니다. 대응 관계는 다음과 같습니다.
@@ -271,7 +272,7 @@ data/                  README.md(가이드 PDF 배치·ingest 방법) · quiz_po
 evaluation/            test_queries.csv · ragas_reference.csv · run_eval · llm_judge · smoke_p0/p1/memory · ragas_smoke
                        results/<label>_eval.json (round1·round2·s3_check·v2_*) · ragas_*.json (smoke·round1·round2·v2_*)
                        round1/round2_report.md · quiz_pool_report.md · human_review_results.csv
-docs/                  DESIGN.md · demo/ · quiz_generation_options.xlsx(문제 풀 생성 방식 사전 비교·비용 추정)
+docs/                  DESIGN.md · demo/
 chroma_db/             벡터 DB (미커밋, ingest로 생성)
 logs/                  trace.jsonl · guard_audit.log · eval/ (미커밋)
 ```
@@ -282,7 +283,7 @@ logs/                  trace.jsonl · guard_audit.log · eval/ (미커밋)
 
 ## 한계
 
-- **응답 시간**: 개념 질문 평균 20.2초(목표 15초), 단일 출제 5.8초(목표 5초)로 미달입니다. 가장 큰 비중은 답변 생성(약 12.6초)입니다. 가이드에 근거가 없는 질문에서는 검색을 프롬프트 상한(2회)보다 더 반복하기도 합니다(제출 시점 시연 캡처에서 검색 4회, 상한은 코드로 강제하지 않음). 남은 개선 후보는 검색 횟수를 코드로 제한하는 것과 Supervisor 왕복·LLM 호출 수를 줄이는 것입니다.
+- **응답 시간**: 개념 질문 평균 20.2초(목표 15초), 단일 출제 5.8초(목표 5초)로 미달입니다. 가이드에 근거가 없는 질문에서는 검색을 프롬프트 상한(2회)보다 더 반복하기도 합니다(상한은 프롬프트로만 두고 코드로 강제하지 않음). 남은 개선 후보는 검색 횟수를 코드로 제한하는 것과 Supervisor 왕복·LLM 호출 수를 줄이는 것입니다.
 - answer_relevancy는 한국어 답변에 영어 병기와 `[근거]` 표기가 섞인 형식에서는 신뢰도가 낮습니다.
 - G4 정정 질문과 개념 질문이 한 메시지에 섞이면 정정 문구만 답합니다.
 - 시험일과 사용자 프로필(Store 장기 기억)은 저장하지 않습니다. 학습 계획에 필요한 남은 일수·하루 시간은 질문이나 같은 대화의 `case_facts`에서 가져오고, 없으면 묻습니다.

@@ -1,6 +1,6 @@
 """가드레일 G1~G5 (DESIGN §6). Day 5 guards_input.py(규칙 + LLM 판별), guards_refusal.py(고정 문구 + 내부 기록) 재사용.
 
-- 입력: input_guard — G1(실제 문항·덤프 요청), G2(프롬프트 인젝션)는 차단, G4(공식·제휴·합격 보장 질문)는 고정 정정 문구.
+- 입력 가드 — G1(실제 문항·덤프 요청), G2(프롬프트 인젝션)는 차단, G4(공식·제휴·합격 보장 질문)는 고정 정정 문구.
   1차 정규식(rule_check) → 걸리면 그래프를 부르지 않는다. 통과하면 2차 LLM 판별(llm_guard, G1+G2 한 번에)을
   그래프와 동시에 돌린다(응답 시간 단축). 앱 도구는 첫 줄에서 wait_input_ok()로 판별 통과를 기다리므로
   LLM이 차단하면 도구는 한 번도 실행되지 않고, CoachApp.run이 그래프를 취소하고 이번 턴 메시지를 되돌린다.
@@ -101,15 +101,6 @@ async def llm_check(text: str) -> InputCheck:
     from src.llm import get_runtime_llm
     checker = get_runtime_llm().with_structured_output(InputCheck)
     return await checker.ainvoke(LLM_PROMPT.format(text=text))
-
-
-async def input_guard(text: str) -> GuardDecision:
-    """1차 규칙 → 2차 LLM을 차례로 (스크립트·단독 확인용). CoachApp.run은 두 단계를 나눠 LLM을 그래프와 병렬로 돌린다."""
-    d = rule_check(text)
-    if d.action != "pass":
-        audit(d)
-        return d
-    return await llm_guard(text)
 
 
 # 2차 판별 결과를 기다리는 gate. CoachApp.run이 Future를 넣고 그래프 task를 띄운다 (task가 context를 복사).

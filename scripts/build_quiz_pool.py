@@ -19,7 +19,7 @@ import hashlib
 import json
 import os
 import sys
-from collections import Counter, defaultdict
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 

@@ -1,4 +1,4 @@
-# DESIGN · CCA-F 학습 코치 (설계 v0.7.1, 최종)
+# DESIGN · CCA-F 학습 코치 (설계 v0.8, 최종)
 
 > 기준 문서: Claude Certified Architect – Foundations Exam Guide (Version 0.2, 2026-06-30)
 > 과제 규약: 교육 과정 mini PJT 안내 문서(과정 내부 자료) §4 산출물 규약, §5 12개 패턴. 본문의 "Day N `xxx.py` 재사용"은 같은 과정의 N일차 실습 코드를 가져왔다는 뜻
@@ -31,7 +31,7 @@
 | 단계 | 범위 | 완료 결과 |
 |---|---|---|
 | **S0** 기획·코퍼스 | SERVICE.md · `evaluation/test_queries.csv`·`ragas_reference.csv` 확정 · `src/ingest.py`(청크 62개 + 세부 항목 240개 → Chroma) | ingest 검증 통과(62/240, 도메인별 K/S 개수) |
-| **S1** 문제 풀 구축 | `quiz_gen.py`·프롬프트 · 파일럿 10문제(도메인당 2개)로 프롬프트 조정 · 전체 생성(`--resume`, 기본 240 → 추가 30) · 보충(`--fill-gaps`) · 사람 표본 검토 · `evaluation/quiz_pool_report.md` · `scripts/seed_study_log.py` (§5-2) | 승인 266, 커버리지 240/240, 사람 표본 오류 0건, `study_log.json` 시드 |
+| **S1** 문제 풀 구축 | `quiz_gen.py`·프롬프트 · 파일럿 · 전체 생성 · 보충 · 사람 표본 검토 · `quiz_pool_report.md` · `seed_study_log.py` (§5-2) | 승인 266, 커버리지 240/240, 사람 표본 오류 0건, `study_log.json` 시드 |
 | **S2** 핵심 한 바퀴 | 도구 `search_guide`·`get_quiz`(MCP)·`submit_answer`(MCP) · Supervisor + concept_tutor + quiz_master · `/query` (answer, contexts, trace) · `evaluation/smoke_p0.py` · RAGAS 3건 스모크 | "개념 질문 → 출제 → 채점"이 `/query` 3회로 동작, 채점 결과가 `study_log.json`에 기록 |
 | **S3** 기능 완성 | 가드레일 G1~G7 · `get_chunk` · `get_progress`·`get_weak_domains` · study_coach(`allocate_study_time`, `make_study_plan`) · 평가 러너(`run_eval.py`, `llm_judge.py`) | 20건 평가 실행 가능 |
 | **S4** round1 평가 | 20건 평가 + RAGAS → `evaluation/round1_report.md` | 15/20 |
@@ -109,8 +109,8 @@ class GuideBullet(BaseModel):
 - **문제 풀 `data/quiz_pool.json`은 커밋함**: 직접 생성한 원본 문제이고 근거 인용은 짧은 발췌만 포함. 평가 재현성 확보 목적.
 
 ### 2-5. 다국어 검색 이슈 (중요)
-코퍼스는 영어, 질문은 한국어. 한국어 질의 + 한국어 토크나이저(kiwipiepy) BM25로는 영어 문서를 거의 못 찾음.
-- 질의를 영어 키워드로 재작성하는 `rewrite_query` 후 BM25 + 벡터 하이브리드 (Day 2 `hybrid.py`, `extra_multiquery.py` 재사용). BM25 토크나이저도 영어용으로 바꿈(§5-1)
+코퍼스는 영어, 질문은 한국어라 한국어 질의 그대로는 BM25로 영어 문서를 거의 찾지 못한다.
+- 질의를 영어 키워드로 재작성하는 `rewrite_query` 후 BM25(영어 토크나이저) + 벡터 하이브리드 (Day 2 `hybrid.py`, `extra_multiquery.py` 재사용, §5-1)
 - `task_id`가 질문에 명시되면("TS 2.2", "도메인 3") 그 청크를 정확 조회해 앞에 둠
 
 ---
@@ -126,7 +126,7 @@ flowchart TD
         B3 --> B4[사람 표본 검토 · 커버리지 보충]
         B4 --> QP[(quiz_pool.json 승인 266문제)]
     end
-    U[POST /query] --> G{input_guard<br/>규칙 + LLM}
+    U[POST /query] --> G{입력 가드<br/>규칙 + LLM}
     G -- 차단 --> R[고정 거절 문구]
     G -- 통과 --> S[Supervisor / coordinator]
     S -->|개념·해설| T[concept_tutor]
@@ -156,12 +156,12 @@ flowchart TD
 | `concept_tutor` | 개념 설명, 샘플 문항 해설, 범위 안내 | `search_guide(query, domain?, doc_type?)`, `get_chunk(doc_id)` | 답변 + claim-source 목록 |
 | `quiz_master` | 출제, 채점 | `get_quiz` (MCP), `submit_answer` (MCP) | 문제(정답 제외) / 채점 결과 |
 | `study_coach` | 진도, 약점, 학습 계획 | `get_progress`, `get_weak_domains` (MCP), `allocate_study_time`, `make_study_plan` | 진도 요약 / 학습 계획 |
-| `general_agent` | 인사, 기능 안내, 무관한 주제 안내(G5) | 없음 | Day 6 `general_agent` 재사용 |
+| `general_agent` | 인사, 기능 안내, 무관한 주제 안내(G5). Day 6 `general_agent` 재사용 | 없음 | 짧은 안내 |
 
-`search_guide`는 질문에 TS 번호 등이 있으면 그 청크를 먼저 정확 조회로 앞에 둔다. `get_chunk(doc_id)`는 모델이 번호를 이미 알 때·결과 전문을 확인할 때 쓰는 별도 도구이고, `search_guide`의 정확 조회 선행과 함께 둔다.
+`search_guide`는 질문에 TS 번호 등이 있으면 그 청크를 정확 조회해 결과 앞에 둔다. `get_chunk(doc_id)`는 모델이 doc_id를 이미 알 때나 검색 결과의 전문을 확인할 때 쓰는 별도 도구다.
 
 도구 설명은 "언제 쓰고 언제 쓰지 않는지, 입력 형식, 예시 질의"를 포함해 작성 (TS 2.1).
-- `get_quiz`: "문제 요청 시 사용. 도메인·TS·시나리오로 필터. 결과가 `no_match`면 문제를 만들지 말고 `alternatives` 중 하나를 사용자에게 제안."
+- `get_quiz`: "문제 요청 시 사용. 도메인·TS·시나리오로 필터. 풀에 없는 조합이면 도구가 그 사실을 밝히고 같은 범위의 대체 문제를 낸다." (no_match 처리는 래퍼 코드, §5-3)
 - `submit_answer`: "사용자가 직전 문제의 답을 말했을 때만 사용. quiz_id는 대화 상태의 pending_quiz_id를 사용."
 
 **quiz_master 도구 = MCP 래퍼 (`src/agents/quiz_master.py`)**
@@ -183,7 +183,6 @@ flowchart TD
 | `submit_answer` | user_id, quiz_id, choice | 채점 결과 + 보기별 해설. **채점과 기록 저장을 한 번에 수행** |
 | `get_progress` | user_id | 도메인별 시도 수·정답률, 세부 항목 커버리지(푼 항목 수 / 240), TS별 시도·정답·남은 승인 문제 수. 기록 없는 사용자도 정상 결과(0건) |
 | `get_weak_domains` | user_id, top_k=2 | 약점 점수 순 도메인 (점수 = 비중 × (1 − 정답률), 시도 3회 미만 도메인은 "데이터 부족") |
-| (`reset_progress`) | user_id | **미구현** (선택 항목, 패턴 7 HITL 승인용으로 설계만 함) |
 
 - 저장소: `data/quiz_pool.json`(문제 은행, 읽기 전용), `data/study_log.json`(풀이 기록).
 - MCP resource `quiz://catalog`: 도메인·TS·시나리오별 승인 문제 수 (탐색용 도구 호출 감소, TS 2.4)
@@ -333,7 +332,7 @@ class QuizManifest(BaseModel):
 
 구현 (`src/retriever.py`, `src/agents/concept_tutor.py`, `src/guards.check_tutor_answer`, `src/memory.py`):
 - **검색**: 정확 조회는 정규식(`TS 2.2`·`Task Statement 2.2`·`도메인 3`·`Domain 3`·`D3`·`샘플 1번`·`Sample Question 1`·`시나리오 5`·`Exercise 2`)으로 감지한 청크를 앞에 두고 남은 자리를 하이브리드로 채움. BM25는 영어 토크나이저(가이드가 영어), 가중치 BM25 0.4 · 벡터 0.6, 재작성은 `rewrite_query` LLM 1회(실패 시 원문). rewrite·retrieve 결과는 custom event로 trace에 기록
-- **검색 결과 트리밍** (`retriever.trim_hits`) — 청크 단위 필터: 1순위 hit, 정확 조회 hit, task_statement가 아닌 청크(샘플 문항·범위·개요 등)는 그대로. 2순위 이하 `task_statement` 청크는 영어 검색어와 키워드(일반어 제외)가 겹치는 bullet이 하나라도 있으면 전문, 없으면 뺀다. 청크 안의 bullet은 자르지 않음(관련 bullet까지 잘려 평가 8번이 실패한 적 있음)
+- **검색 결과 트리밍** (`retriever.trim_hits`) — 청크 단위 필터: 1순위 hit, 정확 조회 hit, task_statement가 아닌 청크(샘플 문항·범위·개요 등)는 그대로. 2순위 이하 `task_statement` 청크는 영어 검색어와 키워드(일반어 제외)가 겹치는 bullet이 하나라도 있으면 전문, 없으면 뺀다. 청크 안의 bullet은 자르지 않음(bullet 단위로 자르면 답에 필요한 bullet까지 빠짐)
 - **TutorAnswer + G3**: `create_agent(response_format=ToolStrategy(TutorAnswer))` + after_agent 미들웨어 `TutorAnswerGuard`. claim은 **이번 턴에 search_guide/get_chunk가 실제로 돌려준 doc_id를 가리킬 때만 유효**(대소문자 무시). 유효 claim 0개(또는 구조화 응답 없음)면 고정 문구 `NO_EVIDENCE`(+coverage_gap). 아니면 answer_ko + "가이드에 없는 부분: …"(coverage_gap) + `GAP_NOTICE`(coverage_gap이 있을 때) + 코드가 만든 `[근거: …]`(answer_ko의 LLM 표기는 지움). excerpt 원문 일치 수는 trace `output_check`에만 기록(강제 안 함). 결과는 `name="concept_tutor"` AIMessage로 마지막에 붙여 Supervisor last_message·turn_answer가 사용
 - **장기 대화 요약** (`memory.compact`, `CoachApp.run`): 턴 시작 전 thread 메시지가 `config.SUMMARY_TRIGGER_MESSAGES`(40)를 넘으면 최근 `SUMMARY_KEEP_TURNS`(3)개 턴은 그대로 두고 그 앞을 LLM 1회로 한국어 10줄 이내 요약 → `SystemMessage`([이전 대화 요약] + [핵심 사실 — case_facts, 코드 보존]) 하나로 바꿔 바깥 그래프 상태에 `aupdate_state`로 적용(`RemoveMessage(REMOVE_ALL)`). 자르는 지점은 사용자 입력 경계라 도구 호출 쌍이 끊기지 않음. 요약 LLM은 입력 가드 판별과 동시에 돌고, 실패하면 원래 메시지 유지. Supervisor `pre_model_hook`으로 지우면 내부 그래프에만 적용되고 바깥 thread에는 옛 메시지가 남아서 그래프 밖에서 처리. 하위 에이전트도 같은 messages를 받으므로 study_coach는 요약 블록의 일수·시간을 쓰고 다시 묻지 않음. 가드 차단 턴은 `_rollback`이 messages·case_facts를 통째로 복원. 검증: `evaluation/smoke_memory.py`
 
@@ -357,7 +356,7 @@ class QuizManifest(BaseModel):
 - 예외: 세부 항목 원문이 특정 시나리오를 전제하면 시작 시나리오를 고정 (`build_quiz_pool.SCENARIO_OVERRIDES`. 순환 위치는 그대로 진행해 다른 슬롯 배정은 불변). `TS-1.4-S2`("multi-concern customer requests") → SC-1
 
 **생성 절차**
-1. **매니페스트 작성**: 기본·추가 슬롯 270개(보충·예외 슬롯은 나중에 추가, `quiz_id`, task_id, focus_bullet_ids, scenario_id)를 `data/quiz_pool_manifest.json`에 기록. 슬롯 상태(pending/approved/rejected)를 갱신하므로 중단돼도 `--resume`으로 미완료 슬롯만 이어서 생성 (TS 4.5 custom_id 재제출, TS 5.4 manifest 기반 복구)
+1. **매니페스트 작성**: 기본·추가 슬롯 270개(보충·예외 슬롯은 나중에 추가, `quiz_id`, task_id, focus_bullet_ids, scenario_id)를 `data/quiz_pool_manifest.json`에 기록. 슬롯 상태(pending/approved/rejected/duplicate/needs_fix)를 갱신하므로 중단돼도 `--resume`으로 미완료 슬롯만 이어서 생성 (TS 4.5 custom_id 재제출, TS 5.4 manifest 기반 복구)
 2. **파일럿 10문제**(도메인당 2개)로 생성·검토 프롬프트를 먼저 다듬음 (TS 4.5: 대량 처리 전 표본으로 프롬프트 개선)
 3. **생성 순서**: 기본 슬롯 240개를 먼저 전 도메인에 걸쳐 생성하고, 그다음 추가 슬롯 30개 (중간에 멈춰도 커버리지 우선 확보)
 4. **슬롯별 생성**: 해당 TS 청크 + 초점 세부 항목 + 시나리오 청크 + 샘플 문항 2개 few-shot → `quiz_gen.generate()` (TS 4.2)
@@ -446,13 +445,10 @@ class QuizManifest(BaseModel):
 - 결과 문서: `evaluation/quiz_pool_report.md` (도메인·시나리오별 승인 수, 세부 항목 커버리지, 승인율, 실패 유형 분포, 정답 위치 분포, 중복 제거 수, 사람 검토 오류율)
 
 **실제 결과 (S1, 2026-11-04)** — 세부 수치는 `evaluation/quiz_pool_report.md`
-- **승인 266개** (목표 270, 최소 250 충족) · 슬롯 284개 처리: approved 266 · rejected 16 · duplicate 2 → **승인율 93.7%**
-  - 슬롯 유형별 승인: base 226/240 · extra 27/30 · fill 12/13 · exception 1/1. 도메인 D1 55 · D2 47 · D3 55 · D4 53 · D5 56
-  - **세부 항목 커버리지 240/240 (100%)**
-- **쓰로틀링 중단·재개**: 첫 실행이 공용 할당량 쓰로틀링으로 50슬롯을 남기고 중단 → 매니페스트 `--resume`으로 이어서 완료 (TS 5.4 사례) → `--fill-gaps` 13슬롯(12 승인)
-- **모델 전환 이력**: 이어서 실행 중 us Sonnet 4.5 일일 토큰 할당량 소진 → global Sonnet 4.5로 전환. 승인 문항 생성 모델 us Sonnet 4.5 209 · global Sonnet 4.5 57, 검토 모델(마지막) us 170 · global 96. **Sonnet 4.6은 사용되지 않음**(Haiku는 체인에 없음)
-- **사후 길이 재조정** (`--rebalance-length`): 대상 75개 중 **성공 55 · 실패 20(원본 유지)** → 정답이 가장 긴 보기 54% → **33.8%**, 5% 초과 28% → 7.9%. 모델은 global Sonnet 4.5만 사용(쓰로틀링·전환 0회)
-- **예외 슬롯** `Q-5.2-K2-E`: TS-5.2-K2가 기본(`Q-5.2-K2`)·보충(`Q-5.2-K2-F`) 모두 탈락해 유일한 미커버 항목 → **SC-1 고정** 예외 슬롯(`--exception-slot TS-5.2-K2:1`) 2번째 시도에서 승인 → 커버리지 239 → 240
+- **승인 266개** (목표 270, 최소 250 충족) · 슬롯 284개 처리(approved 266 · rejected 16 · duplicate 2) → 승인율 93.7%. 도메인 D1 55 · D2 47 · D3 55 · D4 53 · D5 56, **세부 항목 커버리지 240/240**
+- 쓰로틀링으로 중단된 실행을 매니페스트 `--resume`으로 이어서 완료(TS 5.4) → `--fill-gaps` 13슬롯(12 승인) → 예외 슬롯 `Q-5.2-K2-E`로 커버리지 239 → 240
+- 승인 문항 생성 모델 us Sonnet 4.5 209 · global Sonnet 4.5 57 (us 일일 할당량 소진 후 전환, Sonnet 4.6은 쓰이지 않음)
+- 사후 길이 재조정: 대상 75개 중 성공 55 · 실패 20(원본 유지) → 정답이 가장 긴 보기 54% → 33.8%
 
 ### 5-3. 퀴즈 출제 (런타임)
 1. `get_quiz(user_id, domain?, task_id?, scenario_id?)` 호출
@@ -496,12 +492,12 @@ class QuizManifest(BaseModel):
 | G4 | 공식·제휴 사칭, 합격 보장 표현 금지 (`공식 튜터`, `합격 보장`) | 입력 + 출력 | 입력: 공식·인증·제휴·합격 보장 질문은 고정 정정 문구로 바로 답함(그래프 미호출). 출력: 긍정형 금지 표현 문장 제거 + 고정 고지 |
 | G5 | 범위 밖 주제(Claude 시험과 무관한 질문)는 한 줄 안내 후 종료 | 입력/라우팅 | Supervisor 배분 기준 + general 응대 |
 | G6 | 채점 전 정답 노출 금지 | 도구 | `get_quiz`는 `QuizPublic`만 반환. 정답은 `submit_answer`에서만 공개 |
-| G7 | 검토를 통과하지 못한 문제는 출제 금지, 런타임에 문제를 만들지 않음 | 도구 | `get_quiz`는 `approved`만 반환. 풀에 없으면 안내 + 대체 제안 |
+| G7 | 검토를 통과하지 못한 문제는 출제 금지, 런타임에 문제를 만들지 않음 | 도구 | `get_quiz`는 `approved`만 반환. 풀에 없으면 안내 + 대체 조합 출제 |
 
 고정 거절 문구는 Day 5 `guards_refusal.py` 방식으로 상수화 (평가 시 문자열 매칭 가능하게).
 
 구현 (`src/guards.py`, 실행 순서는 `agent.CoachApp.run`):
-- 입력 `input_guard`: 1차 정규식 G1(`덤프`·`기출`·`실제 (시험에 나온) 문제` — "실제 시험 문제처럼" 같은 스타일 요청은 제외 — `exam dump`·`real questions`) → G2(Day 5 INJECTION_PATTERNS) → G4. 1차 규칙에 걸리면 그래프를 부르지 않음 → 도구 호출 0건. 걸리지 않으면 2차 LLM `InputCheck` 1회(G1+G2 함께, confidence > 0.7만 차단, 실패 시 통과 + 기록)를 **그래프와 동시에** 시작 (순차 실행 대비 응답 시간 약 4~5초 단축)
+- 입력 가드(`rule_check` → `llm_guard`): 1차 정규식 G1(`덤프`·`기출`·`실제 (시험에 나온) 문제` — "실제 시험 문제처럼" 같은 스타일 요청은 제외 — `exam dump`·`real questions`) → G2(Day 5 INJECTION_PATTERNS) → G4. 1차 규칙에 걸리면 그래프를 부르지 않음 → 도구 호출 0건. 걸리지 않으면 2차 LLM `InputCheck` 1회(G1+G2 함께, confidence > 0.7만 차단, 실패 시 통과 + 기록)를 **그래프와 동시에** 시작 (순차 실행 대비 응답 시간 약 4~5초 단축)
   - 앱 도구 8개는 첫 줄 `guards.wait_input_ok()`에서 판별 통과를 기다림(`INPUT_GATE` ContextVar의 Future). 판별 전에는 Supervisor 배분·하위 에이전트 LLM까지만 진행
   - LLM이 차단하면 그래프 task를 취소(도구는 gate에서 멈춰 실행 0건), 이번 턴에 thread에 추가된 메시지를 `RemoveMessage`로 되돌리고(`CoachApp._rollback`), trace는 guard 단계만 남김(`tracer.discard_graph_run`) → 차단 문항은 여전히 도구 호출 0건
   - 새 앱 도구를 추가하면 반드시 첫 줄에 `wait_input_ok()`를 둔다
@@ -538,7 +534,6 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 ### 7-1. 런타임 모델 전환 (`src/llm.py`)
 - 기본은 고정 모델 `global.anthropic.claude-sonnet-4-5-20250929-v1:0` @ **ap-northeast-2(서울)**. 서울에는 Sonnet 4.5 `apac.` 프로필이 없어(ValidationException) `global.` 프로필을 씀. **쓰로틀링·일일 토큰 할당량 소진 등 일시 오류일 때만** `config.RUNTIME_MODEL_CHAIN` 순서로 전환: Sonnet 4.5(us@us-east-1 → global@us-east-1 → us@us-west-2 → global@us-west-2) → Sonnet 4.6(global@ap-northeast-2 → 미국 리전 같은 순서). Haiku는 쓰지 않음
 - 임베딩 Titan v2도 `config.REGION`(서울)을 따름 — us-east-1과 벡터 코사인 0.9999라 Chroma 재색인 안 함. 문제 풀 생성(오프라인)은 `us.` 프로필이 있어 `QUIZ_GEN_MODEL_ID`·`QUIZ_GEN_REGION`(us-east-1)으로 분리
-- 전환은 문제 풀 생성으로 일일 토큰 할당량이 소진된 상황에 대비해 도입함
 - `FallbackChatModel`(BaseChatModel): 후보마다 ChatBedrockConverse(botocore 재시도 1회). 쓰로틀된 후보는 쿨다운(일일 할당량 60분, 그 외 4·2^k초, 최대 60초)을 걸고 다음 후보로. 쿨다운은 프로세스 안 모든 에이전트가 공유. 일시 오류가 아닌 오류는 전환하지 않고 올림, 권한 없음·모델 없음은 제외
 - `bind_tools`는 첫 후보로 Bedrock 형식 도구 kwargs를 만들고 호출 때 실제 후보의 `_generate`에 같은 kwargs를 넘김 (Converse 도구 형식은 모델 간 동일). 응답 메시지 `response_metadata.served_by`에 실제 모델·리전을 남기고 trace `llm.models`에 집계
 - 판정 함수(`is_transient`, `is_unavailable`)는 문제 풀 생성 `quiz_gen.ModelPool`과 공용
@@ -573,7 +568,7 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
   1. `expected_tools`가 모두 호출됨 (ToolRecorder). `;`는 "모두 호출", `|`는 "그중 하나 이상 호출"(예: `search_guide|get_chunk`). 빈 값이면 도구 호출 0건이어야 PASS (guardrail 차단 문항)
   2. `forbidden` 항목이 답변에 없음 (문자열 + LLM judge)
   3. `expected_traits`를 LLM judge가 항목별로 충족 판정 (전부 충족해야 PASS)
-- 문항 5는 풀 출제, 문항 13은 풀에 없는 조합 요청 시 문제를 지어내지 않고 안내 + 대체 문제를 제안하는지 검증. 둘 다 출제 응답까지만 판정
+- 문항 5는 풀 출제, 문항 13은 풀에 없는 조합 요청 시 문제를 지어내지 않고 안내한 뒤 대체 조합에서 출제하는지 검증. 둘 다 출제 응답까지만 판정
 - 문항 7(학습 계획)은 기록이 있는 더미 사용자 `demo_heavy`로 실행
 - 한 바퀴 검증은 CSV와 별도로 `evaluation/smoke_p0.py`(개념 질문 → 출제 → 채점 3턴 같은 thread_id + 늦은 가드 차단, 24항목)로 확인
 - Judge: Bedrock Claude Sonnet 4.5, temperature 0, 루브릭 고정 (Day 7 `llm_judge.py` 확장)
@@ -592,10 +587,10 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 - 지표: context_recall, context_precision, faithfulness, answer_relevancy
 - reference는 가이드 원문 근거로 사람이 작성 (순환 평가 방지)
 - RAGAS LLM/임베딩도 Bedrock 래퍼로 연결. 3건짜리 스모크(`ragas_smoke.py`)와, 평가 답변 재사용 14건: `ragas_smoke.py --from logs/eval/<label>_full.json --out evaluation/ragas_<label>.json`으로 run_eval이 만든 같은 답변·contexts를 14건 전부 채점
-- 주의: 가이드는 영어, 답변은 한국어 → answer_relevancy가 낮게 나옴(영어 핵심 용어 병기를 적용했으나 0.45~0.48 수준). 같은 답변을 다시 채점해도 14건 평균이 ±0.05 정도 흔들림
+- 주의: 가이드는 영어, 답변은 한국어 → answer_relevancy가 낮게 나옴(영어 핵심 용어 병기를 적용했으나 0.45 안팎). 같은 답변을 다시 채점해도 14건 평균이 ±0.05 정도 흔들림
 - 3건 스모크 기준선 (`evaluation/ragas_smoke.py` → `ragas_smoke.json`, 1~3번): faithfulness 0.896 · context_recall 1.0 · context_precision 0.917 · answer_relevancy 0.681. ragas 0.4.3은 langchain-community 0.4에서 사라진 `chat_models.vertexai`를 import하므로 스크립트 안에서만 자리표시 모듈을 끼움
 
-### 9-3. 문제 풀 품질 지표 (round 리포트에 함께 기재)
+### 9-3. 문제 풀 품질 지표
 목표와 최종 판정은 SERVICE §5, 세부 수치는 `evaluation/quiz_pool_report.md`. 여기서는 지표 정의만 둔다.
 - 승인 문제 수, 세부 항목 커버리지
 - 승인율(승인 ÷ 생성 슬롯), 실패 유형 분포: 검토 패턴(`detected_pattern`) + 코드 검증 세부 패턴(`format`, `excerpt_not_verbatim`, `answer_too_long` 등, §5-2)을 함께 집계. `answer_too_long:repaired`(repair로 복구)는 따로 셈
@@ -603,7 +598,7 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 - 생성 모델별 승인 수·승인율, 승인 문항의 검토 모델 분포 (모델 전환, §5-2)
 - 사람 표본 검토 오류율. **판정=오류만 셈**, 경미는 별도 집계 (§5-2)
 - 정답 위치 분포, 중복 제거 수
-- **정답이 가장 긴 보기 비율** (승인 문항 기준, 동률은 가장 긴 것으로 침. **목표 35% 이하 유지**, 우연 수준 25%, 길이 규칙 도입 전 파일럿 80%). 현재 33.8% (재조정 전 54%)
+- **정답이 가장 긴 보기 비율** (승인 문항 기준, 동률은 가장 긴 것으로 침. **목표 35% 이하 유지**, 우연 수준 25%). 현재 33.8% (재조정 전 54%)
   - 참고 지표(목표 없음, 병기만): **"정답이 가장 긴 오답보다 5% 넘게 긴 비율"** — 근소한 차이의 동률성 1위를 걸러 실제 단서에 가까운 비율. `--rebalance-length` 대상 기준과 같음. 현재 7.9% (재조정 전 28%). 리포트 `evaluation/quiz_pool_report.md`
 - 런타임 `no_match` 비율: 최종 평가에서 출제 요청 3건 중 1건(13번, 풀에 없는 조합을 일부러 요청한 문항)
 
@@ -624,22 +619,17 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 
 ---
 
-## 10. 매핑표
+## 10. 매핑표 · 폴더 구조
 
 과제 12개 패턴의 적용 위치(12개 중 11개 구현, 7 HITL 미구현), 시험 TS를 앱 구현에 적용한 지점, LangGraph ↔ Claude Agent SDK 용어 대응은 README "활용한 패턴"을 기준으로 한다.
 
----
-
-## 11. 폴더 구조 (과제 §4-1 준수)
-
-README "폴더 구조"를 기준으로 한다 (커밋하지 않는 파일 포함). 모듈별 설계 위치: 검색 `retriever.py` §5-1, 문제 풀 `quiz_gen.py`·`scripts/build_quiz_pool.py` §5-2, MCP `quiz_bank_server.py` §3-2, 가드 `guards.py` §6, API·웹 UI `api.py`·`web/` §7, 런타임 LLM `llm.py` §7-1.
+폴더 구조(과제 §4-1)는 README "폴더 구조"를 기준으로 한다 (커밋하지 않는 파일 포함). 모듈별 설계 위치: 검색 `retriever.py` §5-1, 문제 풀 `quiz_gen.py`·`scripts/build_quiz_pool.py` §5-2, MCP `quiz_bank_server.py` §3-2, 가드 `guards.py` §6, API·웹 UI `api.py`·`web/` §7, 런타임 LLM `llm.py` §7-1.
 
 ---
 
 ## 변경 이력
 
-- v0.7.1 (프로젝트 종료 정리, 문서만): 문서 간 중복 정리(폴더 구조는 README, 성공 기준·결과는 SERVICE §5, 커밋 금지 기준은 `.gitignore`·§2-4), §2-5 BM25 토크나이저 설명 수정, §9-3을 지표 정의로 축소, 개발 경위 문장 삭제, 변경 이력 압축
-- v0.7 (프로젝트 종료 정리, 문서만): 단계 라벨 정리, 문서 간 모순 수정(핸드오프 quiz_id, 복합 질문 처리, case_facts·Store, 학습 계획 입력), §7 웹 UI를 설계 원칙 중심으로 축약. 풀 소진은 조건 없는 출제 기준으로 판정(SERVICE §5)
+- v0.8 (프로젝트 종료 정리): 문서 간 중복·모순 정리(폴더 구조는 README, 성공 기준·결과는 SERVICE §5, 커밋 금지 기준은 `.gitignore`·§2-4, `no_match` 처리를 "대체 조합 출제"로 통일, 핸드오프 quiz_id·복합 질문·case_facts·학습 계획 입력), 풀 소진은 조건 없는 출제 기준으로 판정, §7 웹 UI를 설계 원칙 중심으로, §9-3을 지표 정의로 축소, §10·§11 통합, 미구현 `reset_progress` 행·개발 경위 문장 삭제, 미사용 코드(`guards.input_guard`, `llm.served_stats`) 삭제, 변경 이력 압축
 - v0.6.x (제출 후 개선 v2-1~v2-6): G3 `GAP_NOTICE`(v2-1), 입력 가드 LLM 판별 병렬화(v2-2, §6), 검색 결과 청크 필터·장기 대화 요약·`case_facts`(v2-3, §5-1), 예시 수치 금지 한 줄(v2-4), 웹 UI·`GET /progress`(v2-5, §7), 런타임 LLM·임베딩 서울 리전(v2-6, §7-1). LangSmith/LangFuse·Dockerfile은 하지 않기로 결정. 버전별 결과는 README "평가 결과"
 - v0.5.x (S2~S6): 런타임 모델 전환(§7-1), quiz_master MCP 래퍼 + return_direct, 가드레일·`TutorAnswer` + G3, study_coach, 평가 러너, round2 프롬프트 개선(§9-4 #2·#4), README·시연 캡처
 - v0.2~v0.5: 문제 은행 MCP 서버·코드 채점(v0.2), 런타임 문제 생성 제거·세부 항목 단위 사전 생성 풀 270문제 목표(v0.4), 문제 풀 생성 세부 규칙(v0.4.x, §5-2), 단계 S0~S6 통합(v0.5)

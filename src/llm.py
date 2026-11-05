@@ -64,12 +64,11 @@ def label(model_id: str, region: str) -> str:
 
 
 class _ChainState:
-    """프로세스 공용 쿨다운·통계."""
+    """프로세스 공용 쿨다운."""
     lock = threading.Lock()
     cool_until: dict[tuple, float] = {}
     streak: dict[tuple, int] = {}
     disabled: set[tuple] = set()
-    served: dict[str, int] = {}
 
 
 class FallbackChatModel(BaseChatModel):
@@ -117,7 +116,6 @@ class FallbackChatModel(BaseChatModel):
                 raise
             with _ChainState.lock:
                 _ChainState.streak[key] = 0
-                _ChainState.served[label(*key)] = _ChainState.served.get(label(*key), 0) + 1
             for g in result.generations:
                 g.message.response_metadata["served_by"] = label(*key)
             return result
@@ -127,8 +125,3 @@ class FallbackChatModel(BaseChatModel):
 def get_runtime_llm() -> FallbackChatModel:
     """런타임 에이전트·Supervisor·rewrite_query 공용 LLM (temperature 0, 전환 포함)."""
     return FallbackChatModel(chain=list(config.RUNTIME_MODEL_CHAIN))
-
-
-def served_stats() -> dict[str, int]:
-    with _ChainState.lock:
-        return dict(_ChainState.served)

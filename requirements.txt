@@ -27,7 +27,6 @@ ragas==0.4.3
 
 # LangGraph
 langgraph==1.2.17
-langgraph-checkpoint-sqlite==3.1.2
 langgraph-supervisor==0.0.31
 
 # MCP

@@ -7,7 +7,7 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
 ## 상태: 프로젝트 종료 (S0~S6 + 제출 후 개선 v2-1~v2-6 완료, DESIGN §1-1·변경 이력)
 - 최종(v2-6): 20건 19/20, RAGAS faithfulness 0.850·recall 1.000, 개념 평균 20.2s.
   smoke_p0 24/24, smoke_p1 37/37, smoke_memory 9/9. 버전별 수치는 README "평가 결과", 성공 기준 대비는 SERVICE §5
-- 데이터: 문제 풀 승인 266, study_log 시드 demo_heavy 61회·demo_new 없음 (seed_study_log.py)
+- 데이터: 문제 풀 승인 266, study_log 시드 demo_heavy 61회·demo_new 기록 없음 (seed_study_log.py)
 - 웹 UI는 자동 스모크 없음 → 브라우저로 확인 (study_log 임시 사본으로 서버 실행, DESIGN §9-1)
 - 원격: https://github.com/kainetic/ccaf-study-coach (private, master). 남은 개선 후보는 README "한계"
 
@@ -51,7 +51,7 @@ MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언�
 ## 반드시 지킬 규칙
 - 정답은 LLM 컨텍스트와 그래프 State에 넣지 않는다. get_quiz는 QuizPublic만 반환하고,
   채점은 submit_answer가 코드로 한다. State에는 pending_quiz_id만 둔다
-- get_quiz가 no_match면 문제를 지어내지 않는다. alternatives로 대체 제안만 한다
+- get_quiz가 no_match면 문제를 지어내지 않는다. 래퍼가 코드로 안내하고 alternatives의 첫 조합(풀에 있는 승인 문제)으로 대체 출제한다
 - 승인(approved) 상태가 아닌 문제는 출제하지 않는다
 - 런타임에 문제를 생성하지 않는다. quiz_gen은 scripts/build_quiz_pool.py에서만 호출하고 에이전트 도구로 노출하지 않는다
 - 세부 항목 수가 240개가 아니면 ingest 파싱 오류로 보고 멈춘다

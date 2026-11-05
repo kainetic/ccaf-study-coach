@@ -232,7 +232,7 @@ class InputCheck(BaseModel):
 
 
 class GuardDecision(BaseModel):
-    """input_guard 결과. block = 고정 거절 문구, correct = 고정 정정 문구(G4), pass = 그래프 실행."""
+    """입력 가드(rule_check·llm_guard) 결과. block = 고정 거절 문구, correct = 고정 정정 문구(G4), pass = 그래프 실행."""
     action: Literal["pass", "block", "correct"]
     rule: Optional[Literal["G1", "G2", "G4"]] = None
     layer: Optional[Literal["rule", "llm"]] = None

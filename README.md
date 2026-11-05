@@ -162,6 +162,7 @@ curl.exe -s localhost:8000/query -H "Content-Type: application/json" `
 - 20건 결과는 같은 코드로도 1건 정도 흔들립니다(judge·생성의 비결정성).
 - 개념 질문 평균 응답 시간은 개념·해설 문항 15건의 평균입니다. round1에서는 그중 3건이 검색 없이 general_agent로 답해 짧게 나왔고, round2부터는 15건 모두 검색을 거칩니다([round2_report](evaluation/round2_report.md) §5).
 - RAGAS는 같은 답변을 다시 채점해도 문항 하나의 faithfulness가 크게 움직여(예: 12번 0.47~0.88) 14건 평균이 ±0.05 정도 흔들립니다. v2-2·v2-3에서 faithfulness가 0.79까지 내려간 것은 9번 답변이 가이드에 없는 "TTL 값(예: 5분)"을 예시로 쓴 탓이었고, v2-4에서 해소했습니다.
+- 최종 열의 RAGAS는 v2-6 답변을 새로 채점한 값입니다. v2-3의 context_precision 0.825와 v2-4의 faithfulness 0.889보다 낮지만, v2-5·v2-6에서는 검색·프롬프트를 바꾸지 않았습니다(v2-6은 리전만 변경). 그래서 이 차이는 답변 생성과 채점의 비결정성으로 봅니다. 다만 context_precision 차이(0.065)는 ±0.05보다 조금 큽니다.
 - RAGAS 결과는 `evaluation/ragas_*.json`(round1·round2·v2_*)에 있습니다.
 
 ```powershell
@@ -201,7 +202,7 @@ Remove-Item Env:CCAF_STUDY_LOG
 
 | # | 패턴 | 적용 위치 | 상태 |
 |---|---|---|---|
-| 1 | Pydantic 구조화 출력 | `src/schemas.py` 모델을 `with_structured_output`(입력 가드 `InputCheck`, 계획 `StudyPlanDraft`, judge `JudgeVerdict`, 풀 생성·검토)과 `ToolStrategy(TutorAnswer)`로 사용. `\|` 파이프 체인 대신 Runnable 메서드로 구성 | 구현 |
+| 1 | Pydantic 구조화 출력 | `src/schemas.py` 모델을 `with_structured_output`(입력 가드 `InputCheck`, 계획 `StudyPlanDraft`, judge `JudgeVerdict`, 풀 생성·검토)과 `ToolStrategy(TutorAnswer)`로 사용 | 구현 |
 | 2 | ReAct | 하위 에이전트 4개 (`langchain.agents.create_agent`, 도구 호출 루프) | 구현 |
 | 3 | RAG (하이브리드·쿼리 재작성) | `src/retriever.py`: TS 번호 정확 조회 + 한→영 `rewrite_query` + BM25·벡터 `EnsembleRetriever`(0.4 / 0.6) | 구현 |
 | 4 | 도구 다중 | 검색 2 + MCP 4 + 계산 1(`allocate_study_time`) + 계획 1(`make_study_plan`) | 구현 |
@@ -277,8 +278,8 @@ chroma_db/             벡터 DB (미커밋, ingest로 생성)
 logs/                  trace.jsonl · guard_audit.log · eval/ (미커밋)
 ```
 
-**커밋하지 않는 것** (기준은 `.gitignore`. 비공개 저장소여도 유지 — 클론하면 가이드 원문이 재배포되므로. 가이드 파생물은 `python -m src.ingest`로 다시 만듭니다, [DESIGN.md](docs/DESIGN.md) §2-4)
-- 가이드 PDF와 그 파생물(`data/guide_chunks.jsonl`, `data/guide_bullets.jsonl`, `chroma_db/`, `evaluation/review_sample.xlsx`): 가이드 원문이 들어 있습니다.
+**커밋하지 않는 것** (기준은 `.gitignore`, 이유는 [DESIGN.md](docs/DESIGN.md) §2-4)
+- 가이드 PDF와 그 파생물(`data/guide_chunks.jsonl`, `data/guide_bullets.jsonl`, `chroma_db/`, `evaluation/review_sample.xlsx`): `python -m src.ingest`(xlsx는 `scripts/review_sample.py`)로 다시 만듭니다.
 - `.env`, `logs/`
 
 ## 한계
@@ -289,4 +290,4 @@ logs/                  trace.jsonl · guard_audit.log · eval/ (미커밋)
 - 시험일과 사용자 프로필(Store 장기 기억)은 저장하지 않습니다. 학습 계획에 필요한 남은 일수·하루 시간은 질문이나 같은 대화의 `case_facts`에서 가져오고, 없으면 묻습니다.
 - 대화 기억은 `InMemorySaver`라서 서버를 다시 시작하면 이어지지 않습니다(풀이 기록은 `study_log.json`에 남음).
 - trace의 `llm` 단계는 그래프 안의 호출만 셉니다. 입력 가드의 LLM 판별 1회(`layer=llm`)는 호출 수와 토큰에 포함되지 않습니다(그래프와 병렬이라 응답 시간에는 거의 더해지지 않음).
-- 선택 항목 중 `reset_progress` HITL 승인, Dockerfile, LangSmith/LangFuse 연동은 만들지 않았습니다.
+- 하지 않기로 한 범위(`reset_progress` HITL, Dockerfile, LangSmith/LangFuse 등)는 [SERVICE.md](SERVICE.md) §3 "이번 과제에서 하지 않는 것"에 있습니다.

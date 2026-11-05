@@ -12,7 +12,7 @@
 |---|---|
 | 5개 도메인, 30개 Task Statement(TS 1.1~5.6) | **검색 청킹 단위 = TS 1개**. `domain`, `task_id`가 검색 필터, 출처 표기, 약점 추적의 공통 키 |
 | 각 TS의 Knowledge of / Skills in 세부 항목 (총 240개) | **문제 생성 단위 = 세부 항목 1개**. 문제마다 어느 항목을 묻는지 지정해 중복 방지, 커버리지 측정 |
-| 도메인 비중 27/18/20/20/15 (번호는 공식 가이드 기준: D2=Tool Design 18%, D3=Claude Code 20%) | 추가 30문제 배분, **런타임 출제 빈도**, 학습 시간 배분, 약점 점수 가중치 |
+| 도메인 비중 27/18/20/20/15 (D1 Agentic Architecture · D2 Tool Design & MCP · D3 Claude Code · D4 Prompt Eng. & Structured Output · D5 Context & Reliability) | 추가 30문제 배분, **런타임 출제 빈도**, 학습 시간 배분, 약점 점수 가중치 |
 | 6개 시나리오와 각 시나리오의 primary domains | 문제마다 시나리오를 배정하되, 해당 도메인이 primary domain인 시나리오만 사용 |
 | 문항 형식: 4지선다, 정답 1 + 그럴듯한 오답 3 | 퀴즈 Pydantic 스키마(보기 A~D, 정답 1개, 보기별 해설) |
 | 샘플 문항 12개(정답·해설 포함) | 생성 few-shot 예시(형식·난이도 기준), 해설 질문의 근거 |
@@ -39,12 +39,8 @@
 | **S6** 제출 정리 | README("활용한 패턴" 포함, §10) · 시연 캡처 | 제출 |
 | 선택 항목 | `reset_progress` HITL · 장기 세션 요약 · 웹 UI · Dockerfile · LangSmith/LangFuse | 요약(v2-3)·웹 UI(v2-5)만 구현 |
 
-### 1-2. 하지 않는 것 (이번 과제 범위 밖)
-- 실제 시험 문항 재현·덤프 제공, 합격 예측
-- **런타임 실시간 문제 생성** (풀이 부족한 범위는 오프라인 배치로 보충)
-- 난이도별 출제 (단일 난이도)
-- 가이드 외 문서(공식 SDK·MCP 문서 등) 코퍼스 확장
-- 선택 항목 중 LangSmith/LangFuse 연동(로컬 trace로 대체), Dockerfile, `reset_progress` HITL — 하지 않기로 결정
+### 1-2. 하지 않는 것
+목록은 SERVICE §3 "이번 과제에서 하지 않는 것"을 기준으로 한다. 설계에 주는 영향은 두 가지다. 런타임에 문제를 만들지 않으므로 풀이 부족한 범위는 오프라인 배치로 보충한다(§5-2). LangSmith/LangFuse 대신 로컬 trace를 쓴다(§7).
 
 ---
 
@@ -104,8 +100,7 @@ class GuideBullet(BaseModel):
 - 산출물: `data/guide_chunks.jsonl`(62), `data/guide_bullets.jsonl`(240) → 청크만 Chroma 컬렉션 `ccaf_guide` 적재 (Titan v2 임베딩).
 
 ### 2-4. 저장 정책 (private repo)
-- 가이드 PDF 원본(`data/raw/ccaf_exam_guide.pdf`), `guide_chunks.jsonl`, `guide_bullets.jsonl`은 **커밋하지 않음** (`.gitignore`). `data/README.md`에 PDF 배치 위치와 ingest 실행법만 기재.
-- 비공개 저장소여도 collaborator에게 복제되므로 가이드 원문과 그 파생물(`chroma_db/`, `evaluation/review_sample.xlsx` 포함)은 커밋하지 않음 (재배포 방지, ingest로 재생성 가능).
+- 가이드 원문과 그 파생물(`data/raw/ccaf_exam_guide.pdf`, `guide_chunks.jsonl`, `guide_bullets.jsonl`, `chroma_db/`, `evaluation/review_sample.xlsx`)은 **커밋하지 않음** (`.gitignore`). 비공개 저장소여도 collaborator가 클론하면 원문이 재배포되기 때문. 모두 ingest(xlsx는 `review_sample.py`)로 다시 만들 수 있고, PDF 배치 위치와 ingest 실행법은 `data/README.md`에 있다.
 - **문제 풀 `data/quiz_pool.json`은 커밋함**: 직접 생성한 원본 문제이고 근거 인용은 짧은 발췌만 포함. 평가 재현성 확보 목적.
 
 ### 2-5. 다국어 검색 이슈 (중요)
@@ -161,7 +156,7 @@ flowchart TD
 `search_guide`는 질문에 TS 번호 등이 있으면 그 청크를 정확 조회해 결과 앞에 둔다. `get_chunk(doc_id)`는 모델이 doc_id를 이미 알 때나 검색 결과의 전문을 확인할 때 쓰는 별도 도구다.
 
 도구 설명은 "언제 쓰고 언제 쓰지 않는지, 입력 형식, 예시 질의"를 포함해 작성 (TS 2.1).
-- `get_quiz`: "문제 요청 시 사용. 도메인·TS·시나리오로 필터. 풀에 없는 조합이면 도구가 그 사실을 밝히고 같은 범위의 대체 문제를 낸다." (no_match 처리는 래퍼 코드, §5-3)
+- `get_quiz`: "문제 요청 시 사용. 도메인·TS·시나리오로 필터. 풀에 없는 조합이면 도구가 그 사실을 밝히고 대체 문제를 낸다." (대체 문제는 조건을 하나씩 뺀 조합에서 고르므로 도메인이 달라질 수 있음) (no_match 처리는 래퍼 코드, §5-3)
 - `submit_answer`: "사용자가 직전 문제의 답을 말했을 때만 사용. quiz_id는 대화 상태의 pending_quiz_id를 사용."
 
 **quiz_master 도구 = MCP 래퍼 (`src/agents/quiz_master.py`)**
@@ -296,7 +291,7 @@ class ManifestSlot(BaseModel):          # data/quiz_pool_manifest.json의 슬롯
     attempts: int = 0                   # 생성 호출 수 0~3 (QuizItem.review_retries = attempts - 1)
     repairs: int = 0                    # 길이 repair 호출 수 (attempts에 포함하지 않음)
     repairs_ok: int = 0                 # repair 후 코드 검증을 통과한 수
-    generator_model: Optional[str]      # 최종 문항을 만든 생성 호출의 실제 모델 (모델 전환, §5-2). 도입 전 슬롯은 None
+    generator_model: Optional[str]      # 최종 문항을 만든 생성 호출의 실제 모델 (모델 전환, §5-2). 이 필드를 도입하기 전에 처리된 슬롯(220개)은 None (문항 쪽 QuizItem.generator_model에는 모두 기록됨)
     reviewer_model: Optional[str]       # 승인 또는 마지막 탈락 판정을 낸 검토 호출의 모델
     detected_patterns: list[str] = []   # 시도별 실패 유형 (parse, code, 검토 패턴, duplicate_of:Q-…)
     last_errors: list[str] = []         # 마지막 실패의 구체적 오류
@@ -363,7 +358,7 @@ class QuizManifest(BaseModel):
 5. **코드 검증**(Pydantic): 보기 4개, 라벨 중복 없음, 정답 라벨 존재, task_id·bullet_id·scenario_id 실재
 6. **독립 검토**: `quiz_reviewer`는 생성 추론 없이 문항 + 근거 청크 + 초점 세부 항목만 받아 판정 (TS 4.6)
 7. **재시도**: 실패 시 근거 + 실패한 문항 + 구체적 오류를 붙여 재생성, 최대 2회 (TS 4.4). 그래도 실패하면 `rejected`로 남기고 `detected_patterns` 기록
-8. 동시 실행 **기본 2개**(`--concurrency N`, 공용 Bedrock 할당량 기준), Bedrock throttling 시 지수 백오프 + 모델 전환(아래 "모델 전환")
+8. 동시 실행 **기본 2개**(`--concurrency N`), Bedrock throttling 시 지수 백오프 + 모델 전환(아래 "모델 전환")
 
 **구현 세부 규칙**
 - **문항 언어**: stem·options는 영어(실제 시험·few-shot과 동일), rationale은 한국어 + 영어 용어 병기, source_excerpt는 가이드 영문 원문 그대로
@@ -387,8 +382,6 @@ class QuizManifest(BaseModel):
   - repair는 attempts(생성 호출 수)에 넣지 않음. 매니페스트 `repairs`·`repairs_ok`, 성공 시 detected_patterns에 `answer_too_long:repaired` 기록. repair 후에도 실패하면 그 시도는 실패로 처리하고 피드백에 "repair 후에도 실패"를 명시
 - **생성 프롬프트 길이 균형 지침**: 정답을 먼저 쓰고 오답 3개를 같은 문장 구조(행동 + 수단 + 범위)·같은 수준의 세부로 작성, 보기당 약 15~30단어, 정답에만 "왜 좋은지" 설명구를 붙이지 않음(해설로), 반환 전 길이 비교
 - **재시도 피드백**: 원래 생성 프롬프트 전체 + 실패 문항 JSON + 문제점 목록(`[parse]`/`[code:세부 패턴]`/`[review:패턴]`) + 패턴별 고정 지시문(`src/prompts/FIX_HINTS`, 코드 세부 패턴별로 분리) + 이전 시도 요약 한 줄씩. `scenario_mismatch`면 다음 후보 시나리오로 바꾸고 그 사실을 피드백에 명시 (마지막 시도 뒤에는 바꾸지 않음)
-- **프롬프트 변경 후 재생성** (`--reset-stale`, LLM 호출 없음): 현재 `prompt_version`과 다른 버전으로 처리된 슬롯을 되돌림. base/extra는 pending으로 초기화(attempts·repairs·detected_patterns·last_errors, 시나리오는 원래 배정값), fill 슬롯은 삭제, pool에서 해당 문항 제거. 자동 리셋은 하지 않고(전체 생성 도중 진행분 보호) 실행 시 오래된 버전 슬롯 수를 경고로 출력
-- **매니페스트 동기화**: 슬롯 배정 규칙이 바뀌면 pending 슬롯의 정의(focus_bullet_ids, scenario_candidates)는 자동 갱신, 처리된 슬롯의 정의가 바뀌었으면 오류(`--reset-stale` 후 재실행)
 - **Bedrock 일시 오류**(throttling 등)는 재시도 횟수(attempts)에 넣지 않음. 처리할 수 없으면 슬롯은 pending으로 남음
 - **모델 전환** (문제 풀 생성용 — 런타임 전환은 §7-1): 생성·검토·repair·시나리오 순위 호출은 `quiz_gen.ModelPool`을 거침
   - 체인 `config.QUIZ_GEN_MODEL_CHAIN`: us Sonnet 4.5(기본) → global Sonnet 4.5 → us Sonnet 4.6 → global Sonnet 4.6. **Haiku는 쓰지 않음**(문항·검토 품질, 검토자가 생성자보다 약하면 안 됨)
@@ -399,7 +392,11 @@ class QuizManifest(BaseModel):
   - 생성 모델과 검토 모델이 달라질 수 있음(독립성에는 유리). 기록: `QuizItem.generator_model` = 최종 문항을 만든 실제 생성 모델(repair가 있었어도 원 생성 모델), `ManifestSlot.generator_model`·`reviewer_model`
   - 접근 확인: `python scripts/check_bedrock.py --quiz-chain`
 - **저장**: 코드 검증을 통과한 문항만 `quiz_pool.json`에 저장(approved / 검토 탈락 rejected / duplicate). 코드 검증 단계에서 끝난 rejected는 매니페스트에만 기록
-- **파일럿**(`--pilot N`)은 실행할 때마다 해당 슬롯을 새로 생성(프롬프트 조정 반복용)
+
+**풀을 다시 만들거나 프롬프트를 고칠 때만 쓰는 규칙**
+- **파일럿**(`--pilot N`): 실행할 때마다 해당 슬롯을 새로 생성 (프롬프트 조정 반복용)
+- **`--reset-stale`** (LLM 호출 없음): 현재 `prompt_version`과 다른 버전으로 처리된 슬롯을 되돌림. base/extra는 pending으로 초기화(attempts·repairs·detected_patterns·last_errors, 시나리오는 원래 배정값), fill 슬롯은 삭제, pool에서 해당 문항 제거. 자동으로 실행하지 않고 오래된 버전 슬롯 수만 경고로 출력
+- **매니페스트 동기화**: 슬롯 배정 규칙이 바뀌면 pending 슬롯의 정의(focus_bullet_ids, scenario_candidates)는 자동 갱신. 처리된 슬롯의 정의가 바뀌었으면 오류(`--reset-stale` 후 재실행)
 
 **후처리 (코드)**
 - **보기 섞기**: LLM은 정답을 특정 위치에 몰아 두는 경향이 있으므로, 정답 보기를 슬롯의 `target_answer` 위치에 놓고(A~D 균등 리스트 68/68/67/67을 고정 시드로 섞어 슬롯 순서대로 배정, 보충 슬롯은 quiz_id 해시) 오답 3개는 `quiz_id`를 시드로 섞은 뒤 라벨을 다시 매핑. 결과 정답 분포가 A~D 각 20~30%인지 확인
@@ -457,7 +454,7 @@ class QuizManifest(BaseModel):
      - 약점 계수(코드 계산, `quiz_bank_server.QuizBank`): 그 도메인 시도 3회 이상이면 `max(0.2, 1 − 정답률)`, 3회 미만이면 1 (기록 부족 → 시험 비중만). 하한 0.2는 잘 푸는 도메인도 가끔 나오게 함
      - 후보 우선순위: 안 낸 문제이면서 안 푼 세부 항목을 다루는 문제 → 안 낸 문제 → 안 푼 문제. 무작위는 `user_id:시도 수:출제 수` 시드
    - `no_match` 형식: `{"status": "no_match", "reason": "not_in_pool" | "all_solved", "message", "alternatives": [{domain, task_id, scenario_id, count, relaxed}]}`. alternatives는 시나리오 → TS(같은 도메인 안) → 도메인 순으로 조건을 하나씩 뺀 조합, 최대 6개
-2. `no_match`이면 문제를 지어내지 않고 "해당 조합의 문제가 없다"고 밝힌 뒤 `alternatives` 중 하나로 대체 문제를 제안하거나 바로 출제 — **get_quiz 래퍼가 코드로 처리**: "요청한 조합의 검토된 문제는 아직 풀에 없습니다. 문제를 새로 만들지는 않습니다" + 첫 대체 조합으로 바로 출제 + 다른 대안 나열
+2. `no_match`이면 문제를 지어내지 않고 "해당 조합의 문제가 없다"고 밝힌 뒤 `alternatives`의 첫 조합으로 바로 출제 — **get_quiz 래퍼가 코드로 처리**: "요청한 조합의 검토된 문제는 아직 풀에 없습니다. 문제를 새로 만들지는 않습니다" + 첫 대체 조합으로 바로 출제 + 다른 대안 나열
 3. 사용자에게 지문과 보기만 보여주고 `pending_quiz_id` 저장
 
 `no_match`가 나는 경우: **풀에 실제로 없는 조합** 요청(approved 문항이 0개인 TS·시나리오 등. 예: TS-1.7 × SC-5 — `FORBIDDEN_SCENARIOS`로 어떤 경로로도 만들지 않음, `test_queries.csv` 13번), 해당 범위 문제를 사용자가 모두 푼 경우. 배정 규칙 밖이라도 보충·예외 슬롯으로 승인된 조합은 출제함 (§5-2).
@@ -580,7 +577,7 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 - 산출물: `evaluation/results/<label>_eval.json`(커밋: 판정·사유·도구·doc_id·지연·호출 수, 답변 본문·가이드 원문 없음) + `logs/eval/<label>_full.json`(비커밋: 답변·contexts, RAGAS 재사용)
 - 오프라인 스모크 `evaluation/smoke_p1.py` (37항목, LLM 없음): 가드 규칙, G3 분기, get_chunk 정규화, 진도·약점, 배분 합계, 기본 일정, 검색 결과 트리밍, case_facts 추출
 - 긴 대화 스모크 `evaluation/smoke_memory.py` (5턴, 9항목, Bedrock): 요약 발생 + case_facts 보존, study_log 임시 사본 사용
-- 웹 UI(§7)는 자동 스모크 없음. 화면 확인은 `CCAF_STUDY_LOG`를 임시 사본으로 지정해 서버를 띄우고(출제·채점 기록이 커밋 대상 study_log에 쌓이지 않게) 1280·1440·1920 너비, 세 프로필(`web_demo`·`demo_heavy`·`demo_new`)로 본다. 2026-11-05 전체 점검 통과 (UI 3단계 항목별 동작, 가로 넘침 없음, 콘솔 오류 없음)
+- 웹 UI(§7)는 자동 스모크 없음. 화면 확인은 `CCAF_STUDY_LOG`를 임시 사본으로 지정해 서버를 띄우고(출제·채점 기록이 커밋 대상 study_log에 쌓이지 않게) 1280·1440·1920 너비, 세 프로필(`web_demo`·`demo_heavy`·`demo_new`)로 본다. 2026-11-05 전체 점검 통과 (위 웹 UI 설계 원칙 항목별 동작, 가로 넘침 없음, 콘솔 오류 없음)
 
 ### 9-2. RAGAS
 - 대상: 근거 검색이 있는 문항만 (`evaluation/ragas_reference.csv`의 `ragas=Y`, 14건). 출제·학습 계획·가드레일 차단 문항은 judge로만 평가
@@ -598,8 +595,8 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 - 생성 모델별 승인 수·승인율, 승인 문항의 검토 모델 분포 (모델 전환, §5-2)
 - 사람 표본 검토 오류율. **판정=오류만 셈**, 경미는 별도 집계 (§5-2)
 - 정답 위치 분포, 중복 제거 수
-- **정답이 가장 긴 보기 비율** (승인 문항 기준, 동률은 가장 긴 것으로 침. **목표 35% 이하 유지**, 우연 수준 25%). 현재 33.8% (재조정 전 54%)
-  - 참고 지표(목표 없음, 병기만): **"정답이 가장 긴 오답보다 5% 넘게 긴 비율"** — 근소한 차이의 동률성 1위를 걸러 실제 단서에 가까운 비율. `--rebalance-length` 대상 기준과 같음. 현재 7.9% (재조정 전 28%). 리포트 `evaluation/quiz_pool_report.md`
+- **정답이 가장 긴 보기 비율** (승인 문항 기준, 동률은 가장 긴 것으로 침. **목표 35% 이하 유지**, 우연 수준 25%). 최종 33.8% (재조정 전 54%)
+  - 참고 지표(목표 없음, 병기만): **"정답이 가장 긴 오답보다 5% 넘게 긴 비율"** — 근소한 차이의 동률성 1위를 걸러 실제 단서에 가까운 비율. `--rebalance-length` 대상 기준과 같음. 최종 7.9% (재조정 전 28%). 리포트 `evaluation/quiz_pool_report.md`
 - 런타임 `no_match` 비율: 최종 평가에서 출제 요청 3건 중 1건(13번, 풀에 없는 조합을 일부러 요청한 문항)
 
 ### 9-4. 개선 후보와 채택 결과

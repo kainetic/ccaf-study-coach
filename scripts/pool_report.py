@@ -102,7 +102,7 @@ def build_auto(manifest: QuizManifest, pool: dict[str, QuizItem]) -> str:
     # 5. 중복·모델
     dups = [s.quiz_id for s in slots if s.status == "duplicate"]
     gen_c = Counter(short_model(i.generator_model) for i in approved)
-    rev_c = Counter(short_model(s.reviewer_model) if s.reviewer_model else "(기록 전, us/sonnet-4-5)"
+    rev_c = Counter(short_model(s.reviewer_model) if s.reviewer_model else "us/sonnet-4-5(추정: reviewer_model 기록 도입 전, 당시 us만 사용)"
                     for s in slots if s.status == "approved")
     L += ["## 5. 중복 · 모델", "",
           f"중복 제거: {len(dups)}개 ({', '.join(dups) or '없음'})", "",
@@ -141,8 +141,10 @@ def build_auto(manifest: QuizManifest, pool: dict[str, QuizItem]) -> str:
         L.append("같은 도메인·같은 사유 2건 이상 (오류+경미, DESIGN §5-2 프롬프트 수정 후 재생성 검토): "
                  + ("; ".join(f"{d} {reason} {len(ids)}건 ({', '.join(ids)})" for d, reason, ids in alerts) or "없음"))
         L.append("")
-        diff = [r for r in done if r["my_answer"] and r["my_answer"] != r["answer"]]
-        L.append(f"내 답 ≠ 정답: {len(diff)}건")
+        answered = [r for r in done if r["my_answer"]]
+        diff = [r for r in answered if r["my_answer"] != r["answer"]]
+        L.append(f"내 답 ≠ 정답: {len(diff)}/{len(answered)}건" if answered
+                 else "내 답 ≠ 정답: 비교 없음 (내 답 기입 0건)")
         if diff:
             L += ["", "| quiz_id | 층 | 내 답 | 정답 | 판정 | 사유 |", "|---|---|---|---|---|---|"]
             L += [f"| {r['quiz_id']} | {r['stratum']} | {r['my_answer']} | {r['answer']} | {r['verdict']} | {r['reason']} |"

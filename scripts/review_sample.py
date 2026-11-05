@@ -316,8 +316,10 @@ def apply_reviews(xlsx: Path, dry_run: bool) -> int:
     rc = Counter((r["verdict"], r["reason"]) for r in done if r["reason"])
     if rc:
         print("[apply] 사유 분포: " + " · ".join(f"{reason}({v}) {k}" for (v, reason), k in rc.most_common()))
-    diff = [r for r in done if r["my_answer"] and r["my_answer"] != r["answer"]]
-    print(f"[apply] 내 답 ≠ 정답: {len(diff)}건")
+    answered = [r for r in done if r["my_answer"]]
+    diff = [r for r in answered if r["my_answer"] != r["answer"]]
+    print(f"[apply] 내 답 ≠ 정답: {len(diff)}/{len(answered)}건" if answered
+          else "[apply] 내 답 ≠ 정답: 비교 없음 (내 답 기입 0건)")
     for r in diff:
         print(f"  - {r['quiz_id']} 내 답 {r['my_answer']} · 정답 {r['answer']} · 판정 {r['verdict']}")
     for d, reason, ids in same_reason_alerts(results):

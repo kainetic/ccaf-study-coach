@@ -58,13 +58,31 @@ flowchart LR
 
 ## 빠른 시작 (Windows PowerShell)
 
+### 저장소 클론
+
+비공개 저장소라서 저장소 소유자(`kainetic`)에게 collaborator로 초대받아야 클론할 수 있습니다.
+
 ```powershell
-# 1. 환경
-..\.venv\Scripts\activate          # 또는 python -m venv .venv; .venv\Scripts\activate
+mkdir C:\work; cd C:\work                 # 작업 폴더 (이 폴더에 .env를 둔다, 아래 2번)
+gh repo clone kainetic/ccaf-study-coach    # GitHub CLI (gh auth login 후)
+# 또는: git clone https://github.com/kainetic/ccaf-study-coach.git   (자격 증명 창에서 GitHub 로그인)
+cd ccaf-study-coach
+```
+
+클론하면 코드, 문제 풀(`data/quiz_pool.json`), 풀이 기록, 평가 결과가 함께 받아집니다. 가이드 PDF와 그 파생물(청크 jsonl, `chroma_db/`)은 저장소에 없으므로 아래 3번(ingest)을 한 번 실행해야 합니다.
+
+### 설치와 실행
+
+Python 3.14에서 개발하고 검증했습니다.
+
+```powershell
+# 1. 환경 (저장소 폴더 안에 venv)
+python -m venv .venv; .venv\Scripts\activate
 pip install -r requirements.txt
 
 # 2. 자격 증명: Bedrock 접근이 가능한 AWS 자격 증명을 .env에 둔다 (값은 저장소에 커밋하지 않음)
-#    src/config.py의 ENV_PATH가 읽을 위치를 정한다 (현재: 저장소 상위 폴더의 .env). 독립 저장소로 쓸 때는 이 한 줄만 바꾼다
+#    src/config.py의 ENV_PATH는 저장소 폴더의 "상위 폴더"에 있는 .env를 읽는다 (위 예시면 C:\work\.env)
+#    저장소 안에 두려면 ENV_PATH 한 줄을 Path(__file__).resolve().parents[1] / ".env"로 바꾼다 (.gitignore에 .env 포함)
 python scripts/check_bedrock.py    # LLM·임베딩 연결 확인
 
 # 3. 가이드 색인 (가이드 PDF와 파생물은 저장소에 없음 → data/README.md)

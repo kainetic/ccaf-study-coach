@@ -27,8 +27,8 @@ into one concise English search query for that (English) guide.
 
 Question: {question}"""
 
-# 정확 조회 패턴: 질문에 문서 번호가 있으면 그 청크를 먼저 쓴다. S3에서 get_chunk(doc_id)를 따로 두었지만
-# search_guide의 정확 조회 선행도 유지한다 (S2 검색 기준선 회귀 방지, DESIGN §3-1)
+# 정확 조회 패턴: 질문에 문서 번호가 있으면 그 청크를 먼저 쓴다. get_chunk(doc_id)는 모델이 번호를 알 때 쓰는
+# 별도 도구이고, search_guide의 정확 조회 선행과 함께 둔다 (DESIGN §3-1)
 EXACT_PATTERNS = [
     (re.compile(r"(?:\bTS|task\s*statement)\s*-?\s*([1-5])\s*\.\s*([1-7])", re.I), lambda m: f"TS-{m[1]}.{m[2]}"),
     (re.compile(r"(?:도메인|domain)\s*-?\s*([1-5])(?!\s*\.\s*\d)", re.I), lambda m: f"D{m[1]}"),
@@ -53,7 +53,7 @@ class Hit:
     how: str                         # "exact" | "hybrid"
 
 
-# ---------------------------------------------------------------- 결과 트리밍 (TS 5.1, v2-3)
+# ---------------------------------------------------------------- 결과 트리밍 (TS 5.1)
 
 # 겹침 계산에서 빼는 일반어 (가이드 전반에 흔해 관련성 신호가 아님)
 TRIM_GENERIC = set("""claude model models use using used agent agents task tasks system systems design implement

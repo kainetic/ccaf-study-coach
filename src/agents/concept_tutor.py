@@ -1,6 +1,6 @@
 """concept_tutor: 개념 설명·샘플 문항 해설·범위 안내 (DESIGN §3-1, §5-1).
 
-S3(P1): TutorAnswer 구조화 출력(ToolStrategy) + G3.
+TutorAnswer 구조화 출력(ToolStrategy) + G3.
 - 모델은 search_guide/get_chunk로 근거를 가져온 뒤 TutorAnswer(answer_ko, claims, in_exam_scope, coverage_gap)로 답한다.
 - TutorAnswerGuard(after_agent)가 이번 턴에 실제로 가져온 doc_id를 가리키는 claim만 유효로 보고(src/guards.check_tutor_answer),
   유효 claim이 0개면 답변 대신 "가이드 근거 없음" 고정 문구를 쓴다. [근거: …] 표기도 코드가 붙인다.

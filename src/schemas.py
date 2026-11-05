@@ -221,7 +221,7 @@ class StudyLog(BaseModel):
     users: dict[str, UserStudyLog] = Field(default_factory=dict)
 
 
-# ---------------------------------------------------------------- 가드레일 (§6, S3)
+# ---------------------------------------------------------------- 가드레일 (§6)
 
 class InputCheck(BaseModel):
     """입력 가드 2차 LLM 판별 (G1 덤프 요청 + G2 프롬프트 인젝션을 한 번에)."""
@@ -239,7 +239,7 @@ class GuardDecision(BaseModel):
     reason: str = ""
 
 
-# ---------------------------------------------------------------- 학습 계획 (§5-5, S3)
+# ---------------------------------------------------------------- 학습 계획 (§5-5)
 
 class DomainAllocation(BaseModel):
     domain: int
@@ -277,7 +277,7 @@ class StudyPlanDraft(BaseModel):
     days: list[DayPlanDraft]
 
 
-# ---------------------------------------------------------------- 평가 (§9-1, S3)
+# ---------------------------------------------------------------- 평가 (§9-1)
 
 class JudgeItem(BaseModel):
     index: int = Field(description="항목 번호 (1부터)")

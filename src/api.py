@@ -4,7 +4,7 @@
 요청: {"question": "...", "user_id": "demo_user"(선택), "thread_id": "..."(선택)}
 응답: {"answer", "contexts": [{"doc_id", "text"}], "trace": [...], "thread_id"}
   - thread_id를 주지 않으면 새로 만들어 돌려준다. 같은 thread_id로 이어서 부르면 출제 → 채점이 이어진다.
-GET /           웹 UI (src/web/index.html, v2-5). 스타일·동작은 /static/style.css·app.js (src/web/ 정적 서빙)
+GET /           웹 UI (src/web/index.html). 스타일·동작은 /static/style.css·app.js (src/web/ 정적 서빙)
 GET /progress   ?user_id=... → get_progress 결과 + weak(get_weak_domains) (코드 계산, LLM 없음. 웹 UI 진도 패널용)
 """
 import re

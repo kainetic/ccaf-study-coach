@@ -2,11 +2,11 @@
 
 - 입력: input_guard — G1(실제 문항·덤프 요청), G2(프롬프트 인젝션)는 차단, G4(공식·제휴·합격 보장 질문)는 고정 정정 문구.
   1차 정규식(rule_check) → 걸리면 그래프를 부르지 않는다. 통과하면 2차 LLM 판별(llm_guard, G1+G2 한 번에)을
-  그래프와 동시에 돌린다(v2, 응답 시간). 앱 도구는 첫 줄에서 wait_input_ok()로 판별 통과를 기다리므로
+  그래프와 동시에 돌린다(응답 시간 단축). 앱 도구는 첫 줄에서 wait_input_ok()로 판별 통과를 기다리므로
   LLM이 차단하면 도구는 한 번도 실행되지 않고, CoachApp.run이 그래프를 취소하고 이번 턴 메시지를 되돌린다.
 - 출력: check_tutor_answer — G3. concept_tutor의 TutorAnswer에서 이번 턴에 실제로 가져온 doc_id를 가리키는 claim만 유효.
   유효 claim이 0개면 답변 대신 NO_EVIDENCE. 출처 표기 [근거: …]는 코드가 붙인다.
-  coverage_gap이 있으면 GAP_NOTICE(공식 안내 확인 권고)를 코드가 붙인다 (v2, 프롬프트에 맡기지 않음).
+  coverage_gap이 있으면 GAP_NOTICE(공식 안내 확인 권고)를 코드가 붙인다 (프롬프트에 맡기지 않음).
 - 출력: output_check — G4 백스톱. 긍정형 사칭·합격 보장 문장을 지우고 고지 문구를 붙인다.
 - G5(시험 무관 질문)는 Supervisor 배분 + general_agent가 OFF_TOPIC 문구로 응대 (src/agent.py, src/agents/general.py).
 - G6·G7(정답 비노출, 승인 문항만·런타임 생성 금지)은 도구가 강제 (src/quiz_bank_server.py, src/agents/quiz_master.py).

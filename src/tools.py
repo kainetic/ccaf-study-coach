@@ -1,4 +1,4 @@
-"""concept_tutor 도구 (DESIGN §3-1). search_guide(P0), get_chunk(P1)."""
+"""concept_tutor 도구 (DESIGN §3-1): search_guide, get_chunk."""
 import asyncio
 from typing import Literal, Optional
 

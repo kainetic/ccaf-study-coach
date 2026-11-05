@@ -91,7 +91,7 @@ class CoachApp:
     async def run(self, question: str, user_id: str, thread_id: str, tracer) -> str:
         """한 턴: 입력 가드 → 그래프 → 답변 조립 → 출력 검사.
         - 1차 규칙에 걸리면 그래프를 부르지 않는다 (도구 호출 0건).
-        - 규칙을 통과하면 2차 LLM 판별과 그래프를 동시에 시작한다 (v2, 응답 시간). 앱 도구는 guards.wait_input_ok()에서
+        - 규칙을 통과하면 2차 LLM 판별과 그래프를 동시에 시작한다 (응답 시간 단축). 앱 도구는 guards.wait_input_ok()에서
           판별 통과를 기다리므로, LLM이 차단하면 도구는 실행되지 않고 그래프를 취소한 뒤 이번 턴 메시지를 되돌린다."""
         d = guards.rule_check(question)
         if d.action != "pass":

@@ -1,8 +1,8 @@
 """문제 은행 + 풀이 기록 MCP 서버 (DESIGN §3-2, §5-3, §5-4). Day 4 mcp_server.py 구조.
 
-단독 실행하지 않는다. 클라이언트(src/agent.py)가 `sys.executable -m src.quiz_bank_server`로 stdio 자식 프로세스로 띄운다.
+단독 실행하지 않는다. 클라이언트(src/quiz_client.py)가 `sys.executable -m src.quiz_bank_server`로 stdio 자식 프로세스로 띄운다.
 
-- 도구: get_quiz, submit_answer (P0), get_progress, get_weak_domains (P1)
+- 도구: get_quiz, submit_answer, get_progress, get_weak_domains
 - resource: quiz://catalog (도메인·TS·시나리오별 출제 가능 문항 수)
 - 출제는 data/quiz_pool.json의 status == "approved" 문항만. 런타임에 문제를 만들지 않는다
 - get_quiz는 정답·해설을 뺀 QuizPublic만 반환. 정답은 submit_answer가 코드로 채점한 뒤에만 공개
@@ -197,7 +197,7 @@ class QuizBank:
         return {"status": "graded", **result.model_dump(),
                 "options": {o.label: o.text for o in item.options}}
 
-    # ---- 진도·약점 (P1) ----
+    # ---- 진도·약점 ----
     def _user_log(self, user_id: str) -> UserStudyLog:
         with self._lock:
             return self._load_log().users.get(user_id, UserStudyLog())

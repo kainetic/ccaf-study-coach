@@ -8,7 +8,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-ROOT = Path(__file__).resolve().parents[1]                 # mini_pjt/
+ROOT = Path(__file__).resolve().parents[1]                 # 저장소 루트
 ENV_PATH = ROOT / ".env"                                   # 저장소 폴더/.env
 
 if not ENV_PATH.is_file():
@@ -16,12 +16,12 @@ if not ENV_PATH.is_file():
 load_dotenv(ENV_PATH)
 
 # ---- 모델 (CLAUDE.md 고정값) ----
-# v2-6: 기본 리전을 서울(ap-northeast-2)로. 서울에는 Sonnet 4.5 apac 프로필이 없어 global 추론 프로필을 쓴다.
+# 기본 리전은 서울(ap-northeast-2). 서울에는 Sonnet 4.5 apac 프로필이 없어 global 추론 프로필을 쓴다.
 # 임베딩(Titan v2)도 REGION을 따른다 (us-east-1과 벡터 코사인 0.9999, 재색인 불필요).
 MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 REGION = "ap-northeast-2"
 
-# 문제 풀 생성(오프라인 quiz_gen) 전용: 기존대로 us-east-1, 쓰로틀링 시 이 순서로 전환 (DESIGN §5-2).
+# 문제 풀 생성(오프라인 quiz_gen) 전용: us-east-1, 쓰로틀링 시 이 순서로 전환 (DESIGN §5-2).
 # us. 프로필이 들어 있어 서울 리전으로는 부를 수 없으므로 리전을 따로 둔다. Haiku는 문항·검토 품질 때문에 쓰지 않는다.
 QUIZ_GEN_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
 QUIZ_GEN_REGION = "us-east-1"
@@ -57,7 +57,7 @@ BULLETS_PATH = DATA_DIR / "guide_bullets.jsonl"
 CHROMA_DIR = ROOT / "chroma_db"
 COLLECTION = "ccaf_guide"
 QUIZ_POOL_PATH = DATA_DIR / "quiz_pool.json"
-# 풀이 기록. 테스트에서만 CCAF_STUDY_LOG로 다른 파일을 가리킬 수 있다.
+# 풀이 기록. CCAF_STUDY_LOG로 임시 사본을 가리킬 수 있다 (평가·스모크·시연, 커밋된 시드 기록을 지키려는 서버 실행).
 STUDY_LOG_PATH = Path(os.environ.get("CCAF_STUDY_LOG", DATA_DIR / "study_log.json"))
 
 # 장기 대화 요약 (src/memory.py, TS 5.1). 턴 시작 때 thread 메시지가 이 수를 넘으면 최근 턴만 남기고 앞부분을 요약.

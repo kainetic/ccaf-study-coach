@@ -4,7 +4,7 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
 기획: SERVICE.md · 설계: docs/DESIGN.md · 평가: evaluation/test_queries.csv
 설계 세부는 필요할 때 docs/DESIGN.md의 해당 절(§)을 읽을 것. 전체를 미리 읽지 말 것.
 
-## 현재 단계: S1~S6 완료 → 제출 대기 (DESIGN §1-1 단계표)
+## 현재 단계: S1~S6 완료 · push 완료 (DESIGN §1-1 단계표)
 - 완료: S0(ingest 62/240) · S1 전반(문제 풀 승인 266/284 슬롯(93.7%), 세부 항목 커버리지 240/240,
   정답이 가장 긴 보기 54% → 33.8%(목표 35% 이하 달성, --rebalance-length 성공 55·원본 유지 20),
   5% 초과 비율 28% → 7.9%(참고). 수치·예외 기록은 evaluation/quiz_pool_report.md)
@@ -31,7 +31,7 @@ CCA-F 시험 가이드 기반 멀티에이전트 학습 도우미. LangGraph Sup
 - S6 완료: README.md("활용한 패턴" — 12개 패턴 중 10개 구현, 시험 TS 적용 지점, 용어 대응) · 시연 캡처 docs/demo/01~05
   (scripts/demo_capture.py, 임시 study_log 사본) · DESIGN v0.5.4(§10·§11 실제 구현 기준)
   - 최종 점검: smoke_p1 19/19 · smoke_p0 18/18 · pip check · compileall · 커밋 금지 파일·비밀값 검사 이상 없음
-- 다음: push (원격 URL 받은 뒤). 제출 후 후보는 round2_report §6
+- 원격: https://github.com/kainetic/ccaf-study-coach (private, 브랜치 master, origin 추적). 제출 후 개선 후보는 round2_report §6
 - 선택 항목(v2)은 요청 전까지 시작하지 않는다
 
 ## 명령 (Windows PowerShell)

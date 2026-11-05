@@ -1,6 +1,6 @@
-/* CCA-F 학습 코치 웹 UI 스타일 (v2-5). src/api.py가 /static/style.css로 서빙.
+/* CCA-F 학습 코치 웹 UI 스타일. src/api.py가 /static/style.css로 서빙.
    라이트 전용·데스크톱 전용. 색·반경·그림자는 :root 토큰으로만 쓴다.
-   문제 풀이 영역(문제 카드·보기·채점 결과·해설)은 2단계 블록에 모아 둔다. */
+   문제 풀이 영역(문제 카드·보기·채점 결과·해설)은 "문제 풀이" 블록에 모아 둔다. */
 :root {
   /* 기본 토큰 */
   --bg: #f5f6f8; --surface: #ffffff; --surface-2: #f9fafb; --hover: #f3f4f6;
@@ -12,8 +12,8 @@
   --r-sm: 8px; --r: 12px; --r-lg: 14px;
   --shadow-sm: 0 1px 2px rgba(16, 24, 40, .05);
   --content: 760px; --msg-py: 16px; --msg-px: 18px;
-  /* 기존 규칙이 쓰는 이름 (새 값의 별칭) */
-  --panel: var(--surface); --bot: var(--surface); --user: var(--accent-soft); --code: #f3f4f6;
+  /* 보조 이름 (기본 토큰의 별칭) */
+  --bot: var(--surface); --user: var(--accent-soft); --code: #f3f4f6;
   --badge: #ecfdf3; --badge-text: #067647;
 }
 * { box-sizing: border-box; }
@@ -137,7 +137,7 @@ details.trace { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(
 details.trace summary { cursor: pointer; }
 details.trace ul { margin: 6px 0 0; padding-left: 18px; }
 
-/* ---------- 문제 풀이 (2단계): 문제 카드 · 보기 · 채점 결과 · 해설 ---------- */
+/* ---------- 문제 풀이: 문제 카드 · 보기 · 채점 결과 · 해설 ---------- */
 /* 문제 카드: 일반 답변과 구분되는 헤더 띠 */
 .msg.bot.quiz { padding: 0; overflow: hidden; border-color: #c7d2fe; }
 .quiz-notice { padding: 12px var(--msg-px); background: #fffbeb; border-bottom: 1px solid #fde68a; font-size: 13.5px; color: #92400e; }
@@ -243,7 +243,7 @@ kbd {
 .msg.graded > details.trace, .msg.quiz > details.trace { margin: 12px var(--msg-px) var(--msg-py); }
 .msg.graded > .next:last-child, .msg.graded > .next:has(+ details.trace) { padding-bottom: var(--msg-py); }
 
-/* 예전 채점 표시 (형식이 다를 때) */
+/* 대체 채점 표시 (채점 텍스트를 파싱하지 못했을 때) */
 .verdict { font-weight: 700; margin: calc(-1 * var(--msg-py)) calc(-1 * var(--msg-px)) 12px; padding: 8px var(--msg-px); border-radius: var(--r-lg) var(--r-lg) 0 0; }
 .msg.graded-ok { border-color: var(--ok); }
 .msg.graded-ok .verdict { background: var(--ok-bg); color: var(--ok); }
@@ -370,7 +370,7 @@ aside { display: flex; flex-direction: column; min-height: 0; background: var(--
 .dom .fill { border-radius: 4px; }
 .dom.weak { border-color: #fecaca; background: var(--err-bg); }
 .dom.weak .fill { background: var(--err); }
-/* 15) 채점 직후 해당 도메인 행 강조 + 바뀐 숫자 */
+/* 채점 직후 해당 도메인 행 강조 + 바뀐 숫자 */
 .dom.flash { animation: flash 1.8s ease-out; }
 @keyframes flash { 0%, 35% { background: #e0e7ff; border-color: #a5b4fc; } }
 .cnt.bump { color: var(--accent); }

@@ -1,4 +1,4 @@
-// CCA-F 학습 코치 웹 UI 동작 (v2-5). src/api.py가 /static/app.js로 서빙, index.html 끝에서 불러온다(DOM이 먼저 있어야 함).
+// CCA-F 학습 코치 웹 UI 동작. src/api.py가 /static/app.js로 서빙, index.html 끝에서 불러온다(DOM이 먼저 있어야 함).
 // 정답은 서버 코드(submit_answer)만 안다. 이 스크립트는 사용자가 고른 글자를 /query로 보낼 뿐이다.
 const USER_ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
 const EXAMPLES = [
@@ -13,7 +13,7 @@ let threadId = null, busy = false;
 let history = [];               // 이번 대화 기록 (새로고침 복원용, sessionStorage)
 const SESSION_KEY = "ccaf_session", HISTORY_MAX = 60;
 const DEBUG = new URLSearchParams(location.search).get("debug") === "1";   // ?debug=1 → trace 표시 체크박스
-const ACC_MIN = 10;             // 전체 정답률은 이만큼 풀어야 크게 보여 준다 (그 전에는 풀이 수 중심)
+const ACC_MIN = 10;             // 전체 풀이가 이보다 적으면 KPI에 정답률 대신 풀이 수를 보여 주고 "정답률은 N문제부터"로 안내
 const DOM_MIN = 3;              // 도메인 정답률은 이만큼 풀어야 보여 준다 (서버 약점 판정 기준 시도 3회와 같게)
 const sources = new Map();      // doc_id → 가이드 원문 (이번 대화에서 받은 contexts). 채점 턴은 출제 턴의 TS 청크를 쓴다
 
@@ -27,14 +27,15 @@ function esc(s) {
 }
 
 // 코치 답변용 작은 마크다운: 이스케이프 후 코드블록·목록·제목·굵게·인라인 코드·근거 배지만 처리
+const DOC_ID_RE = /^(TS-\d+\.\d+|SQ-\d+|OV-[a-z]+|SCOPE-[a-z]+|D[1-5]|SC-\d+|EX-\d+)$/;
 function inline(s) {
   return s
     .replace(/`([^`]+)`/g, "<code>$1</code>")
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
     .replace(/\[근거:([^\]]+)\]/g, (_, body) => {
-      // TS 번호마다 누르면 가이드 원문 발췌를 펼치는 버튼. TS 번호가 없으면 배지만
-      const ids = body.match(/TS-\d+\.\d+/g);
-      if (!ids) return `<span class="cite">근거:${body}</span>`;
+      // doc_id(TS·SQ·OV·SCOPE·D·SC·EX)마다 누르면 가이드 원문 발췌를 펼치는 버튼. doc_id가 없으면 배지만
+      const ids = body.split(",").map((s) => s.trim()).filter((s) => DOC_ID_RE.test(s));
+      if (!ids.length) return `<span class="cite">근거:${body}</span>`;
       return '<span class="cite-row">근거: ' + ids.map((id) =>
         `<button type="button" class="cite" data-doc="${id}" aria-expanded="false" title="가이드 원문 보기">${id}</button>`).join(" ") + "</span>";
     });
@@ -155,7 +156,7 @@ function traceSummary(data) {
   return el;
 }
 
-// 출제 답변을 문항 앞부분 · 보기(A~F) · 뒷부분으로 나눈다. 보기가 2개 미만이면 null (일반 렌더링)
+// 출제 답변을 문항 앞부분 · 보기 · 뒷부분으로 나눈다 (파서는 A~F까지 허용, 풀 문항은 A~D). 보기가 2개 미만이면 null (일반 렌더링)
 function splitQuiz(answer) {
   const lines = answer.split(/\r?\n/);
   const idx = [], options = [];
@@ -249,7 +250,7 @@ function reopenQuiz() {
 
 function quizBlock(el, answer) {
   const q = splitQuiz(answer);
-  if (!q) {      // 보기를 못 찾으면 예전처럼 A~D 버튼
+  if (!q) {      // 대체 표시: 보기를 못 찾으면 원문 + A~D 버튼
     el.innerHTML = renderMarkdown(answer);
     const row = document.createElement("div");
     row.className = "choices";
@@ -328,7 +329,7 @@ function markQuizGraded(submit, answer) {
   setQuizState(activeQuiz, submit.correct ? "ok" : "bad");
 }
 
-// 예전 표시 (채점 텍스트 형식이 다를 때): 말풍선 머리줄 + 원문 마크다운
+// 대체 표시 (채점 텍스트를 파싱하지 못했을 때): 말풍선 머리줄 + 원문 마크다운
 function markGraded(el, submit) {
   el.classList.add(submit.correct ? "graded-ok" : "graded-bad");
   const head = document.createElement("div");
@@ -664,7 +665,7 @@ q.addEventListener("input", autosize);
 q.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("ask").requestSubmit(); }
 });
-// 답을 기다리는 문항이 있으면 입력창 밖에서 A~F 키로 고른다
+// 답을 기다리는 문항이 있으면 입력창 밖에서 카드에 있는 보기 글자 키로 고른다
 document.addEventListener("keydown", (e) => {
   if (!activeQuiz || busy || e.ctrlKey || e.metaKey || e.altKey) return;
   if (/^(TEXTAREA|INPUT)$/.test(document.activeElement.tagName)) return;
@@ -718,7 +719,7 @@ log.addEventListener("click", (e) => {
   const text = sources.get(id);
   box.innerHTML = `<div class="src-head">${esc(id)} · 시험 가이드 원문</div>` + (text
     ? esc(text)
-    : '<div class="src-note">이 대화에서 받은 검색 결과에 원문이 없습니다. 원문이 필요하면 이 TS를 질문해 보세요.</div>');
+    : '<div class="src-note">이 대화에서 받은 검색 결과에 원문이 없습니다. 원문이 필요하면 이 항목을 질문해 보세요.</div>');
   (btn.closest("p, ul, ol") || btn.closest(".cite-row")).after(box);
   btn.setAttribute("aria-expanded", "true");
 });
@@ -738,7 +739,7 @@ uid.addEventListener("change", () => {
   loadProgress();
 });
 
-// 프로필은 선택 메뉴에 있는 값만 (예전 자유 입력으로 저장된 값이 메뉴에 없으면 기본 web_demo)
+// 프로필은 선택 메뉴에 있는 값만 (이전 버전의 자유 입력이 localStorage에 남긴 값이 메뉴에 없으면 기본 web_demo)
 const savedUser = store("ccaf_user_id");
 uid.value = [...uid.options].some((o) => o.value === savedUser) ? savedUser : "web_demo";
 showIntro();

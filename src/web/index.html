@@ -121,7 +121,7 @@ details.trace ul { margin: 4px 0 0; padding-left: 18px; }
 .intro { color: var(--muted); }
 form#ask { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--panel); }
 form#ask textarea {
-  flex: 1; min-width: 0; resize: none; padding: 8px 10px; height: 44px;
+  flex: 1; min-width: 0; resize: none; padding: 8px 10px; height: 44px; min-height: 44px; max-height: 160px; overflow-y: auto;
   border: 1px solid var(--border); border-radius: 8px; background: var(--bg);
 }
 .waiting { color: var(--muted); font-size: 14px; }
@@ -156,13 +156,18 @@ aside .btn { padding: 2px 8px; font-size: 12px; }
 .track { height: 8px; background: var(--bar); border-radius: 4px; margin-top: 3px; overflow: hidden; }
 .fill { height: 100%; background: var(--accent); }
 .note { font-size: 12px; color: var(--muted); }
+.restored { align-self: center; font-size: 12px; color: var(--muted); text-align: center; }
 @media (max-width: 760px) {
   .app { height: auto; min-height: 100vh; }
   .main { grid-template-columns: 1fr; }
   .chat { grid-template-rows: auto auto; }
   #log { overflow: visible; min-height: 50vh; }
   form#ask { position: sticky; bottom: 0; }
-  header input { width: 110px; }
+  header { flex-wrap: nowrap; gap: 6px; padding: 8px 12px; }
+  header h1 { font-size: 15px; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  header .lbl { display: none; }
+  header input { width: 92px; }
+  header .btn { padding: 5px 9px; white-space: nowrap; }
   /* 모바일: 진도 패널은 헤더 "진도" 버튼으로 여는 아래 시트 */
   #toggleProgress, #closeProgress { display: inline-block; }
   aside {
@@ -179,8 +184,8 @@ aside .btn { padding: 2px 8px; font-size: 12px; }
 <div class="app">
   <header>
     <h1>CCA-F 학습 코치</h1>
-    <label>user_id
-      <input id="uid" list="uids" autocomplete="off" spellcheck="false">
+    <label><span class="lbl">user_id</span>
+      <input id="uid" list="uids" autocomplete="off" spellcheck="false" aria-label="user_id" placeholder="user_id">
       <datalist id="uids"><option value="web_demo"><option value="demo_heavy"><option value="demo_new"></datalist>
     </label>
     <button class="btn" id="toggleProgress" type="button" aria-controls="progressPanel">진도</button>
@@ -214,6 +219,8 @@ const EXAMPLES = [
 const $ = (id) => document.getElementById(id);
 const log = $("log"), q = $("q"), send = $("send"), uid = $("uid");
 let threadId = null, busy = false;
+let history = [];               // 이번 대화 기록 (새로고침 복원용, sessionStorage)
+const SESSION_KEY = "ccaf_session", HISTORY_MAX = 60;
 const sources = new Map();      // doc_id → 가이드 원문 (이번 대화에서 받은 contexts). 채점 턴은 출제 턴의 TS 청크를 쓴다
 
 function store(key, value) {
@@ -269,6 +276,47 @@ function renderMarkdown(text) {
   if (code) out.push("<pre><code>" + code.join("\n") + "</code></pre>");
   flushPara(); flushList();
   return out.join("");
+}
+
+// 대화 기록을 탭 단위로 저장한다 (탭을 닫으면 사라짐). 용량이 넘치면 최근 기록만 남긴다
+function saveSession() {
+  for (const n of [HISTORY_MAX, 20, 6]) {
+    try {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user: uid.value.trim(), threadId, items: history.slice(-n) }));
+      return;
+    } catch (e) { /* 용량 초과·접근 불가 → 더 줄여서 재시도 */ }
+  }
+}
+
+function record(item) {
+  history.push(item);
+  if (history.length > HISTORY_MAX) history = history.slice(-HISTORY_MAX);
+  saveSession();
+}
+
+// 저장된 기록을 네트워크 호출 없이 다시 그린다 (문항 카드·채점 표시·근거 원문 포함)
+function restoreSession() {
+  let saved = null;
+  try { saved = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null"); } catch (e) { saved = null; }
+  if (!saved || saved.user !== uid.value.trim() || !Array.isArray(saved.items) || !saved.items.length) return;
+  history = saved.items;
+  threadId = saved.threadId || null;
+  for (const it of history) {
+    if (it.r === "u") { disableChoices(); addUser(it.t); }
+    else if (it.r === "b") { for (const c of it.d.contexts || []) sources.set(c.doc_id, c.text); addBot(it.d); }
+    else if (it.r === "e") addError(it.t);
+  }
+  const note = document.createElement("div");
+  note.className = "restored";
+  note.textContent = "이전 대화를 복원했습니다. 서버가 다시 시작됐다면 풀던 문제는 이어지지 않으니 새로 요청해 주세요.";
+  log.appendChild(note);
+  scrollDown();
+}
+
+function newConversation() {
+  threadId = null; activeQuiz = null; sources.clear(); history = [];
+  try { sessionStorage.removeItem(SESSION_KEY); } catch (e) { /* 무시 */ }
+  showIntro();
 }
 
 function scrollDown() { log.scrollTop = log.scrollHeight; window.scrollTo(0, document.body.scrollHeight); }
@@ -462,6 +510,7 @@ async function ask(question) {
   if (!user) { addError("user_id는 영문·숫자·_·-만 쓸 수 있습니다 (점 금지, 64자 이하)."); return; }
   disableChoices();
   addUser(question);
+  record({ r: "u", t: question });
   setBusy(true);
   // 스트리밍이 없어 실제 진행 단계는 모른다 → 경과 시간에 따른 일반 문구만 보여 준다
   const wait = document.createElement("div");
@@ -495,9 +544,12 @@ async function ask(question) {
     threadId = data.thread_id;
     for (const c of data.contexts || []) sources.set(c.doc_id, c.text);
     addBot(data);
+    record({ r: "b", d: { answer: data.answer, trace: data.trace, contexts: data.contexts } });
     if ((data.trace || []).some((s) => s.step === "submit" && s.status === "graded")) loadProgress();
   } catch (e) {
-    addError("오류: " + (e.message || "서버에 연결할 수 없습니다."));
+    const msg = "오류: " + (e.message || "서버에 연결할 수 없습니다.");
+    addError(msg);
+    record({ r: "e", t: msg });
   } finally {
     clearInterval(timer);
     wait.remove();
@@ -576,8 +628,15 @@ $("ask").addEventListener("submit", (e) => {
   e.preventDefault();
   const text = q.value;
   q.value = "";
+  autosize();
   ask(text);
 });
+function autosize() {
+  if (!q.value) { q.style.height = ""; return; }      // 비면 CSS 기본 높이(44px)로
+  q.style.height = "0px";       // auto는 flex 행 높이로 늘어나 측정이 틀어진다
+  q.style.height = Math.max(44, Math.min(q.scrollHeight + 2, 160)) + "px";
+}
+q.addEventListener("input", autosize);
 q.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("ask").requestSubmit(); }
 });
@@ -589,7 +648,7 @@ document.addEventListener("keydown", (e) => {
   if (activeQuiz.cards[label]) { e.preventDefault(); pick(label); }
 });
 $("reset").addEventListener("click", () => {
-  if (!busy) { threadId = null; activeQuiz = null; sources.clear(); showIntro(); q.focus(); }
+  if (!busy) { newConversation(); q.focus(); }
 });
 $("refresh").addEventListener("click", loadProgress);
 $("toggleProgress").addEventListener("click", () => {
@@ -631,12 +690,13 @@ showTrace.addEventListener("change", () => {
 $("backdrop").addEventListener("click", closeSheet);
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet(); });
 uid.addEventListener("change", () => {
-  if (currentUid()) { store("ccaf_user_id", uid.value.trim()); threadId = null; activeQuiz = null; sources.clear(); showIntro(); }
+  if (currentUid()) { store("ccaf_user_id", uid.value.trim()); newConversation(); }
   loadProgress();
 });
 
 uid.value = store("ccaf_user_id") || "web_demo";
 showIntro();
+restoreSession();
 loadProgress();
 </script>
 </body>

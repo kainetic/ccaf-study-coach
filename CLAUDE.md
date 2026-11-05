@@ -63,6 +63,7 @@ MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언�
 - 선택 항목(v2) reset_progress HITL은 요청 전까지 만들지 않는다. LangSmith/LangFuse·Dockerfile은 하지 않기로 결정 (웹 UI는 v2-5 구현)
 - 커밋 금지: data/raw/*.pdf, data/guide_chunks.jsonl, data/guide_bullets.jsonl, chroma_db/, .env, evaluation/review_sample.xlsx
   (data/quiz_pool.json, quiz_pool_manifest.json, study_log.json은 커밋)
+  저장소가 private이어도 유지 — 가이드 원문 재배포 방지, ingest로 재생성 가능 (DESIGN §2-4 저장 정책)
 - evaluation/test_queries.csv와 ragas_reference.csv의 기대값은 묻지 않고 바꾸지 않는다
 - 설계와 다르게 구현해야 하면 먼저 말하고, 합의되면 docs/DESIGN.md를 같이 고친다
 

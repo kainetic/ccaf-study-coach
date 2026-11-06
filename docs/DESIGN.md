@@ -118,8 +118,9 @@ flowchart TD
         B0[(guide_bullets 240개)] --> B1[build_quiz_pool.py<br/>매니페스트]
         B1 --> B2[생성 → 코드 검증 → 독립 검토 → 재시도]
         B2 --> B3[후처리: 보기 섞기 · 중복 제거]
-        B3 --> B4[사람 표본 검토 · 커버리지 보충]
-        B4 --> QP[(quiz_pool.json 승인 266문제)]
+        B3 --> B4[커버리지 보충 · 예외 슬롯 · 정답 길이 재조정]
+        B4 --> B5[사람 표본 검토]
+        B5 --> QP[(quiz_pool.json 승인 266문제)]
     end
     U[POST /query] --> G{입력 가드<br/>규칙 + LLM}
     G -- 차단 --> R[고정 거절 문구]
@@ -134,7 +135,10 @@ flowchart TD
     M --> SL[(study_log.json)]
     C --> M
     C --> P[plan_and_execute 서브그래프]
-    S --> O{output_check<br/>출처·금지표현}
+    T --> O{output_check<br/>출처·금지표현}
+    Q --> O
+    C --> O
+    GA --> O
     G -. LLM 판별은 그래프와 병렬, 차단 시 취소 .-> S
     O --> A[answer + contexts + trace]
 ```
@@ -156,7 +160,7 @@ flowchart TD
 `search_guide`는 질문에 TS 번호 등이 있으면 그 청크를 정확 조회해 결과 앞에 둔다. `get_chunk(doc_id)`는 모델이 doc_id를 이미 알 때나 검색 결과의 전문을 확인할 때 쓰는 별도 도구다.
 
 도구 설명은 "언제 쓰고 언제 쓰지 않는지, 입력 형식, 예시 질의"를 포함해 작성 (TS 2.1).
-- `get_quiz`: "문제 요청 시 사용. 도메인·TS·시나리오로 필터. 풀에 없는 조합이면 도구가 그 사실을 밝히고 대체 문제를 낸다." (대체 문제는 조건을 하나씩 뺀 조합에서 고르므로 도메인이 달라질 수 있음) (no_match 처리는 래퍼 코드, §5-3)
+- `get_quiz`: "문제 요청 시 사용. 도메인·TS·시나리오로 필터. 풀에 없는 조합이면 도구가 그 사실을 밝히고 대체 문제를 낸다." no_match 처리는 래퍼 코드가 하고(§5-3), 대체 문제는 조건을 하나씩 뺀 조합에서 고르므로 도메인이 달라질 수 있음
 - `submit_answer`: "사용자가 직전 문제의 답을 말했을 때만 사용. quiz_id는 대화 상태의 pending_quiz_id를 사용."
 
 **quiz_master 도구 = MCP 래퍼 (`src/agents/quiz_master.py`)**
@@ -329,7 +333,7 @@ class QuizManifest(BaseModel):
 구현 (`src/retriever.py`, `src/agents/concept_tutor.py`, `src/guards.check_tutor_answer`, `src/memory.py`):
 - **검색**: 정확 조회는 정규식(`TS 2.2`·`Task Statement 2.2`·`도메인 3`·`Domain 3`·`D3`·`샘플 1번`·`Sample Question 1`·`시나리오 5`·`Exercise 2`)으로 감지한 청크를 앞에 두고 남은 자리를 하이브리드로 채움. BM25는 영어 토크나이저(가이드가 영어), 가중치 BM25 0.4 · 벡터 0.6, 재작성은 `rewrite_query` LLM 1회(실패 시 원문). rewrite·retrieve 결과는 custom event로 trace에 기록
 - **선행 검색** (`retriever.start_prefetch`·`PREFETCH`): `CoachApp.run`이 1차 규칙 통과 직후 질문 원문으로 재작성 + 필터 없는 하이브리드 검색을 시작(입력 가드 LLM·Supervisor 배분과 동시). `search_guide`는 `wait_input_ok()` 다음에 query가 이번 턴 질문과 같으면 이 결과를 씀(필터가 있으면 재작성 질의만 재사용). trace `rewrite.prefetch` = hit / query_only / miss. 차단되면 취소하고, 결과는 gate 통과 뒤에만 쓰이므로 차단 입력의 검색 결과는 나가지 않음. 채점 입력(§6)에는 하지 않음
-- **첫 검색 주입** (`concept_tutor.ForceFirstSearch`, before_model): 이번 턴에 아직 검색하지 않았으면 모델을 부르지 않고 `search_guide(질문 원문)` 호출을 넣어 도구 단계로 감(프롬프트가 "먼저 검색"으로 고정이라 첫 모델 호출은 검색 결정뿐이었음). 결과를 본 모델은 바로 답하거나 한 번 더 검색
+- **첫 검색 주입** (`concept_tutor.ForceFirstSearch`, before_model): 이번 턴에 아직 검색하지 않았으면 모델을 부르지 않고 `search_guide(질문 원문)` 호출을 넣어 도구 단계로 감(프롬프트가 "먼저 검색"이라 검색만 결정하던 첫 모델 호출을 생략). 결과를 본 모델은 바로 답하거나 한 번 더 검색
 - **검색 결과 트리밍** (`retriever.trim_hits`) — 청크 단위 필터: 1순위 hit, 정확 조회 hit, task_statement가 아닌 청크(샘플 문항·범위·개요 등)는 그대로. 2순위 이하 `task_statement` 청크는 영어 검색어와 키워드(일반어 제외)가 겹치는 bullet이 하나라도 있으면 전문, 없으면 뺀다. 청크 안의 bullet은 자르지 않음(bullet 단위로 자르면 답에 필요한 bullet까지 빠짐)
 - **TutorAnswer + G3**: `create_agent(response_format=ToolStrategy(TutorAnswer))` + after_agent 미들웨어 `TutorAnswerGuard`. claim은 **이번 턴에 search_guide/get_chunk가 실제로 돌려준 doc_id를 가리킬 때만 유효**(대소문자 무시). 유효 claim 0개(또는 구조화 응답 없음)면 고정 문구 `NO_EVIDENCE`(+coverage_gap). 아니면 answer_ko + "가이드에 없는 부분: …"(coverage_gap) + `GAP_NOTICE`(coverage_gap이 있을 때) + 코드가 만든 `[근거: …]`(answer_ko의 LLM 표기는 지움). excerpt 원문 일치 수는 trace `output_check`에만 기록(강제 안 함). 결과는 `name="concept_tutor"` AIMessage로 마지막에 붙여 Supervisor last_message·turn_answer가 사용
 - **장기 대화 요약** (`memory.compact`, `CoachApp.run`): 턴 시작 전 thread 메시지가 `config.SUMMARY_TRIGGER_MESSAGES`(40)를 넘으면 최근 `SUMMARY_KEEP_TURNS`(3)개 턴은 그대로 두고 그 앞을 LLM 1회로 한국어 10줄 이내 요약 → `SystemMessage`([이전 대화 요약] + [핵심 사실 — case_facts, 코드 보존]) 하나로 바꿔 바깥 그래프 상태에 `aupdate_state`로 적용(`RemoveMessage(REMOVE_ALL)`). 자르는 지점은 사용자 입력 경계라 도구 호출 쌍이 끊기지 않음. 요약 LLM은 입력 가드 판별과 동시에 돌고, 실패하면 원래 메시지 유지. Supervisor `pre_model_hook`으로 지우면 내부 그래프에만 적용되고 바깥 thread에는 옛 메시지가 남아서 그래프 밖에서 처리. 하위 에이전트도 같은 messages를 받으므로 study_coach는 요약 블록의 일수·시간을 쓰고 다시 묻지 않음. 가드 차단 턴은 `_rollback`이 messages·case_facts를 통째로 복원. 검증: `evaluation/smoke_memory.py`
@@ -497,7 +501,7 @@ class QuizManifest(BaseModel):
 고정 거절 문구는 Day 5 `guards_refusal.py` 방식으로 상수화 (평가 시 문자열 매칭 가능하게).
 
 구현 (`src/guards.py`, 실행 순서는 `agent.CoachApp.run`):
-- 입력 가드(`rule_check` → `llm_guard`): 1차 정규식 G1(`덤프`·`기출`·`실제 (시험에 나온) 문제` — "실제 시험 문제처럼" 같은 스타일 요청은 제외 — `exam dump`·`real questions`) → G2(Day 5 INJECTION_PATTERNS) → G4. 1차 규칙에 걸리면 그래프를 부르지 않음 → 도구 호출 0건. 걸리지 않으면 2차 LLM `InputCheck` 1회(G1+G2 함께, confidence > 0.7만 차단, 실패 시 통과 + 기록)를 **그래프와 동시에** 시작 (순차 실행 대비 응답 시간 약 4~5초 단축)
+- 입력 가드(`rule_check` → `llm_guard`): 1차 정규식 G1(`덤프`·`기출`·`실제 (시험에 나온) 문제` — "실제 시험 문제처럼" 같은 스타일 요청은 제외 — `exam dump`·`real questions`) → G2(Day 5 INJECTION_PATTERNS) → G4. 1차 규칙에 걸리면 그래프를 부르지 않음 → 도구 호출 0건. 걸리지 않으면 2차 LLM `InputCheck` 1회(G1+G2 함께, confidence > 0.7만 차단, 실패 시 통과 + 기록)를 **그래프와 동시에** 시작 (순차 실행 대비 개념 질문 평균 약 4초 단축, v2-2)
   - 앱 도구 8개는 첫 줄 `guards.wait_input_ok()`에서 판별 통과를 기다림(`INPUT_GATE` ContextVar의 Future). 판별 전에는 Supervisor 배분·하위 에이전트 LLM까지만 진행
   - LLM이 차단하면 그래프 task를 취소(도구는 gate에서 멈춰 실행 0건), 이번 턴에 thread에 추가된 메시지를 `RemoveMessage`로 되돌리고(`CoachApp._rollback`), trace는 guard 단계만 남김(`tracer.discard_graph_run`) → 차단 문항은 여전히 도구 호출 0건
   - 새 앱 도구를 추가하면 반드시 첫 줄에 `wait_input_ok()`를 둔다
@@ -523,7 +527,7 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 - Supervisor 동시 핸드오프 금지: Bedrock Converse는 parallel_tool_calls 끄기를 지원하지 않으므로 `post_model_hook`(`agent.single_handoff`)이 첫 핸드오프만 남김 (복합 요청은 concept_tutor → quiz_master 순서로 이어서 처리)
 - `contexts`: `search_guide`/`get_chunk` 결과와, 출제 시에는 해당 문제의 TS 청크(정답 단서인 source_excerpt는 넣지 않음)를 콜백으로 수집 (Day 7 `run_eval.py`의 ToolRecorder 방식)
 - `trace`: step 단위 `guard → route(agent) → rewrite → retrieve → get_quiz → submit → progress → allocate → plan → output_check` + 끝에 `tools`(이번 턴 앱 도구 이름, 핸드오프·TutorAnswer 제외 — 평가 판정용)와 `llm`(호출 수·토큰·실제 응답 모델). `output_check`는 G3(concept_tutor)과 G4(최종 답변) 두 종류. Day 7 `local_tracer.py` 확장. 로컬 사본 `logs/trace.jsonl`(커밋 안 함)
-- 서버: FastAPI (Day 6 `api_server.py` 재사용, 경로만 `/query`로 변경). 시작 때 `retriever.warm_up()`으로 청크·BM25·Chroma를 열고 임베딩·재작성 LLM 1회씩 호출해 첫 요청의 콜드 스타트를 없앰. `config.get_llm`은 (모델, 재시도, 리전)마다 인스턴스를 공유해 모든 에이전트가 같은 Bedrock 클라이언트·연결을 씀
+- 서버: FastAPI (Day 6 `api_server.py` 재사용, 경로만 `/query`로 변경). 시작 때 `retriever.warm_up()`으로 청크·BM25·Chroma를 열고 임베딩·재작성 LLM 1회씩 호출해 첫 요청의 콜드 스타트를 없앰. 런타임 `FallbackChatModel`(§7-1)의 후보 인스턴스는 `config.get_llm` 캐시((모델, 재시도, 리전)마다 1개)를 거치므로 모든 에이전트가 같은 Bedrock 클라이언트·연결을 씀
 - 웹 UI: `GET /`가 `src/web/index.html`(바닐라 JS, 외부 의존성·CDN 없음)을 서빙하고 `style.css`·`app.js`는 `/static` 마운트. 화면 세부(카드·배너·문구·애니메이션)는 `src/web/`이 기준이고, 설계 원칙은 다음과 같다
   - 백엔드는 `/query`·`/progress`만 쓰고 그래프·가드·도구는 바꾸지 않음. 화면은 표시만 바꾸고 계산(정답률·약점·커버리지)은 서버 값 그대로
   - **정답은 UI도 모름**: `trace`의 `get_quiz` status=ok면 `format_quiz` 텍스트를 파싱해 문제 카드·보기 카드(클릭·키보드 A~D)로 보여 주고 고른 글자만 다음 질문으로 보냄. 채점 후 정답 글자는 `format_grade` 답변 문구에서 읽어 결과 배너·보기 표시·보기별 해설을 그림. 파싱에 실패하면 원문 마크다운
@@ -590,7 +594,7 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 - 지표: context_recall, context_precision, faithfulness, answer_relevancy
 - reference는 가이드 원문 근거로 사람이 작성 (순환 평가 방지)
 - RAGAS LLM/임베딩도 Bedrock 래퍼로 연결. 3건짜리 스모크(`ragas_smoke.py`)와, 평가 답변 재사용 14건: `ragas_smoke.py --from logs/eval/<label>_full.json --out evaluation/ragas_<label>.json`으로 run_eval이 만든 같은 답변·contexts를 14건 전부 채점
-- 주의: 가이드는 영어, 답변은 한국어 → answer_relevancy가 낮게 나옴(영어 핵심 용어 병기를 적용했으나 0.45 안팎). 같은 답변을 다시 채점해도 14건 평균이 ±0.05 정도 흔들림
+- 주의: 가이드는 영어, 답변은 한국어 → answer_relevancy가 낮게 나옴(영어 핵심 용어 병기를 적용했으나 0.45~0.51). 같은 답변을 다시 채점해도 14건 평균이 ±0.05 정도 흔들림
 - 3건 스모크 기준선 (`evaluation/ragas_smoke.py` → `ragas_smoke.json`, 1~3번): faithfulness 0.896 · context_recall 1.0 · context_precision 0.917 · answer_relevancy 0.681. ragas 0.4.3은 langchain-community 0.4에서 사라진 `chat_models.vertexai`를 import하므로 스크립트 안에서만 자리표시 모듈을 끼움
 
 ### 9-3. 문제 풀 품질 지표
@@ -603,7 +607,7 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 - 정답 위치 분포, 중복 제거 수
 - **정답이 가장 긴 보기 비율** (승인 문항 기준, 동률은 가장 긴 것으로 침. **목표 35% 이하 유지**, 우연 수준 25%). 최종 33.8% (재조정 전 54%)
   - 참고 지표(목표 없음, 병기만): **"정답이 가장 긴 오답보다 5% 넘게 긴 비율"** — 근소한 차이의 동률성 1위를 걸러 실제 단서에 가까운 비율. `--rebalance-length` 대상 기준과 같음. 최종 7.9% (재조정 전 28%). 리포트 `evaluation/quiz_pool_report.md`
-- 런타임 `no_match` 비율: 최종 평가에서 출제 요청 3건 중 1건(13번, 풀에 없는 조합을 일부러 요청한 문항)
+- 런타임 `no_match` 비율: 최종 평가에서 `get_quiz` 호출 3회(5번 1회, 13번 2회) 중 1회(13번, 풀에 없는 조합을 일부러 요청한 문항)
 
 ### 9-4. 개선 후보와 채택 결과
 
@@ -633,7 +637,7 @@ Response: {"answer": "...", "contexts": [{"doc_id": "TS-1.4", "text": "..."}], "
 ## 변경 이력
 
 - v0.9 (v2-7, 응답 속도): 학습 계획 return_direct 보정(`PlanDirectReturn`, §3-1), 에이전트 후 Supervisor 마무리 호출 생략(`after_agent`, §3·§7), 재작성·검색 선행 실행과 tutor 첫 검색 코드 주입(§5-1), 계획 LLM은 TS·시간만(§5-5), 채점 입력 LLM 가드 생략(§6), 서버 예열·LLM 인스턴스 공유(§7). 20/20, 개념 16.6초·출제 4.1초·계획 15.6초, faithfulness 0.876. claim·excerpt 길이 제한은 faithfulness 하락으로 되돌림
-- v0.8 (프로젝트 종료 정리): 문서 간 중복·모순 정리(폴더 구조는 README, 성공 기준·결과는 SERVICE §5, 커밋 금지 기준은 `.gitignore`·§2-4, `no_match` 처리를 "대체 조합 출제"로 통일, 핸드오프 quiz_id·복합 질문·case_facts·학습 계획 입력), 풀 소진은 조건 없는 출제 기준으로 판정, §7 웹 UI를 설계 원칙 중심으로, §9-3을 지표 정의로 축소, §10·§11 통합, 미구현 `reset_progress` 행·개발 경위 문장 삭제, 미사용 코드(`guards.input_guard`, `llm.served_stats`) 삭제, 변경 이력 압축
+- v0.7~v0.8 (프로젝트 종료 정리): 문서 간 중복·모순 정리(폴더 구조는 README, 성공 기준·결과는 SERVICE §5, 커밋 금지 기준은 `.gitignore`·§2-4, `no_match` 처리를 "대체 조합 출제"로 통일, 핸드오프 quiz_id·복합 질문·case_facts·학습 계획 입력), 풀 소진은 조건 없는 출제 기준으로 판정, §7 웹 UI를 설계 원칙 중심으로, §9-3을 지표 정의로 축소, §10·§11 통합, 미구현 `reset_progress` 행·개발 경위 문장 삭제, 미사용 코드(`guards.input_guard`, `llm.served_stats`) 삭제, 변경 이력 압축
 - v0.6.x (제출 후 개선 v2-1~v2-6): G3 `GAP_NOTICE`(v2-1), 입력 가드 LLM 판별 병렬화(v2-2, §6), 검색 결과 청크 필터·장기 대화 요약·`case_facts`(v2-3, §5-1), 예시 수치 금지 한 줄(v2-4), 웹 UI·`GET /progress`(v2-5, §7), 런타임 LLM·임베딩 서울 리전(v2-6, §7-1). LangSmith/LangFuse·Dockerfile은 하지 않기로 결정. 버전별 결과는 README "평가 결과"
 - v0.5.x (S2~S6): 런타임 모델 전환(§7-1), quiz_master MCP 래퍼 + return_direct, 가드레일·`TutorAnswer` + G3, study_coach, 평가 러너, round2 프롬프트 개선(§9-4 #2·#4), README·시연 캡처
 - v0.2~v0.5: 문제 은행 MCP 서버·코드 채점(v0.2), 런타임 문제 생성 제거·세부 항목 단위 사전 생성 풀 270문제 목표(v0.4), 문제 풀 생성 세부 규칙(v0.4.x, §5-2), 단계 S0~S6 통합(v0.5)

@@ -74,7 +74,7 @@ MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언�
 - Supervisor 구조에서는 하위 에이전트 도구 결과가 최상위 messages에 안 올라옴
   → contexts·trace는 콜백(ToolRecorder 방식)으로 수집
 - 가이드는 영어, 질문은 한국어 → BM25 전에 rewrite_query로 영어 키워드 질의 생성
-- Store namespace 라벨에 점(.)을 쓸 수 없음 (user_id에 점 금지)
+- user_id는 영문·숫자·`_`·`-`만 (api `^[A-Za-z0-9_-]+$` 검증, study_log 키). Store는 쓰지 않음
 - MCP 도구는 비동기로 로드 → build_app은 async, 실행은 ainvoke
 - MultiServerMCPClient.get_tools()는 호출마다 서버 프로세스를 새로 띄움 → src/quiz_client.py가 세션 1개를 열어 두고 call_tool
 - Bedrock Converse는 parallel_tool_calls 끄기를 지원하지 않음 → Supervisor 동시 핸드오프는 post_model_hook(single_handoff)로 제거
@@ -86,7 +86,7 @@ MCP 서버(src/quiz_bank_server.py)는 단독 실행하지 않음. 클라이언�
   출제 대기 중 답 한 글자 입력(guards.ANSWER_ONLY)은 LLM 판별을 건너뜀
 - Supervisor pre_model_hook에서 messages를 RemoveMessage로 지우면 내부 그래프에만 적용되고 바깥 thread에는 남음
   → 장기 대화 요약은 CoachApp.run이 그래프 시작 전에 memory.compact + aupdate_state로 처리
-- 평가·스모크가 출제하면 study_log에 issued가 쌓임 → run_eval·demo_capture는 임시 사본(CCAF_STUDY_LOG)을 씀.
+- 평가·스모크가 출제하면 study_log에 issued가 쌓임 → run_eval·smoke_memory·demo_capture는 임시 사본(CCAF_STUDY_LOG)을 씀.
   smoke_p0는 data/study_log.json을 직접 다시 씀(종료 시 smoke 사용자 삭제. 중간에 멈추면 smoke 사용자 기록이 남을 수 있음)
   → 실행 전 $env:CCAF_STUDY_LOG에 임시 사본 경로 지정 권장
 - 가드 고정 문구(guards.REFUSALS·G4_CORRECTION·NO_EVIDENCE·GAP_NOTICE·OFF_TOPIC)는 run_eval이 문자열로 매칭 → 문구를 바꾸면 평가 기준도 바뀜

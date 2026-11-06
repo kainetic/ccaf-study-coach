@@ -1,7 +1,7 @@
 """가이드 검색: TS 번호 등 정확 조회 + rewrite_query(한→영) + BM25·벡터 하이브리드 (DESIGN §2-5, §5-1).
 
 Day 2 hybrid.py(BM25 + 벡터 EnsembleRetriever), extra_multiquery.py(LLM 질의 재작성) 재사용.
-가이드는 영어, 질문은 한국어라 BM25 전에 영어 키워드 질의로 바꾼다. 토크나이저도 영어용(kiwipiepy 대신).
+가이드는 영어, 질문은 한국어라 BM25 전에 영어 키워드 질의로 바꾼다. 토크나이저도 영어용.
 """
 import asyncio
 import re

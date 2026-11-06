@@ -2,7 +2,7 @@
 
 > quiz_master가 사전 생성 풀에서 출제(정답은 LLM 컨텍스트에 없음)하고, 같은 thread에서 답을 받아 코드로 채점·기록한다.
 >
-> 생성: 2026-11-05 16:33 · 커밋 954c75e · user_id `demo_heavy`(풀이 기록은 시드 상태에서 시작) · 모든 턴이 같은 대화(thread)에서 이어짐
+> 생성: 2026-11-06 09:01 · 커밋 a1345cd · user_id `demo_heavy`(풀이 기록은 시드 상태에서 시작) · 모든 턴이 같은 대화(thread)에서 이어짐
 > `python scripts/demo_capture.py --only 02`로 재생성 (LLM 답변이라 실행마다 문장은 달라질 수 있음)
 
 ## 턴 1
@@ -24,14 +24,14 @@ D. The agent queries each configured MCP server sequentially during request proc
 답을 A~D 중 하나로 알려 주세요. (문제는 실제 시험과 같은 영어, 해설은 한국어)
 ```
 
-**trace 요약** (응답 6.3초)
+**trace 요약** (응답 4.1초)
 
 - 입력 가드: 통과 (LLM 판별)
 - 배분: quiz_master
 - 출제 get_quiz: ok · Q-2.4-K3 (TS-2.4)
 - G4 출력 검사: 위반 없음
 - 호출 도구: get_quiz
-- LLM 호출 3회 (입력 가드 판별 제외) · 토큰 입력 6647 / 출력 98 · global/sonnet-4-5@ap-northeast-2 ×3
+- LLM 호출 3회 (입력 가드 판별 제외) · 토큰 입력 4601 / 출력 104 · global/sonnet-4-5@ap-northeast-2 ×3
 
 contexts doc_id: TS-2.4
 
@@ -54,11 +54,11 @@ contexts doc_id: TS-2.4
 다음 문제를 원하면 말씀해 주세요.
 ```
 
-**trace 요약** (응답 6.0초)
+**trace 요약** (응답 5.2초)
 
-- 입력 가드: 통과 (LLM 판별)
+- 입력 가드: 통과 (1차 규칙)
 - 배분: quiz_master
 - 채점 submit_answer: Q-2.4-K3 · 선택 B → 정답
 - G4 출력 검사: 위반 없음
 - 호출 도구: submit_answer
-- LLM 호출 3회 (입력 가드 판별 제외) · 토큰 입력 8512 / 출력 98 · global/sonnet-4-5@ap-northeast-2 ×3
+- LLM 호출 2회 (입력 가드 판별 제외) · 토큰 입력 5462 / 출력 93 · global/sonnet-4-5@ap-northeast-2 ×2
